@@ -13,7 +13,7 @@ https://ecology.wa.gov/Research-Data/Data-resources/Models-spreadsheets/Modeling
 
 ### Building
 
-Use the Fortran Package Manager (FPM) for building.
+This uses the Fortran Package Manager (FPM) for building.
 See: https://fpm.fortran-lang.org/
 
 ```
@@ -57,7 +57,7 @@ BC_1987-08-21.out
 ```
 
 Here we use `BC_1987-08-21.q2k` as input file.
-(This file is distributed with Windows executable, but a copy is availabe in this repository.)
+(This file is distributed with the Windows executable, but a copy is available in this repository.)
 
 Run the model:
 
