@@ -60,8 +60,6 @@
 	IMPLICIT NONE
 
 
-!gp 04-Feb-05
-	character(LEN=260):: sDir 
 
 
   ! Variables
@@ -84,7 +82,6 @@
 !	CHARACTER(LEN=260) ::msgFile, dirname	!11/16/04
 !	INTEGER(I4B) istat							!11/16/04
 	CHARACTER(LEN=260) ::msgFile 				!gp long file names are limited to 255 characters (260 for full paths)
-	call GetExeDirectory(sDir)
 
 
 	CALL SYSTEM_CLOCK(begintime)
@@ -100,11 +97,7 @@
 	WRITE(*,*)
 	
 
-!gp 04-Feb-05
-!	!msgFile = 'C:\qual2kw5\message.dat'			!11/16/04
-!	ISTAT = GETCWD(dirname)							!11/16/04
-!	msgFile = TRIM(dirname) // '\message.dat'		!11/16/04
-	msgFile = TRIM(sDir) // '\message.dat'		!11/16/04
+	msgFile = 'message.dat'
 
 
 	open (unit=8, File=msgFile, status='OLD', ACTION='READ')
@@ -184,29 +177,6 @@
 !	CLOSE (11)
 
 	end program Q2KMain
-
-
-
-!gp 04-Feb-05
-!
-!--------------------------------------------------------------------
-!
-!--- new sub to correctly get current working drive and directory ---
-!
-!--------------------------------------------------------------------
-!
-
-Subroutine GetExeDirectory(sDir) 
-
-use dfwin 
-character(LEN=260), intent(out)::	sDir 
-integer::	b 
-
-sDir = "" 
-if (GetModuleFileName(0, sDir, len(sDir)).ne.0) & 
-    sDir = sDir(1 : index(sDir,"\",.true.)-1) 
-
-end subroutine GetExeDirectory 
 
 
 
