@@ -2995,7 +2995,7 @@ End If
 	TYPE(Rates_type), INTENT(IN) :: Rates
 	TYPE(Outdata_type), INTENT(OUT) :: pr	  !output data
 	REAL(DP), INTENT(IN) :: t1, t2, dt1
-	LOGICAL(2), INTENT(IN) :: saveSteps
+	LOGICAL(4), INTENT(IN) :: saveSteps
 	!local variables
 	REAL(DP) t, dt       !initial time
 	INTEGER(I4B) nstp, i, j
