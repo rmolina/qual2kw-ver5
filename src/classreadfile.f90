@@ -1019,7 +1019,7 @@ SUBROUTINE ReadInputfile(system, hydrau, siteMeteo, HW, DB, stochRate, topo, sit
 
 	HW= Headwater_(HwIn)
 	DB= Downstream_(DBin,downstreamBoundary)
-	DEALLOCATE(DBin, STAT=status(1))
+	IF (downstreamBoundary) DEALLOCATE(DBin, STAT=status(1))
 	DEALLOCATE(HwIn, STAT=status(2))
 
 	!gp 12-Jan-06
