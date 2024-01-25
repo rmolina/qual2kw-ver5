@@ -591,7 +591,7 @@ MODULE Class_Hydraulics
 	TYPE(RiverHydraulics_type), INTENT(INOUT) :: hydrau
 	INTEGER(I4B) status
 	
-	IF (.NOT. ASSOCIATED(hydrau%reach)) THEN
+	!IF (.NOT. ASSOCIATED(hydrau%reach)) THEN
 		IF (nr > 0) THEN
 			!ALLOCATE (reach(0:nr))
 			ALLOCATE (hydrau%reach (0:nr+1), STAT= status)
@@ -600,9 +600,9 @@ MODULE Class_Hydraulics
 			PRINT *, 'ERROR:element number must be great than 0'
 			STOP 'Class_Hydraulics:AllocateHydrauArrays failed'
 		END IF
-	ELSE
-		PRINT *, 'Warning: Hydraulics array can only allocate once. Allocation failed!'
-	END IF
+	!ELSE
+		!PRINT *, 'Warning: Hydraulics array can only allocate once. Allocation failed!'
+	!END IF
 
 	END SUBROUTINE AllocateHydrauArrays
 
