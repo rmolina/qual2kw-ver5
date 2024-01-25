@@ -939,7 +939,7 @@ SUBROUTINE Save_init_step(nr, intg, pr, dt, IMethpH, showDielResults, Rates)
 	REAL(DP), INTENT(IN)::	t						!time
 
 	INTEGER(I4B) i,j, k
-	REAL(DP) :: es =0, evap, back, flux
+	REAL(DP) :: evap, back, flux
 	REAL(DP) eair, longat, conv
 	!Temperature corrected rates
 
