@@ -812,10 +812,10 @@ If (system%showDielResults == "Yes") Then
 							pr%DiagFluxSRPpr(nrp, i) + pr%HypoFluxSRPpr(nrp, i), &		
 							pr%DiagFluxICpr(nrp, i) + pr%HypoFluxICpr(nrp, i)			
 			CASE DEFAULT	!gp only write sediment temperatures and diagenesis fluxes if hyporheic wq is not being simulated		
-				WRITE(8, '(41F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, 2), (0*k,k=3,23), &
+				WRITE(8, '(41F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, 2), (0.0*k,k=3,23), &
 							pr%DiagFluxDOpr(nrp, i), pr%DiagFluxCBODpr(nrp, i), pr%DiagFluxNH4pr(nrp, i), &	
 							pr%DiagFluxNO3pr(nrp, i), pr%DiagFluxSRPpr(nrp, i), pr%DiagFluxICpr(nrp, i), &	
-							0,0,0,0,0,0, &
+							0.0,0.0,0.0,0.0,0.0,0.0, &
 							pr%DiagFluxDOpr(nrp, i), pr%DiagFluxCBODpr(nrp, i), pr%DiagFluxNH4pr(nrp, i), &	
 							pr%DiagFluxNO3pr(nrp, i), pr%DiagFluxSRPpr(nrp, i), pr%DiagFluxICpr(nrp, i)	
 			END SELECT
