@@ -1,9 +1,7 @@
-# qual2kw-ver5
-## QUAL2KW version 5
+# qual2kw-ver5-for-linux
+## QUAL2KW version 5 for Linux
 
-This is the Fortran source code for version 5 of QUAL2Kw. 
-
-It was slightly modified to get it working on Linux.
+This is the Fortran source code for version 5 of QUAL2Kw, slightly modified to get it working on Linux.
 
 The original source code is available at https://github.com/gjpelletier/qual2kw-ver5/blob/master/qual2kw51b52_f.zip
 
