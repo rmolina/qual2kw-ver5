@@ -163,7 +163,7 @@
 
 	CALL SYSTEM_CLOCK(endtime)
 	
-	WRITE(*,*) 'elapsed time: ', (endtime-begintime)/10000.0, ' seconds'
+	WRITE(*,*) 'elapsed time: ', (endtime-begintime)/1000.0, ' seconds'
 	CLOSE (8)
 
 !	CALL Output(Temn, Temx, Teav, osav, pHsav, cmn, cmx, cav, &
