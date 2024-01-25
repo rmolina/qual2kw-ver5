@@ -20,7 +20,7 @@ MODULE Class_Date
 		Date_%year = year
 		Date_%month= month
 		Date_%day = day
-		Date_%Julday = Julcvt(INT(month, I2B), INT(day, I2B), INT(year, I2B))
+		Date_%Julday = Julcvt(INT(month, I4B), INT(day, I4B), INT(year, I4B))
 	END FUNCTION Date_
 
 !Calculate Julian day, Jan 1st =1, 
