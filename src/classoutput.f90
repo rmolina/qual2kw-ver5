@@ -56,11 +56,13 @@ TYPE Outdata_type
 	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxEvap, pr_saveHeatFluxJsed, pr_saveHeatFluxJhyporheic, pr_saveHeatFluxTribs
 	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxAdvecDisp
 	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxReaer, pr_saveDOfluxCBODfast, pr_saveDOfluxCBODslow, pr_saveDOfluxNitrif
-	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxPhytoResp, pr_saveDOfluxPhytoPhoto, pr_saveDOfluxBotalgResp, pr_saveDOfluxBotalgPhoto
+	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxPhytoResp, pr_saveDOfluxPhytoPhoto, pr_saveDOfluxBotalgResp, &
+		pr_saveDOfluxBotalgPhoto
 	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxSOD, pr_saveDOfluxCOD, pr_saveDOfluxHyporheic, pr_saveDOfluxTribs
 	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxAdvecDisp
 	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxReaer, pr_saveCO2fluxCBODfast, pr_saveCO2fluxCBODslow
-	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxPhytoResp, pr_saveCO2fluxPhytoPhoto, pr_saveCO2fluxBotalgResp, pr_saveCO2fluxBotalgPhoto
+	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxPhytoResp, pr_saveCO2fluxPhytoPhoto, pr_saveCO2fluxBotalgResp, &
+		pr_saveCO2fluxBotalgPhoto
 	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxSOD, pr_saveCO2fluxHyporheic, pr_saveCO2fluxTribs
 	REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxAdvecDisp
 
