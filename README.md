@@ -13,7 +13,8 @@ https://ecology.wa.gov/Research-Data/Data-resources/Models-spreadsheets/Modeling
 
 ### Building
 
-Use the Fortran Package Manager (FPM) for building:
+Use the Fortran Package Manager (FPM) for building.
+See: https://fpm.fortran-lang.org/
 
 ```
 (fortran) ruben@pop-os:~/github/qual2kw-ver5$ fpm build
