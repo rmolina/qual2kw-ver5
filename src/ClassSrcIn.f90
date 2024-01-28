@@ -8,7 +8,8 @@ module class_sourcein
     use class_hydraulics, only: riverhydraulics_type
     implicit none
 
-    private pointin_, nonpointin_
+    private
+    public sourcein_, load, ndiff, npt, sourcescalc
 !	public :: qpt, qpta
 
     !derived type for diffusion load/source
