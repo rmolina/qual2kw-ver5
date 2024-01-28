@@ -1,9 +1,6 @@
-!stoichiometry
 module m_rates
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    !use nrtype
     implicit none
-
     private
     public rates_t, setoxygeninhibenhance, tempadjust
 
@@ -37,15 +34,16 @@ module m_rates
         real(r64) ksop
         real(r64) ksob
 
-
         !slow cbod
         real(r64) khc !slow cbod hydrolysis rate
         real(r64) :: tkhc =1.05 !slow cbod hydrolysis temp correction
         real(r64) kdcs !slow cbod oxidation rate
         real(r64) :: tkdcs =1.05 !slow cbod oxidation temp correction
+
         !fast cbod
         real(r64) kdc !fast cbod oxidation rate
         real(r64) :: tkdc=1.05 !fast cbod oxidation temp correction
+
         !nitrogen
         real(r64) khn !organic n hydrolysis rate
         real(r64) :: tkhn=1.05 !organic n hydrolysis temp correction
@@ -56,6 +54,7 @@ module m_rates
         real(r64) :: tki=1.05 !nitrate denitrification rate
         real(r64) vdi !nitrate sed denitrification transfer coeff
         real(r64) :: tvdi=1.05 !nitrate sed denitrification transfer coeff temp correction
+
         !phosphorus
         real(r64) khp !organic p hydrolysis
         real(r64) :: tkhp=1.05 !organic p hydrolysis temp correction
@@ -100,6 +99,7 @@ module m_rates
         real(r64) isatf !light constant
         real(r64) :: khnxf=15.0 !ammonia preference
         character(len=30) :: typef ='Zero-order' !bottom algae growth model,zero-first order
+
         !pom
         real(r64) kdt !pom dissolution rate
         real(r64) :: tkdt=1.05 !pom dissolution temp correction
