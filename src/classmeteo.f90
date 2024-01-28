@@ -1,5 +1,5 @@
 module m_meteorology
-    use, intrinsic :: iso_fortran_env, only: f64 => real64, i32 => int32
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     implicit none
     private
 
@@ -8,14 +8,14 @@ module m_meteorology
     type t_meteorology
 
         !gp 16-jul-08
-        !real(f64), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh
-        real(f64), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh, solarhh
+        !real(r64), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh
+        real(r64), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh, solarhh
 
         !instantenous meteorology data
 
         !gp 16-jul-08
-        !real(f64), dimension(:),   pointer :: shadet, ta, td, uw, cc
-        real(f64), dimension(:),   pointer :: shadet, ta, td, uw, cc, solart
+        !real(r64), dimension(:),   pointer :: shadet, ta, td, uw, cc
+        real(r64), dimension(:),   pointer :: shadet, ta, td, uw, cc, solart
 
         integer(i32) :: numdatpnt= 24 !use to identify the size of time series
         !hardwire to (0-23 hour) for now
@@ -35,8 +35,8 @@ contains
         integer(i32), intent(in) :: nr
 
         !gp 16-jul-08
-        !real(f64), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin
-        real(f64), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin
+        !real(r64), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin
+        real(r64), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin
 
         !gp 16-jul-08
         !integer(i32) status(10), i
@@ -89,7 +89,7 @@ contains
 
         integer(i32), intent(in) :: nr
         type(t_meteorology), intent(inout) :: met
-        real(f64), intent(in) :: t
+        real(r64), intent(in) :: t
 
         call interpolatehelper(nr, t, met%ta, met%tahh, met%numdatpnt)
         call interpolatehelper(nr, t, met%td, met%tdhh, met%numdatpnt)
@@ -110,10 +110,10 @@ contains
         !input arrays have dimensions of (ihour, k) where ihour is hour (0 to 23)
         !and k is variable number (1 to 15) or reach number (1-1000)
         integer(i32), intent(in) :: nr
-        real(f64), intent(out) :: interp(:)
-        real(f64), intent(in) :: t, c (0:,:)
+        real(r64), intent(out) :: interp(:)
+        real(r64), intent(in) :: t, c (0:,:)
         integer(i32), intent(in):: upbound
-        real(f64) t_hr
+        real(r64) t_hr
         integer(i32) t0_hr, t1_hr, k
 
         t_hr = (t - int(t)) * (upbound)
@@ -140,10 +140,10 @@ contains
         !input arrays have dimensions of (ihour, k) where ihour is hour (0 to 23)
         !and k is variable number (1 to 15) or reach number (1-1000)
         integer(i32), intent(in) :: nr
-        real(f64), intent(out) :: hourlyshade(:)
-        real(f64), intent(in):: t, shadehh(0:,:)
+        real(r64), intent(out) :: hourlyshade(:)
+        real(r64), intent(in):: t, shadehh(0:,:)
         integer(i32), intent(in):: upbound
-        real(f64) t_hr
+        real(r64) t_hr
         integer(i32) t0_hr, t1_hr, k
 
         t_hr = (t - int(t)) * (upbound)
