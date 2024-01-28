@@ -2,7 +2,7 @@
 module m_downstream_boundary
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: LGT, nv
-    use m_water_quality, only: t_water_quality
+    use m_water_quality, only: water_quality_t
     use class_phsolve, only: ct
     implicit none
     private
@@ -11,7 +11,7 @@ module m_downstream_boundary
     type downstream_boundary_t
         logical(lgt) :: downstreambound =.false. !specify downsteam boundary
         integer(i32) :: numdatpnt = 24 !number of data points per day
-        type(t_water_quality), pointer :: dat(:) !downstream boundary time series data
+        type(water_quality_t), pointer :: dat(:) !downstream boundary time series data
     end type
 
     interface downstream_boundary_t
@@ -21,7 +21,7 @@ module m_downstream_boundary
 contains
 
     function downstream_boundary_ctor(dbfilein, downstreambound) result(db)
-        type(t_water_quality), intent(in) :: dbfilein(0:)
+        type(water_quality_t), intent(in) :: dbfilein(0:)
         logical(lgt), intent(in) :: downstreambound
         type(downstream_boundary_t) db
         integer(i32) :: status

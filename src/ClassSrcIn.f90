@@ -5,7 +5,7 @@ module class_sourcein
     use nrtype, only: nv, pii, cpw, rhow
     use m_rivertopo, only: t_rivertopo
     use class_phsolve, only: ct
-    use m_water_quality, only: t_water_quality
+    use m_water_quality, only: water_quality_t
     use class_hydraulics, only: riverhydraulics_type
     implicit none
     private
@@ -37,7 +37,7 @@ module class_sourcein
     !contains the original point and diffusion data
     type(point_type), pointer :: point(:)
     type(diffusion_type), pointer :: diffu(:)
-    type(t_water_quality), allocatable :: load(:) !combined load from both point and diffusion
+    type(water_quality_t), allocatable :: load(:) !combined load from both point and diffusion
     real(r64), allocatable :: heatdiff(:), loaddiff(:,:) !diffusion load not vary by time
     real(r64), allocatable:: qpta(:), qpt (:)
 
@@ -264,7 +264,7 @@ contains
         real(r64) :: heat(nr)
         real(r64) :: loadi(nr, nv)
         logical(2) cond1, cond2, cond3, cond4, cond5
-        type(t_water_quality) :: ptt
+        type(water_quality_t) :: ptt
         real(r64) qd, lend
 
         heat = 0; loadi =0

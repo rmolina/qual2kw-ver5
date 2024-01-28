@@ -11,7 +11,7 @@ contains
         USE Class_LightHeat
         USE Class_SourceIn
         USE m_rates, only: rates_t
-        USE m_water_quality, ONLY:t_water_quality
+        USE m_water_quality, ONLY:water_quality_t
         USE m_upstream_boundary, ONLY: upstream_boundary_t
         USE m_downstream_boundary
         USE Class_SolarCalc
@@ -246,8 +246,8 @@ contains
         !gp 15-Nov-04 level 2 hyporheic biofilm rates
         REAL(DP) kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax
 
-        TYPE(t_water_quality), DIMENSION(:), ALLOCATABLE :: HwIn	!HEADWATERS
-        TYPE(t_water_quality), DIMENSION(:),	POINTER :: DBin		!Downstream bondary
+        TYPE(water_quality_t), DIMENSION(:), ALLOCATABLE :: HwIn	!HEADWATERS
+        TYPE(water_quality_t), DIMENSION(:),	POINTER :: DBin		!Downstream bondary
 
         !METEOROLOGY DATA
 

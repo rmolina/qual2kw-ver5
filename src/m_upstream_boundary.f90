@@ -1,7 +1,7 @@
 module m_upstream_boundary
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: nv
-    use m_water_quality, only: t_water_quality
+    use m_water_quality, only: water_quality_t
     use class_phsolve, only: ct
     implicit none
     private
@@ -9,7 +9,7 @@ module m_upstream_boundary
 
     type upstream_boundary_t
         integer(i32) :: numdatpnt = 24 !number of data points per day
-        type(t_water_quality), pointer :: dat(:) !headwater data(time:headwaterid)
+        type(water_quality_t), pointer :: dat(:) !headwater data(time:headwaterid)
     end type upstream_boundary_t
 
     interface upstream_boundary_t
@@ -22,7 +22,7 @@ contains
     !headwater data strucutre constructor
     function upstream_boundary_ctor(hwfilein) result(hw)
         type(upstream_boundary_t) hw
-        type(t_water_quality), intent(in) :: hwfilein(:)
+        type(water_quality_t), intent(in) :: hwfilein(:)
         integer(i32) status
 
 ! if (steadystate()) then
