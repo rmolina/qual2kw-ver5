@@ -42,7 +42,7 @@ program Q2KMain
     USE nrtype
     USE Class_SystemParams
     USE Class_Hydraulics
-    USE Class_Meteo
+    USE m_meteorology
     USE Class_Headwater
     USE Class_Downstream
     USE Class_Rates
@@ -66,7 +66,7 @@ program Q2KMain
     CHARACTER(LEN=260) :: infile, outfile	!input & output file name
     !gp long file names are limited to 255 characters (260 for full paths)
     TYPE(RiverHydraulics_type) hydrau	!channel dimensions, hydraulics, physical characters
-    TYPE(Meteo_type) Meteo			!meteology information
+    TYPE(t_meteorology) Meteo			!meteology information
     TYPE(Headwater_type) HW			!headwater
     TYPE(Downstream_type) DB		!downstream boundary
     TYPE(Rates_type) Rates			!stoch, reaction, temperature and all other rate
