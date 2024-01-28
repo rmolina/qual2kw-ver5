@@ -1,29 +1,14 @@
-!element data structure
-!
-!
-!INCLUDE "NRTYPE.F90"
-! classreach.f90
+module m_reach
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    implicit none
+    private
+    public :: t_reach
 
-!reach data structure
-MODULE Class_Reach
-    USE nrtype
+    type t_reach
+        character(len=30) :: rlab='', rname =''
+        real(r64) :: xrdn = 0
+        real(r64) :: xpm = 0
+        integer(i32) :: upid = 0, dwnid = 0 !upstream and downstream element id
+    end type t_reach
 
-    IMPLICIT NONE
-
-    TYPE Reach_type
-        CHARACTER(LEN=30) :: rlab='', rname =''
-        REAL(DP) :: xrdn=0.0_DP
-!		REAL(DP) xup,xdown, xl, xreach			!xl - reach lengh (m), xreach - reach length (km)
-!		REAL(DP) elemLen							!element length
-!		INTEGER(I4B) elems						!number of elements in this reach
-!		REAL(DP) elev1, elev2
-!		REAL(DP) latd, latm, lats
-!		REAL(DP) lond, lonm, lons
-!		REAL(DP) latr, lonr						!latitude, longitude radius
-        !xpm - center of reach,				!
-        REAL(DP) :: xpm =0
-        INTEGER(I4B) :: upID=0, dwnID=0			!upstream and downstream element ID
-    END TYPE Reach_type
-
-END MODULE Class_Reach
-
+end module m_reach

@@ -3,7 +3,7 @@
 MODULE Class_RiverTopo
     USE nrtype
 !	USE Class_Element
-    USE Class_Reach
+    USE m_reach
     IMPLICIT NONE
 
 !	PRIVATE															!unless declared public
@@ -15,7 +15,7 @@ MODULE Class_RiverTopo
 !		INTEGER(I4B) ne									!number of elements
         INTEGER(I4B) :: nHw =1					!Hardwired to 1 for mainstem only
 !		TYPE(Element_type), POINTER :: elems(:) !element array, containing topology information
-        TYPE(Reach_type), DIMENSION(:),  POINTER :: reach !reaches array,
+        TYPE(t_reach), DIMENSION(:),  POINTER :: reach !reaches array,
 
         !gp 17-Nov-04
         CHARACTER(LEN=30) geoMethod		!gp 17-Nov-04 Depth or Width for col T and U of 'Reach' sheet
