@@ -321,14 +321,6 @@ contains
         rates%ksp = ksp
         rates%ksc = ksc
 
-        ! select case (xdum6)
-        !   case ("Smith")
-        !     rates%ilight = 2 !"langleys/d"
-        !   case ("Steele")
-        !     rates%ilight = 3 !"langleys/d"
-        !   case default !"half saturation"
-        !     rates%ilight = 1 !"langleys/d"
-        ! end select
         rates%ilight = ilight(xdum6)
 
         rates%isat = isat
@@ -385,14 +377,15 @@ contains
         rates%kqn = kqn !mgn/gd
         rates%kqp = kqp !mgp/gd
 
-        select case (xdum7)
-          case ("Smith")
-            rates%ilightf = 2 !"langleys/d"
-          case ("Steele")
-            rates%ilightf = 3 !"langleys/d"
-          case default !"half saturation"
-            rates%ilightf = 1 ! "langleys/d"
-        end select
+        ! select case (xdum7)
+        !   case ("Smith")
+        !     rates%ilightf = 2 !"langleys/d"
+        !   case ("Steele")
+        !     rates%ilightf = 3 !"langleys/d"
+        !   case default !"half saturation"
+        !     rates%ilightf = 1 ! "langleys/d"
+        ! end select
+        rates%ilightf = ilight(xdum7)
 
         rates%isatf = isatf
         if (khnxf > 0) rates%khnxf = khnxf
@@ -497,283 +490,201 @@ contains
         rates%rccd = gc / gd / 12.0107_r64 / 1000.0_r64
         rates%rccc = 1.0_r64 / 12.0107_r64 / 1000.0_r64
 
+        !if reach specific rates provided by input file are invalid,
+        !then use default general rates provided by input file
+        call validate_user_rates(nr, hydrau, rates)
+
+    end function rates_ctor
+
+    subroutine validate_user_rates(nr, hydrau, rates)
+        integer(i32), intent(in) :: nr !number of reach
+        type(rates_t), intent(in) :: rates
+        type(riverhydraulics_type), intent(inout) :: hydrau
+
+        integer(i32) i
+
         !gp 08-feb-06
-        !if reach specific rates provided by input file are invalid, then use default general
-        !rates provided by input file
         do i=1, nr
             !1.reaeration coefficient
             !leave the value as it is
             !unless it is equal/great than zero, it will be calculated by reaeration model
+
             !2.inorganic suspended solids settling velocity
-            if (hydrau%reach(i)%vss <0) then
-                hydrau%reach(i)%vss = rates%vss
-            end if
+            call validate_user_rate(hydrau%reach(i)%vss, rates%vss)
+
             !3.slow cbod hydrolysis rate
-            if (hydrau%reach(i)%khc <0) then
-                hydrau%reach(i)%khc = rates%khc
-            end if
+            call validate_user_rate(hydrau%reach(i)%khc, rates%khc)
+
             !4.slow cbod oxidation rate
-            if (hydrau%reach(i)%kdcs <0) then
-                hydrau%reach(i)%kdcs = rates%kdcs
-            end if
+            call validate_user_rate(hydrau%reach(i)%kdcs, rates%kdcs)
+
             !5.fast cbod oxidation rate
-            if (hydrau%reach(i)%kdc < 0) then
-                hydrau%reach(i)%kdc = rates%kdc
-            end if
+            call validate_user_rate(hydrau%reach(i)%kdc, rates%kdc)
+
             !6. organic n hydrolysis rate (khn)
-            if (hydrau%reach(i)%khn < 0) then
-                hydrau%reach(i)%khn = rates%khn
-            end if
+            call validate_user_rate(hydrau%reach(i)%khn, rates%khn)
+
             !7. organic n settling velocity (von)
-            if (hydrau%reach(i)%von < 0) then
-                hydrau%reach(i)%von = rates%von
-            end if
+            call validate_user_rate(hydrau%reach(i)%von, rates%von)
+
             !8. ammonium nitrification rate (kn)
-            if (hydrau%reach(i)%kn < 0) then
-                hydrau%reach(i)%kn = rates%kn
-            end if
+            call validate_user_rate(hydrau%reach(i)%kn, rates%kn)
+
             !9. nitrate denitrification rate (ki)
-            if (hydrau%reach(i)%ki < 0) then
-                hydrau%reach(i)%ki = rates%ki
-            end if
+            call validate_user_rate(hydrau%reach(i)%ki, rates%ki)
+
             !10. nitrate sed denitrification transfer coeff (vdi)
-            if (hydrau%reach(i)%vdi < 0) then
-                hydrau%reach(i)%vdi = rates%vdi
-            end if
+            call validate_user_rate(hydrau%reach(i)%vdi, rates%vdi)
+
             !11. organic p hydrolysis (khp)
-            if (hydrau%reach(i)%khp < 0) then
-                hydrau%reach(i)%khp = rates%khp
-            end if
+            call validate_user_rate(hydrau%reach(i)%khp, rates%khp)
+
             !12. organic p settling velocity (vop)
-            if (hydrau%reach(i)%vop < 0) then
-                hydrau%reach(i)%vop = rates%vop
-            end if
+            call validate_user_rate(hydrau%reach(i)%vop, rates%vop)
+
             !13. inorganic p settling veloctiy (vip)
-            if (hydrau%reach(i)%vip < 0) then
-                hydrau%reach(i)%vip = rates%vip
-            end if
+            call validate_user_rate(hydrau%reach(i)%vip, rates%vip)
+
             !14. phytoplankton max growth rate (kga)
-            if (hydrau%reach(i)%kga < 0) then
-                hydrau%reach(i)%kga = rates%kga
-            end if
+            call validate_user_rate(hydrau%reach(i)%kga, rates%kga)
+
             !phytoplankton respiration rate (krea)
-            if (hydrau%reach(i)%krea < 0) then
-                hydrau%reach(i)%krea = rates%krea
-            end if
+            call validate_user_rate(hydrau%reach(i)%krea, rates%krea)
+
             !phytoplankton death rate (kdea)
-            if (hydrau%reach(i)%kdea < 0) then
-                hydrau%reach(i)%kdea = rates%kdea
-            end if
+            call validate_user_rate(hydrau%reach(i)%kdea, rates%kdea)
+
             !phytoplankton n half-sat (ksn)
-            if (hydrau%reach(i)%ksn < 0) then
-                hydrau%reach(i)%ksn = rates%ksn
-            end if
+            call validate_user_rate(hydrau%reach(i)%ksn, rates%ksn)
+
             !phytoplankton p half-sat (ksp)
-            if (hydrau%reach(i)%ksp < 0) then
-                hydrau%reach(i)%ksp = rates%ksp
-            end if
+            call validate_user_rate(hydrau%reach(i)%ksp, rates%ksp)
+
             !phytoplankton light sat (isat)
-            if (hydrau%reach(i)%isat < 0) then
-                hydrau%reach(i)%isat = rates%isat
-            end if
+            call validate_user_rate(hydrau%reach(i)%isat, rates%isat)
+
             !phytoplankton ammonia pref (khnx)
-            if (hydrau%reach(i)%khnx < 0) then
-                hydrau%reach(i)%khnx = rates%khnx
-            end if
+            call validate_user_rate(hydrau%reach(i)%khnx, rates%khnx)
+
             !phytoplankton settling (va)
-            if (hydrau%reach(i)%va < 0) then
-                hydrau%reach(i)%va = rates%va
-            end if
+            call validate_user_rate(hydrau%reach(i)%va, rates%va)
 
             !bottom plant initial biomass (botalg0)
             !leave the value as it is
+
             !bottom plant max growth rate (kgaf)
-            if (hydrau%reach(i)%kgaf < 0) then
-                hydrau%reach(i)%kgaf = rates%kgaf
-
-                !gp 03-apr-08 already in gd basis
-                !else
-                ! !convert to mga basis
-                ! if (rates%typef == "zero-order") hydrau%reach(i)%kgaf = hydrau%reach(i)%kgaf * gd / mga
-
-            end if
+            call validate_user_rate(hydrau%reach(i)%kgaf, rates%kgaf)
 
             !bottom plant first order carrying capacity (abmax)
-            if (hydrau%reach(i)%abmax < 0) then
-                hydrau%reach(i)%abmax = rates%abmax
-
-                !gp 03-apr-08 already in gd basis
-                !else
-                ! hydrau%reach(i)%abmax = hydrau%reach(i)%abmax * gd / mga !convert to mga basis
-
-            end if
+            call validate_user_rate(hydrau%reach(i)%abmax, rates%abmax)
 
             !bottom plant respiration rate (kreaf)
-
-            !gp 03-apr-08
-            !if (hydrau%reach(i)%kreaf < 0) then
-            ! hydrau%reach(i)%kreaf = rates%kreaf
-            !end if
-            if (hydrau%reach(i)%krea1f < 0) then
-                hydrau%reach(i)%krea1f = rates%krea1f
-            end if
-            if (hydrau%reach(i)%krea2f < 0) then
-                hydrau%reach(i)%krea2f = rates%krea2f
-            end if
+            call validate_user_rate(hydrau%reach(i)%krea1f, rates%krea1f)
+            call validate_user_rate(hydrau%reach(i)%krea2f, rates%krea2f)
 
             !bottom plant excretion rate (kexaf)
-            if (hydrau%reach(i)%kexaf < 0) then
-                hydrau%reach(i)%kexaf = rates%kexaf
-            end if
+            call validate_user_rate(hydrau%reach(i)%kexaf, rates%kexaf)
+
             !bottom plant death rate (kdeaf)
-            if (hydrau%reach(i)%kdeaf < 0) then
-                hydrau%reach(i)%kdeaf = rates%kdeaf
-            end if
+            call validate_user_rate(hydrau%reach(i)%kdeaf, rates%kdeaf)
+
             !bottom plant external n half-sat (ksnf)
-            if (hydrau%reach(i)%ksnf < 0) then
-                hydrau%reach(i)%ksnf = rates%ksnf
-            end if
+            call validate_user_rate(hydrau%reach(i)%ksnf, rates%ksnf)
+
             !bottom plant external p half-sat (kspf)
-            if (hydrau%reach(i)%kspf < 0) then
-                hydrau%reach(i)%kspf = rates%kspf
-            end if
+            call validate_user_rate(hydrau%reach(i)%kspf, rates%kspf)
+
             !bottom plant light sat (isatf)
-            if (hydrau%reach(i)%isatf < 0) then
-                hydrau%reach(i)%isatf = rates%isatf
-            end if
+            call validate_user_rate(hydrau%reach(i)%isatf, rates%isatf)
+
             !bottom plant nh4 pref (khnxf)
-            if (hydrau%reach(i)%khnxf < 0) then
-                hydrau%reach(i)%khnxf = rates%khnxf
-            end if
+            call validate_user_rate(hydrau%reach(i)%khnxf, rates%khnxf)
+
             !bottom plant subsistence quota for n (ninbmin)
-            if (hydrau%reach(i)%ninbmin < 0) then
-                hydrau%reach(i)%ninbmin = rates%ninbmin
+            call validate_user_rate(hydrau%reach(i)%ninbmin, rates%ninbmin)
 
-                !gp 03-apr-08 already in gd basis
-                !else
-                ! hydrau%reach(i)%ninbmin = hydrau%reach(i)%ninbmin * mga / gd !convert to mga basis
-
-            end if
             !bottom plant subsistence quota for p (nipbmin)
-            if (hydrau%reach(i)%nipbmin < 0) then
-                hydrau%reach(i)%nipbmin = rates%nipbmin
+            call validate_user_rate(hydrau%reach(i)%nipbmin, rates%nipbmin)
 
-                !gp 03-apr-08 already in gd basis
-                !else
-                ! hydrau%reach(i)%nipbmin = hydrau%reach(i)%nipbmin * mga / gd !convert to mga basis
-
-            end if
             !bottom plant max uptake of n (ninbupmax)
-            if (hydrau%reach(i)%ninbupmax < 0) then
-                hydrau%reach(i)%ninbupmax = rates%ninbupmax
+            call validate_user_rate(hydrau%reach(i)%ninbupmax, rates%ninbupmax)
 
-                !gp 03-apr-08 already in gd basis
-                !else
-                ! hydrau%reach(i)%ninbupmax = hydrau%reach(i)%ninbupmax * mga / gd !convert to mga basis
-
-            end if
             !bottom plant max uptake of p (nipbupmax)
-            if (hydrau%reach(i)%nipbupmax < 0) then
-                hydrau%reach(i)%nipbupmax = rates%nipbupmax
+            call validate_user_rate(hydrau%reach(i)%nipbupmax, rates%nipbupmax)
 
-                !gp 03-apr-08 already in gd basis
-                !else
-                ! hydrau%reach(i)%nipbupmax = hydrau%reach(i)%nipbupmax * mga / gd !convert to mga basis
-
-            end if
             !bottom plant internal n half-sat (kqn)
-            if (hydrau%reach(i)%kqn < 0) then
-                hydrau%reach(i)%kqn = rates%kqn
+            call validate_user_rate(hydrau%reach(i)%kqn, rates%kqn)
 
-                !gp 03-apr-08 already in gd basis
-                !else
-                ! hydrau%reach(i)%kqn = hydrau%reach(i)%kqn * mga / gd !convert to mga basis
-
-            end if
             !bottom plant internal p half-sat (kqp)
-            if (hydrau%reach(i)%kqp < 0) then
-                hydrau%reach(i)%kqp = rates%kqp
+            call validate_user_rate(hydrau%reach(i)%kqp, rates%kqp)
 
-                !gp 03-apr-08 already in gd basis
-                !else
-                ! hydrau%reach(i)%kqp = hydrau%reach(i)%kqp * mga / gd !convert to mga basis
-
-            end if
             !bottom plant fraction of n uptake from water column (nupwcfrac)
-            if (hydrau%reach(i)%nupwcfrac < 0) then
-                hydrau%reach(i)%nupwcfrac = rates%nupwcfrac
-            end if
+            call validate_user_rate(hydrau%reach(i)%nupwcfrac, rates%nupwcfrac)
+
             !bottom plant fraction of p uptake from water column (pupwcfrac)
-            if (hydrau%reach(i)%pupwcfrac < 0) then
-                hydrau%reach(i)%pupwcfrac = rates%pupwcfrac
-            end if
+            call validate_user_rate(hydrau%reach(i)%pupwcfrac, rates%pupwcfrac)
+
             !17. detritus(pom) dissolution rate (kdt)
-            if (hydrau%reach(i)%kdt < 0) then
-                hydrau%reach(i)%kdt = rates%kdt
-            end if
+            call validate_user_rate(hydrau%reach(i)%kdt, rates%kdt)
+
             !18. detritus(pom) settling velocity (vdt)
-            if (hydrau%reach(i)%vdt < 0) then
-                hydrau%reach(i)%vdt = rates%vdt
-            end if
+            call validate_user_rate(hydrau%reach(i)%vdt, rates%vdt)
+
             !pathogen dieoff rate (kpath)
-            if (hydrau%reach(i)%kpath < 0) then
-                hydrau%reach(i)%kpath = rates%kpath
-            end if
+            call validate_user_rate(hydrau%reach(i)%kpath, rates%kpath)
+
             !pathogen settling rate (vpath)
-            if (hydrau%reach(i)%vpath < 0) then
-                hydrau%reach(i)%vpath = rates%vpath
-            end if
+            call validate_user_rate(hydrau%reach(i)%vpath, rates%vpath)
+
             !pathogen light alpha (apath)
-            if (hydrau%reach(i)%apath < 0) then
-                hydrau%reach(i)%apath = rates%apath
-            end if
+            call validate_user_rate(hydrau%reach(i)%apath, rates%apath)
+
             !hyporheic heterotroph max growth rate (kgah)
-            if (hydrau%reach(i)%kgah < 0) then
-                hydrau%reach(i)%kgah = rates%kgah
-            end if
+            call validate_user_rate(hydrau%reach(i)%kgah, rates%kgah)
+
             !hyporheic heterotroph half-sat for cbod (ksch)
-            if (hydrau%reach(i)%ksch < 0) then
-                hydrau%reach(i)%ksch = rates%ksch
-            end if
+            call validate_user_rate(hydrau%reach(i)%ksch, rates%ksch)
+
             !hyporheic heterotroph o2 inhibition parameter (kinhch)
-            if (hydrau%reach(i)%kinhch < 0) then
-                hydrau%reach(i)%kinhch = rates%kinhch
-            end if
+            call validate_user_rate(hydrau%reach(i)%kinhch, rates%kinhch)
+
             !hyporheic heterotroph respiration rate (kreah)
-            if (hydrau%reach(i)%kreah < 0) then
-                hydrau%reach(i)%kreah = rates%kreah
-            end if
+            call validate_user_rate(hydrau%reach(i)%kreah, rates%kreah)
+
             !hyporheic heterotroph death rate (kdeah)
-            if (hydrau%reach(i)%kdeah < 0) then
-                hydrau%reach(i)%kdeah = rates%kdeah
-            end if
+            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh)
+
             !hyporheic heterotroph n half-sat (ksnh)
-            if (hydrau%reach(i)%ksnh < 0) then
-                hydrau%reach(i)%ksnh = rates%ksnh
-            end if
+            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh)
+
             !hyporheic heterotroph p half-sat (ksph)
-            if (hydrau%reach(i)%ksph < 0) then
-                hydrau%reach(i)%ksph = rates%ksph
-            end if
+            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh)
+
             !hyporheic heterotroph nh4 preference (khnxh)
-            if (hydrau%reach(i)%khnxh < 0) then
-                hydrau%reach(i)%khnxh = rates%khnxh
-            end if
+            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh)
+
             !hyporheic heterotroph first-order carrying capacity (ahmax)
-            if (hydrau%reach(i)%ahmax < 0) then
-                hydrau%reach(i)%ahmax = rates%ahmax
-            end if
+            call validate_user_rate(hydrau%reach(i)%ahmax, rates%ahmax)
+
             !generic constituent first-order loss rate constant (kgen)
-            if (hydrau%reach(i)%kgen < 0) then
-                hydrau%reach(i)%kgen = rates%kgen
-            end if
+            call validate_user_rate(hydrau%reach(i)%kgen, rates%kgen)
+
             !generic constituent settling rate (vgen)
-            if (hydrau%reach(i)%vgen < 0) then
-                hydrau%reach(i)%vgen = rates%vgen
-            end if
+            call validate_user_rate(hydrau%reach(i)%vgen, rates%vgen)
         end do
 
-    end function rates_ctor
+    end subroutine validate_user_rates
+
+
+    pure subroutine validate_user_rate(user_rate, default_rate)
+        real(r64), intent(in) :: default_rate
+        real(r64), intent(inout) :: user_rate
+
+        if (user_rate < 0) then
+            user_rate = default_rate
+        end if
+    end subroutine validate_user_rate
+
 
     pure function ikox(xdum)
         character(len=30), intent(in) :: xdum
