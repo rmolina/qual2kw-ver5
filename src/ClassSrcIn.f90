@@ -1,358 +1,357 @@
 !sourceinbackup.f90
 
-MODULE Class_SourceIn
-    USE nrtype
-    USE Class_RiverTopo					!only num of reach and num of element
-    USE m_water_quality
-    USE Class_Hydraulics
-    IMPLICIT NONE
+module class_sourcein
+    use nrtype, only: dp, i4b, nv, pii, cpw, rhow
+    use class_rivertopo, only: rivertopo_type
+    use class_phsolve, only: ct
+    use m_water_quality, only: t_water_quality
+    use class_hydraulics, only: riverhydraulics_type
+    implicit none
 
-    PRIVATE PointIn_, NonPointIn_
-!	PUBLIC :: Qpt, Qpta
+    private pointin_, nonpointin_
+!	public :: qpt, qpta
 
     !derived type for diffusion load/source
-    TYPE Diffusion_type					!contain the raw data for diffusin load and source
-        CHARACTER(LEN=30) name
-        REAL(DP) xdup, xddn
-        REAL(DP) :: Q =0.0				!if load, then >0; source, then <0
-        REAL(DP) Te
-        REAL(DP) c(nv-1)
-        REAL(DP) pH
-        INTEGER(I4B) beginRch			!beginning reach number
-    END TYPE Diffusion_type
+    type diffusion_type					!contain the raw data for diffusin load and source
+        character(len=30) name
+        real(dp) xdup, xddn
+        real(dp) :: q =0.0				!if load, then >0; source, then <0
+        real(dp) te
+        real(dp) c(nv-1)
+        real(dp) ph
+        integer(i4b) beginrch			!beginning reach number
+    end type diffusion_type
     !derived type for point load/source
-    TYPE Point_type							!
-        CHARACTER(LEN=30) name
-        REAL(DP) x
-        REAL(DP) :: Q	=0.0				!if load, then >0; source, then <0
-        REAL(DP) :: TeMean=0, TeAmp=0, TeMaxTime =0
-        REAL(DP) cMean(nv-2), cAmp(nv-2), cMaxTime(nv-2)
-        REAL(DP) pHMean, pHAmp, phMaxTime
-        INTEGER(I4B) beginRch			!beginning reach number
-    END TYPE Point_type
+    type point_type							!
+        character(len=30) name
+        real(dp) x
+        real(dp) :: q	=0.0				!if load, then >0; source, then <0
+        real(dp) :: temean=0, teamp=0, temaxtime =0
+        real(dp) cmean(nv-2), camp(nv-2), cmaxtime(nv-2)
+        real(dp) phmean, phamp, phmaxtime
+        integer(i4b) beginrch			!beginning reach number
+    end type point_type
 
-    INTEGER(I4B) npt, ndiff
+    integer(i4b) npt, ndiff
 
     !contains the original point and diffusion data
-    TYPE(Point_type), POINTER :: point(:)
-    TYPE(Diffusion_type), POINTER :: diffu(:)
-    TYPE(t_water_quality), ALLOCATABLE :: load(:)				!combined load from both point and diffusion
-    REAL(DP), ALLOCATABLE :: HeatDiff(:), loadDiff(:,:) 	!diffusion load not vary by time
-    REAL(DP), ALLOCATABLE:: Qpta(:), Qpt (:)
+    type(point_type), pointer :: point(:)
+    type(diffusion_type), pointer :: diffu(:)
+    type(t_water_quality), allocatable :: load(:)				!combined load from both point and diffusion
+    real(dp), allocatable :: heatdiff(:), loaddiff(:,:) 	!diffusion load not vary by time
+    real(dp), allocatable:: qpta(:), qpt (:)
 
-CONTAINS
+contains
 
-    ! Read in Point and diffusion load and abastraction data
-    SUBROUTINE sourceIn_(nr, nptIn, ndiffIn, flag, Topo, hydrau, PtName, xptt, Qptta, Qptt, TepttMean, &
-        TepttAmp, TepttMaxTime, cpttMean, cpttAmp, cpttMaxTime, phpttMean, &
-        phpttAmp, phpttMaxTime, DiffName, xdup, xddn, Qdifa, Qdif, Tedif, cdif, pHind)
+    ! read in point and diffusion load and abastraction data
+    subroutine sourcein_(nr, nptin, ndiffin, flag, topo, hydrau, ptname, xptt, qptta, qptt, tepttmean, &
+        tepttamp, tepttmaxtime, cpttmean, cpttamp, cpttmaxtime, phpttmean, &
+        phpttamp, phpttmaxtime, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
-        INTEGER(I4B), INTENT(IN) :: nr, nptIn, ndiffIn, flag
-        TYPE(RiverTopo_type), INTENT(IN) :: Topo									!river topology
-        TYPE(RiverHydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
-        REAL(DP) xptt(:), Qptta(:), Qptt(:), TepttMean(:), TepttAmp(:), TepttMaxTime(:)
-        REAL(DP) cpttMean(:,:), cpttAmp(:,:), cpttMaxTime(:,:)
-        REAL(DP) phpttMean(:), phpttAmp(:), phpttMaxTime(:)
-        CHARACTER(LEN=30), INTENT(IN) :: PtName(:)
-        REAL(DP), INTENT(IN) :: xdup(:), xddn(:), Qdifa(:), Qdif(:), pHind(:), Tedif(:), cdif(:,:)
-        CHARACTER(LEN=30), INTENT(IN) :: DiffName(:)
-        INTEGER(I4B) status(5), i
+        integer(i4b), intent(in) :: nr, nptin, ndiffin, flag
+        type(rivertopo_type), intent(in) :: topo									!river topology
+        type(riverhydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
+        real(dp) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
+        real(dp) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
+        real(dp) phpttmean(:), phpttamp(:), phpttmaxtime(:)
+        character(len=30), intent(in) :: ptname(:)
+        real(dp), intent(in) :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
+        character(len=30), intent(in) :: diffname(:)
+        integer(i4b) status(5), i
 
-        ALLOCATE(Qpta(nr), STAT=status(1))
-        ALLOCATE(Qpt (nr), STAT=status(2))
-        ALLOCATE(load(nr), STAT=status(3))
-        ALLOCATE(HeatDiff(nr), STAT=status(4))
-        ALLOCATE(loadDiff(nr,nv), STAT=status(5))
+        allocate(qpta(nr), stat=status(1))
+        allocate(qpt (nr), stat=status(2))
+        allocate(load(nr), stat=status(3))
+        allocate(heatdiff(nr), stat=status(4))
+        allocate(loaddiff(nr,nv), stat=status(5))
 
-        DO i=1, 5
-            IF (status(i)==1) THEN
-                STOP 'ERROR:Class_SourceIn(sourceIN) Insufficient memory for dyanmic allocation'
-            END IF
-        END DO
-        Qpta = 0
-        Qpt  = 0
+        do i=1, 5
+            if (status(i)==1) then
+                stop 'ERROR:Class_SourceIn(sourceIN) Insufficient memory for dyanmic allocation'
+            end if
+        end do
+        qpta = 0
+        qpt  = 0
 
-        CALL PointIn_(nr, nptIn, topo, flag, PtName, xptt, Qptta, Qptt, TepttMean, TepttAmp, TepttMaxTime, &
-            cpttMean, cpttAmp, cpttMaxTime, phpttMean, phpttAmp, phpttMaxTime)
-        CALL NonPointIn_(nr, topo, flag, ndiffIn, DiffName, xdup, xddn, Qdifa, Qdif, Tedif, cdif, pHind)
+        call pointin_(nr, nptin, topo, flag, ptname, xptt, qptta, qptt, tepttmean, tepttamp, tepttmaxtime, &
+            cpttmean, cpttamp, cpttmaxtime, phpttmean, phpttamp, phpttmaxtime)
+        call nonpointin_(nr, topo, flag, ndiffin, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
         !generate average reach flows for hydraulics (m^3/s)
-        DO i = 1, nr
-            If (Qpt(i) < 0) Qpt(i) = 0
-            hydrau%reach(i)%Q = hydrau%reach(i-1)%Q + Qpt(i) - Qpta(i)
-            hydrau%reach(i)%Qpt=Qpt(i)
-            hydrau%reach(i)%Qpta = Qpta(i)
-        END DO
+        do i = 1, nr
+            if (qpt(i) < 0) qpt(i) = 0
+            hydrau%reach(i)%q = hydrau%reach(i-1)%q + qpt(i) - qpta(i)
+            hydrau%reach(i)%qpt=qpt(i)
+            hydrau%reach(i)%qpta = qpta(i)
+        end do
 
-    END SUBROUTINE sourceIn_
+    end subroutine sourcein_
 
 
-    SUBROUTINE PointIn_(nr, nptIn, topo, flag, PtName, xptt, Qptta, Qptt, TepttMean, TepttAmp, TepttMaxTime, &
-        cpttMean, cpttAmp, cpttMaxTime, phpttMean, phpttAmp, phpttMaxTime)
+    subroutine pointin_(nr, nptin, topo, flag, ptname, xptt, qptta, qptt, tepttmean, tepttamp, tepttmaxtime, &
+        cpttmean, cpttamp, cpttmaxtime, phpttmean, phpttamp, phpttmaxtime)
 
-        INTEGER(I4B), INTENT(IN) :: nr, nptIn, flag
-        TYPE(RiverTopo_type), INTENT(IN) :: Topo									!river topology
-        REAL(DP) xptt(:), Qptta(:), Qptt(:), TepttMean(:), TepttAmp(:), TepttMaxTime(:)
-        REAL(DP) cpttMean(:,:), cpttAmp(:,:), cpttMaxTime(:,:)
-        REAL(DP) phpttMean(:), phpttAmp(:), phpttMaxTime(:)
-        CHARACTER(LEN=30), INTENT(IN) :: PtName(:)
+        integer(i4b), intent(in) :: nr, nptin, flag
+        type(rivertopo_type), intent(in) :: topo									!river topology
+        real(dp) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
+        real(dp) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
+        real(dp) phpttmean(:), phpttamp(:), phpttmaxtime(:)
+        character(len=30), intent(in) :: ptname(:)
 
-        INTEGER(I4B) i, j, status
-        LOGICAL(2) cond1
-        npt=nptIn
+        integer(i4b) i, j, status
+        logical(2) cond1
+        npt=nptin
 
-        IF (npt>0) THEN
+        if (npt>0) then
 
-            ALLOCATE(point(npt), STAT=status)
-            IF (status==1) THEN
-                STOP 'Class_SourceIn:PointIn_, dynamic allocation failed!'
-            END IF
-            DO i=1, npt
-                point(i)%name = PtName(i)
+            allocate(point(npt), stat=status)
+            if (status==1) then
+                stop 'Class_SourceIn:PointIn_, dynamic allocation failed!'
+            end if
+            do i=1, npt
+                point(i)%name = ptname(i)
                 point(i)%x = xptt(i)
-                IF (Qptta(i)>0) THEN
-                    point(i)%Q = -Qptta(i)					!if load, then >0; source, then <0
-                ELSE
-                    point(i)%Q = Qptt(i)						!if load, then >0; source, then <0
-                END IF
-                point(i)%TeMean   = TepttMean(i)
-                point(i)%TeAmp = TepttAmp(i)
-                point(i)%TeMaxTime = TepttMaxTime(i)
+                if (qptta(i)>0) then
+                    point(i)%q = -qptta(i)					!if load, then >0; source, then <0
+                else
+                    point(i)%q = qptt(i)						!if load, then >0; source, then <0
+                end if
+                point(i)%temean   = tepttmean(i)
+                point(i)%teamp = tepttamp(i)
+                point(i)%temaxtime = tepttmaxtime(i)
 
-                DO j=1, nv-2
-                    point(i)%cMean(j) =cpttMean(i,j)
-                    point(i)%cAmp(j) =cpttAmp(i,j)
-                    point(i)%cMaxTime(j) = cpttMaxTime(i,j)
-                END DO
-                point(i)%phMean = phpttMean(i)
-                point(i)%phAmp = phpttAmp(i)
-                point(i)%phMaxTime = phpttMaxTime(i)
+                do j=1, nv-2
+                    point(i)%cmean(j) =cpttmean(i,j)
+                    point(i)%camp(j) =cpttamp(i,j)
+                    point(i)%cmaxtime(j) = cpttmaxtime(i,j)
+                end do
+                point(i)%phmean = phpttmean(i)
+                point(i)%phamp = phpttamp(i)
+                point(i)%phmaxtime = phpttmaxtime(i)
                 !distribute point flows to elements for hydraulics
-                DO j=1, nr
-                    IF (flag == 1) THEN
-                        cond1 = (xptt(i) >= topo%reach(j-1)%xrdn) .AND. &
+                do j=1, nr
+                    if (flag == 1) then
+                        cond1 = (xptt(i) >= topo%reach(j-1)%xrdn) .and. &
                             (xptt(i) < topo%reach(j)%xrdn)
-                    ELSE
-                        cond1 = (xptt(i) <= topo%reach(j-1)%xrdn) .AND. &
+                    else
+                        cond1 = (xptt(i) <= topo%reach(j-1)%xrdn) .and. &
                             (xptt(i) > topo%reach(j)%xrdn)
-                    END IF
-                    IF (cond1) THEN
-                        IF (point(i)%Q < 0) THEN
-                            Qpta(j) = Qpta(j) -  point(i)%Q
-                        ELSE
-                            Qpt(j) = Qpt(j) + point(i)%Q
-                        END IF
-                        point(i)%beginRch =j
-                        Exit
-                    END IF
-                END DO
-            END DO
-        END IF
+                    end if
+                    if (cond1) then
+                        if (point(i)%q < 0) then
+                            qpta(j) = qpta(j) -  point(i)%q
+                        else
+                            qpt(j) = qpt(j) + point(i)%q
+                        end if
+                        point(i)%beginrch =j
+                        exit
+                    end if
+                end do
+            end do
+        end if
 
-    END SUBROUTINE PointIn_
+    end subroutine pointin_
 
 
-    !Diffusion -- nonpointer source
+    !diffusion -- nonpointer source
 
-    SUBROUTINE NonPointIn_(nr, topo, flag, ndiffIn, DiffName, xdup, xddn, Qdifa, Qdif, Tedif, cdif, pHind)
-        USE Class_Phsolve, ONLY: cT
+    subroutine nonpointin_(nr, topo, flag, ndiffin, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
-        TYPE(RiverTopo_type) Topo									!river topology
-        INTEGER(I4B), INTENT(IN) ::	ndiffIn, nr, flag
-        REAL(DP), INTENT(IN) :: xdup(:), xddn(:), Qdifa(:), Qdif(:), pHind(:), Tedif(:), cdif(:,:)
-        CHARACTER(LEN=30), INTENT(IN) :: DiffName(:)
-        INTEGER(I4B) i, j, k, status
-        LOGICAL(2) cond1, cond2, cond3, cond4, cond5
-        REAL(DP) Qd, Lend
-        ndiff=ndiffIn							!number of diffusion source and abstraction
+        type(rivertopo_type) topo									!river topology
+        integer(i4b), intent(in) ::	ndiffin, nr, flag
+        real(dp), intent(in) :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
+        character(len=30), intent(in) :: diffname(:)
+        integer(i4b) i, j, k, status
+        logical(2) cond1, cond2, cond3, cond4, cond5
+        real(dp) qd, lend
+        ndiff=ndiffin							!number of diffusion source and abstraction
 
-        HeatDiff=0
-        LoadDiff=0
+        heatdiff=0
+        loaddiff=0
 
-        IF (ndiff>0) THEN
+        if (ndiff>0) then
 
-            ALLOCATE(diffu(ndiff), STAT=status)
-            IF (status==1) THEN
-                STOP 'Class_SourceIn:PointIn_, dynamic allocation failed!'
-            END IF
+            allocate(diffu(ndiff), stat=status)
+            if (status==1) then
+                stop 'Class_SourceIn:PointIn_, dynamic allocation failed!'
+            end if
 
-            DO i=1, ndiff
-                diffu(i)%name = DiffName(i)
+            do i=1, ndiff
+                diffu(i)%name = diffname(i)
                 diffu(i)%xdup = xdup(i)
                 diffu(i)%xddn = xddn(i)
-                IF (Qdifa(i)>0) THEN
-                    diffu(i)%Q	= -Qdifa(i)					!if load, then >0; source, then <0
-                ELSE
-                    diffu(i)%Q	= Qdif(i)
-                END IF
-                diffu(i)%Te   = Tedif(i)
-                DO j=1, nv-2
+                if (qdifa(i)>0) then
+                    diffu(i)%q	= -qdifa(i)					!if load, then >0; source, then <0
+                else
+                    diffu(i)%q	= qdif(i)
+                end if
+                diffu(i)%te   = tedif(i)
+                do j=1, nv-2
                     diffu(i)%c(j) =cdif(i,j)
-                END DO
+                end do
 
-                IF (diffu(i)%c(nv - 2) == 0) diffu(i)%c(nv - 2) = 100.0
-                IF (pHind(i)==0) THEN
-                    diffu(i)%pH = 7.0_DP
-                ELSE
-                    diffu(i)%pH = pHind(i)
-                END IF
-                !Total inorganic carbon
-                diffu(i)%c(nv - 1) = cT(diffu(i)%pH, diffu(i)%c(nv - 2), Tedif(i), diffu(i)%c(1))
+                if (diffu(i)%c(nv - 2) == 0) diffu(i)%c(nv - 2) = 100.0
+                if (phind(i)==0) then
+                    diffu(i)%ph = 7.0_dp
+                else
+                    diffu(i)%ph = phind(i)
+                end if
+                !total inorganic carbon
+                diffu(i)%c(nv - 1) = ct(diffu(i)%ph, diffu(i)%c(nv - 2), tedif(i), diffu(i)%c(1))
                 !distribute nonpoint flows to elements for hydraulics
 
-                Qd = diffu(i)%Q / (xddn(i) - xdup(i)) * flag
+                qd = diffu(i)%q / (xddn(i) - xdup(i)) * flag
 
-                DO j=1, nr
-                    If (flag == 1) THEN
-                        cond1 = topo%reach(j)%xrdn < xdup(i) .OR. topo%reach(j-1)%xrdn > xddn(i)
-                        cond2 = topo%reach(j-1)%xrdn <= xdup(i) .AND. xddn(i) <= topo%reach(j)%xrdn
-                        cond3 = xdup(i) <= topo%reach(j-1)%xrdn .AND. xddn(i) >= topo%reach(j)%xrdn
-                        cond4 = topo%reach(j-1)%xrdn >= xdup(i) .AND. topo%reach(j)%xrdn >= xddn(i)
-                        cond5 = topo%reach(j)%xrdn >= xdup(i) .AND. topo%reach(j)%xrdn <= xddn(i)
-                    Else
-                        cond1 = topo%reach(j)%xrdn > xdup(i) .OR. topo%reach(j-1)%xrdn < xddn(i)
-                        cond2 = topo%reach(j-1)%xrdn >= xdup(i) .AND. xddn(i) >= topo%reach(j)%xrdn
-                        cond3 = xdup(i) >= topo%reach(j-1)%xrdn .AND. xddn(i) <= topo%reach(j)%xrdn
-                        cond4 = topo%reach(j-1)%xrdn <= xdup(i) .AND. topo%reach(j)%xrdn <= xddn(i)
-                        cond5 = topo%reach(j)%xrdn <= xdup(i) .AND. topo%reach(j)%xrdn >= xddn(i)
-                    End If
-                    IF (cond1) THEN
-                        Lend = 0
-                    ElseIf (cond2) THEN
-                        Lend = flag * (xddn(i) - xdup(i))
-                    ElseIf (cond3) THEN
-                        Lend = flag * (topo%reach(j)%xrdn - topo%reach(j-1)%xrdn)
-                    ElseIf (cond4) THEN
-                        Lend = flag * (xddn(i) - topo%reach(j-1)%xrdn)
-                    ElseIf (cond5) THEN
-                        Lend = flag * (topo%reach(j)%xrdn - xdup(i))
-                    End If
-                    If (Qd <= 0) THEN
-                        Qpta(j) = Qpta(j) - Lend * Qd
-                    Else
-                        Qpt(j) = Qpt(j) + Lend * Qd
-                    End If
+                do j=1, nr
+                    if (flag == 1) then
+                        cond1 = topo%reach(j)%xrdn < xdup(i) .or. topo%reach(j-1)%xrdn > xddn(i)
+                        cond2 = topo%reach(j-1)%xrdn <= xdup(i) .and. xddn(i) <= topo%reach(j)%xrdn
+                        cond3 = xdup(i) <= topo%reach(j-1)%xrdn .and. xddn(i) >= topo%reach(j)%xrdn
+                        cond4 = topo%reach(j-1)%xrdn >= xdup(i) .and. topo%reach(j)%xrdn >= xddn(i)
+                        cond5 = topo%reach(j)%xrdn >= xdup(i) .and. topo%reach(j)%xrdn <= xddn(i)
+                    else
+                        cond1 = topo%reach(j)%xrdn > xdup(i) .or. topo%reach(j-1)%xrdn < xddn(i)
+                        cond2 = topo%reach(j-1)%xrdn >= xdup(i) .and. xddn(i) >= topo%reach(j)%xrdn
+                        cond3 = xdup(i) >= topo%reach(j-1)%xrdn .and. xddn(i) <= topo%reach(j)%xrdn
+                        cond4 = topo%reach(j-1)%xrdn <= xdup(i) .and. topo%reach(j)%xrdn <= xddn(i)
+                        cond5 = topo%reach(j)%xrdn <= xdup(i) .and. topo%reach(j)%xrdn >= xddn(i)
+                    end if
+                    if (cond1) then
+                        lend = 0
+                    elseif (cond2) then
+                        lend = flag * (xddn(i) - xdup(i))
+                    elseif (cond3) then
+                        lend = flag * (topo%reach(j)%xrdn - topo%reach(j-1)%xrdn)
+                    elseif (cond4) then
+                        lend = flag * (xddn(i) - topo%reach(j-1)%xrdn)
+                    elseif (cond5) then
+                        lend = flag * (topo%reach(j)%xrdn - xdup(i))
+                    end if
+                    if (qd <= 0) then
+                        qpta(j) = qpta(j) - lend * qd
+                    else
+                        qpt(j) = qpt(j) + lend * qd
+                    end if
 
-                    IF (Lend>0 .AND. Qd>0) THEN
-!					Qpt(i) = Qpt(i) + Lend * Qd
-                        HeatDiff(j) = HeatDiff(j) + Lend * Qd * diffu(i)%Te
-                        DO k = 1, nv - 1
-                            LoadDiff(j, k) = LoadDiff(j, k) + Lend * Qd * diffu(i)%c(k)
-                        END DO
-                    END IF
+                    if (lend>0 .and. qd>0) then
+!					qpt(i) = qpt(i) + lend * qd
+                        heatdiff(j) = heatdiff(j) + lend * qd * diffu(i)%te
+                        do k = 1, nv - 1
+                            loaddiff(j, k) = loaddiff(j, k) + lend * qd * diffu(i)%c(k)
+                        end do
+                    end if
 
-                END DO
-            END DO
-        END IF
+                end do
+            end do
+        end if
         !distribute point flows to elements for hydraulics
-!  DO i = 1, nr
-!    Qpt(i) = 0
-!    Qpta(i) = 0
-!  END DO
+!  do i = 1, nr
+!    qpt(i) = 0
+!    qpta(i) = 0
+!  end do
 
-    END SUBROUTINE NonPointIn_
+    end subroutine nonpointin_
 
 
-!Calculate instanteneous sources for time t
-    SUBROUTINE SourcesCalc(t, nr, flag)
-        USE Class_Phsolve, ONLY: cT
+!calculate instanteneous sources for time t
+    subroutine sourcescalc(t, nr, flag)
         !gp new sub to evaluate point source sine functions and distribute loads to reaches at time t
 
-        REAL(DP), INTENT(IN) :: t
-        INTEGER(I4B), INTENT(IN) :: nr, flag
-!	TYPE(RiverTopo_type) Topo									!river topology
-        INTEGER(I4B) i, j, k, kk
-        REAL(DP) Teptt(nr)
-        REAL(DP) :: Heat(nr)
-        REAL(DP) :: Loadi(nr, nv)
-        LOGICAL(2) cond1, cond2, cond3, cond4, cond5
-        TYPE(t_water_quality) :: ptt
-        REAL(DP) Qd, Lend
+        real(dp), intent(in) :: t
+        integer(i4b), intent(in) :: nr, flag
+!	type(rivertopo_type) topo									!river topology
+        integer(i4b) i, j, k, kk
+        real(dp) teptt(nr)
+        real(dp) :: heat(nr)
+        real(dp) :: loadi(nr, nv)
+        logical(2) cond1, cond2, cond3, cond4, cond5
+        type(t_water_quality) :: ptt
+        real(dp) qd, lend
 
-        Heat = 0;	Loadi =0
+        heat = 0;	loadi =0
 
-        IF (npt > 0) THEN
+        if (npt > 0) then
             !gp evaluate the point source diel sine functions for the current time step
-            DO i = 1, npt
+            do i = 1, npt
 
-                IF (point(i)%Q<=0) CONTINUE ! no need to process for Abastraction
+                if (point(i)%q<=0) continue ! no need to process for abastraction
 
-                ptt%Te = sinday(t, point(i)%TeMean, point(i)%TeAmp, point(i)%TeMaxTime)
-                IF (ptt%Te < 0) ptt%Te = 0
-                DO j = 1, nv - 2
-                    ptt%c(j) = sinday(t, point(i)%cMean(j), point(i)%cAmp(j), point(i)%cMaxTime(j))
-                    IF (ptt%c(j) < 0) ptt%c(j) = 0
-                END DO
-                IF (ptt%c(nv - 2) == 0) ptt%c(nv - 2) = 100
-                ptt%pH = sinday(t, point(i)%pHMean, point(i)%pHAmp, point(i)%pHMaxTime)
-                IF (ptt%pH < 0.01) THEN
-                    ptt%pH = 0.01_DP
-                ELSEIF (ptt%pH > 13.99) THEN
-                    ptt%pH = 13.99_DP
-                END IF
+                ptt%te = sinday(t, point(i)%temean, point(i)%teamp, point(i)%temaxtime)
+                if (ptt%te < 0) ptt%te = 0
+                do j = 1, nv - 2
+                    ptt%c(j) = sinday(t, point(i)%cmean(j), point(i)%camp(j), point(i)%cmaxtime(j))
+                    if (ptt%c(j) < 0) ptt%c(j) = 0
+                end do
+                if (ptt%c(nv - 2) == 0) ptt%c(nv - 2) = 100
+                ptt%ph = sinday(t, point(i)%phmean, point(i)%phamp, point(i)%phmaxtime)
+                if (ptt%ph < 0.01) then
+                    ptt%ph = 0.01_dp
+                elseif (ptt%ph > 13.99) then
+                    ptt%ph = 13.99_dp
+                end if
 
-                IF (point(i)%phMean == 0) ptt%pH = 7.0_DP
-                ptt%c(nv - 1) = cT(ptt%pH, ptt%c(nv - 2), ptt%Te, ptt%c(1))
+                if (point(i)%phmean == 0) ptt%ph = 7.0_dp
+                ptt%c(nv - 1) = ct(ptt%ph, ptt%c(nv - 2), ptt%te, ptt%c(1))
 
-                j=point(i)%beginRch
-                IF (point(i)%Q <= 0) THEN	!abstraction
-!						Qpta(j) = Qpta(j) - point(i)%Q
-                ELSE												!load
-!				Qpt(j) = Qpt(j) + point(i)%Q
-                    Heat(j) = Heat(j) + point(i)%Q * rhow * cpw * ptt%Te
-                    DO k = 1, nv - 1
-                        Loadi(j, k) = Loadi(j, k) + point(i)%Q * ptt%c(k)
-                    END DO
-                END IF
-            END DO
+                j=point(i)%beginrch
+                if (point(i)%q <= 0) then	!abstraction
+!						qpta(j) = qpta(j) - point(i)%q
+                else												!load
+!				qpt(j) = qpt(j) + point(i)%q
+                    heat(j) = heat(j) + point(i)%q * rhow * cpw * ptt%te
+                    do k = 1, nv - 1
+                        loadi(j, k) = loadi(j, k) + point(i)%q * ptt%c(k)
+                    end do
+                end if
+            end do
 
-        ELSE		!no point sources
-        END IF
+        else		!no point sources
+        end if
 
         !generate average reach input temperatures and concentrations
-        loadi=loadi+loadDiff
-        Heat=Heat+HeatDiff
-        DO i = 1, nr
-            IF (Qpt(i) > 0) THEN
-                load(i)%Te = Heat(i) / Qpt(i)
-                DO j = 1, nv - 1
-                    load(i)%c(j) = Loadi(i, j) / Qpt(i)
-                END DO
-            ELSE
-                Qpt(i) = 0
-                load(i)%Te = 0
-                DO j = 1, nv - 1
+        loadi=loadi+loaddiff
+        heat=heat+heatdiff
+        do i = 1, nr
+            if (qpt(i) > 0) then
+                load(i)%te = heat(i) / qpt(i)
+                do j = 1, nv - 1
+                    load(i)%c(j) = loadi(i, j) / qpt(i)
+                end do
+            else
+                qpt(i) = 0
+                load(i)%te = 0
+                do j = 1, nv - 1
                     load(i)%c(j) = 0
-                END DO
-            END IF
-!		Q(i) = Q(i - 1) + Qpt(i) - Qpta(i)
-        END DO
+                end do
+            end if
+!		q(i) = q(i - 1) + qpt(i) - qpta(i)
+        end do
 
-    END SUBROUTINE
+    end subroutine
 
 
-    PURE FUNCTION sinday(t, xMean, xAmp, xMaxTime)
+    pure function sinday(t, xmean, xamp, xmaxtime)
         !gp new function sinday to calculate a constituent
         !   at a particular time of day given daily mean, amplitude=(max-min)/2, and time of max (days)
-        REAL(DP) sinday
-        REAL(DP), INTENT(IN) :: t, xMean, xAmp, xMaxTime
-        sinday = xMean + xAmp * COS(2.0_DP * PII * (t - xMaxTime))
+        real(dp) sinday
+        real(dp), intent(in) :: t, xmean, xamp, xmaxtime
+        sinday = xmean + xamp * cos(2.0_dp * pii * (t - xmaxtime))
 
-    END FUNCTION
+    end function
 
 
-    PURE FUNCTION sinday2(t, xMin, xMax, xMaxTime)
+    pure function sinday2(t, xmin, xmax, xmaxtime)
         !gp new function sinday2 to calculate a constituent
         !   at a particular time of day given daily min, max, and time of max
-        REAL(DP) sinday2
-        REAL(DP), INTENT(IN) :: t, xMin, xMax, xMaxTime
-        REAL(DP) xMean, xAmp, xTheta, xOmega
+        real(dp) sinday2
+        real(dp), intent(in) :: t, xmin, xmax, xmaxtime
+        real(dp) xmean, xamp, xtheta, xomega
 
-        xMean = (xMax + xMin) / 2.0_DP
-        xAmp = (xMax - xMin) / 2.0_DP
-        xTheta = (xMaxTime - 0.25_DP) * 2.0_DP * PII
-        xOmega = 2.0_DP * PII
-        sinday2 = xMean + xAmp * SIN(xOmega * t - xTheta)
+        xmean = (xmax + xmin) / 2.0_dp
+        xamp = (xmax - xmin) / 2.0_dp
+        xtheta = (xmaxtime - 0.25_dp) * 2.0_dp * pii
+        xomega = 2.0_dp * pii
+        sinday2 = xmean + xamp * sin(xomega * t - xtheta)
 
-    END FUNCTION
+    end function
 
-END MODULE Class_SourceIn
+end module class_sourcein
