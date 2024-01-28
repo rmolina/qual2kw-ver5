@@ -26,7 +26,7 @@ CONTAINS
         TYPE(Integral_type) intg				!integral data structure
         TYPE(SystemParams) sys
         TYPE(rates_t), INTENT(IN) :: Rates
-        TYPE(t_meteorology) Meteo
+        TYPE(meteorology_t) Meteo
         TYPE(solar_type) Solar					!solar radiation
         TYPE(Headwater_type) HW					!headwater
         TYPE(Downstream_type) DB				!downstream boundary
@@ -925,7 +925,7 @@ CONTAINS
 
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr
-        TYPE(t_meteorology) :: Meteo
+        TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         TYPE(Headwater_type) HW							!headwater
         TYPE(Downstream_type) DB						!downstream boundary
@@ -3012,7 +3012,7 @@ CONTAINS
         !gp 08-Jan-10
         CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
 
-        TYPE(t_meteorology) :: Meteo
+        TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
 !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type) HW							!headwater
@@ -3112,7 +3112,7 @@ CONTAINS
         !gp 08-Jan-10
         CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
 
-        TYPE(t_meteorology) :: Meteo
+        TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar						!solar radiation
         TYPE(Headwater_type), INTENT(IN) :: HW				!headwater
         TYPE(Downstream_type), INTENT(IN) :: DB				!downstream boundary
@@ -3239,7 +3239,7 @@ CONTAINS
         !gp 08-Jan-10
         CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
 
-        TYPE(t_meteorology) :: Meteo
+        TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type), INTENT(IN) :: HW					!headwater
@@ -3485,7 +3485,7 @@ CONTAINS
 
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr
-        TYPE(t_meteorology) :: Meteo
+        TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         !TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type), INTENT(IN) :: HW					!headwater

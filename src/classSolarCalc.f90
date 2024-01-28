@@ -140,7 +140,7 @@ CONTAINS
 
         INTEGER(I4B), INTENT(IN) :: nr
         TYPE(solar_type), INTENT(INOUT) :: Solar
-        TYPE(t_meteorology) siteMeteo								!meteology information
+        TYPE(meteorology_t) siteMeteo								!meteology information
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
         TYPE(SystemParams), INTENT(IN) :: system
 

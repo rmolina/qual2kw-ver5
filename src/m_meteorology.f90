@@ -2,9 +2,9 @@ module m_meteorology
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     implicit none
     private
-    public t_meteorology, instanteousmeteo
+    public meteorology_t, instanteousmeteo
 
-    type t_meteorology
+    type meteorology_t
         real(r64), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh, solarhh
 
         !instantenous meteorology data
@@ -13,17 +13,17 @@ module m_meteorology
 
         integer(i32) :: numdatpnt= 24 !use to identify the size of time series
         !hardwire to (0-23 hour) for now
-    end type t_meteorology
+    end type meteorology_t
 
-    interface t_meteorology
-        procedure :: t_meteorology_ctor
-    end interface t_meteorology
+    interface meteorology_t
+        procedure :: meteorology_ctor
+    end interface meteorology_t
 
 contains
 
-    function t_meteorology_ctor(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin) result(met)
+    function meteorology_ctor(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin) result(met)
 
-        type(t_meteorology) met
+        type(meteorology_t) met
         integer(i32), intent(in) :: nr
 
         real(r64), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin
@@ -63,14 +63,14 @@ contains
             stop 'Class_Meteo:AllocateMeteoDataArray failed'
         end if
 
-    end function t_meteorology_ctor
+    end function meteorology_ctor
 
 
 !interpolate hourly meteology data
     subroutine instanteousmeteo(nr, t, met)
 
         integer(i32), intent(in) :: nr
-        type(t_meteorology), intent(inout) :: met
+        type(meteorology_t), intent(inout) :: met
         real(r64), intent(in) :: t
 
         call interpolatehelper(nr, t, met%ta, met%tahh, met%numdatpnt)

@@ -3,7 +3,7 @@ module m_tempadjust
     use m_rates, only: rates_t
     use m_oxygen, only: oxygen_saturation
     use class_hydraulics, only: RiverHydraulics_type
-    use m_meteorology, only: t_meteorology
+    use m_meteorology, only: meteorology_t
     implicit none
     private
     public :: temp_adjust
@@ -21,7 +21,7 @@ contains
         integer(i32), intent(in) :: nr
         type(rates_t) rates
         type(riverhydraulics_type) hydrau
-        type(t_meteorology) sitemeteo
+        type(meteorology_t) sitemeteo
 
         real(r64), dimension(0:,:), intent(in) :: te
 

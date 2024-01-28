@@ -6,7 +6,7 @@ contains
         USE Class_SystemParams    !, ONLY: SystemParams, SystemParams_
         USE m_rivertopo, only: t_rivertopo
         USE Class_Hydraulics
-        USE m_meteorology, only: t_meteorology
+        USE m_meteorology, only: meteorology_t
 
         USE Class_LightHeat
         USE Class_SourceIn
@@ -20,7 +20,7 @@ contains
 
         TYPE(SystemParams), INTENT(OUT) :: system
         TYPE(RiverHydraulics_type), INTENT(OUT) :: hydrau
-        TYPE(t_meteorology), INTENT(OUT) :: siteMeteo
+        TYPE(meteorology_t), INTENT(OUT) :: siteMeteo
         TYPE(Headwater_type) HW
         TYPE(Downstream_type) DB
         TYPE(rates_t) stochRate				!stoch, reaction, temperature rate
@@ -1081,7 +1081,7 @@ contains
 
         !gp 16-Jul-08
         !siteMeteo = MeteoData_(nRch, shadeHH, TaHH, TdHH, UwHH, ccHH)
-        siteMeteo = t_meteorology(nRch, shadeHH, TaHH, TdHH, UwHH, ccHH, solarHH)
+        siteMeteo = meteorology_t(nRch, shadeHH, TaHH, TdHH, UwHH, ccHH, solarHH)
 
         !gp 16-Jul-08
         DEALLOCATE(solarHH, STAT=status(6))
