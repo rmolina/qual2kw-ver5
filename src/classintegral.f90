@@ -1634,7 +1634,7 @@ CONTAINS
                     prefamF = Fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnxF + Fi * c(i, 7, 1)) &
                         / (hydrau%reach(i)%khnxF + c(i, 8, 1)) &
                         + Fi * c(i, 7, 1) * hydrau%reach(i)%khnxF / (Fi * c(i, 7, 1) + c(i, 8, 1)) &
-						/ (hydrau%reach(i)%khnxF + c(i, 8, 1))
+                        / (hydrau%reach(i)%khnxF + c(i, 8, 1))
                 END IF
 
                 !
@@ -1836,7 +1836,7 @@ CONTAINS
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + Rates%rccd * BotAlgResp
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + Rates%rcco * CSOD * hydrau%reach(i)%Asd
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + kacT(i) * hydrau%reach(i)%vol * (Khs(i, 1) &
-					* Rates%pco2 - alp0 * c(i, nv - 1, 1))  !gp end new block
+                    * Rates%pco2 - alp0 * c(i, nv - 1, 1))  !gp end new block
 
                 !
                 ! --- (nv-2) Alkalinity (gCaCO3/day) ---
@@ -1867,11 +1867,11 @@ CONTAINS
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * Rates%ana * PhytoResp * 50043.45_dp   !'phyto resp of N
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * Rates%apa * PhytoResp * 50043.45_dp   !'phyto resp of P
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * Fi * BotAlgUptakeN * prefamF &
-						* hydrau%reach(i)%NUpWCfrac * 50043.45_dp !'periphyton N uptake (ammonia)
+                        * hydrau%reach(i)%NUpWCfrac * 50043.45_dp !'periphyton N uptake (ammonia)
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * BotAlgUptakeN * (1 - prefamF) &
-						* hydrau%reach(i)%NUpWCfrac * 50043.45_dp  !'periphyton N uptake (nitrate)
+                        * hydrau%reach(i)%NUpWCfrac * 50043.45_dp  !'periphyton N uptake (nitrate)
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * BotAlgUptakeP &
-						* hydrau%reach(i)%PUpWCfrac * 50043.45_dp   !'periphyton P uptake
+                        * hydrau%reach(i)%PUpWCfrac * 50043.45_dp   !'periphyton P uptake
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * BotAlgExc * NINb * 50043.45_dp !'periphyton excretion of N
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * BotAlgExc * NIPb * 50043.45_dp   !'periphyton excretion of P
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * 2.0_dp * NH4Nitrif * 50043.45_dp  !'nitrification ammonia loss and nitrate gain
@@ -2019,7 +2019,7 @@ CONTAINS
                     HypoFluxNO3(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 8, 2) - c(i, 8, 1)) / hydrau%reach(i)%Ast                     !NO3 mgN/m^2/d
                     HypoFluxSRP(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 10, 2) - c(i, 10, 1)) / hydrau%reach(i)%Ast                   !SRP mgP/m^2/d
                     HypoFluxIC(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, nv - 1, 2) - c(i, nv - 1, 1)) &
-						/ hydrau%reach(i)%Ast / Rates%rccc     !cT gC/m^2/d
+                        / hydrau%reach(i)%Ast / Rates%rccc     !cT gC/m^2/d
                 END DO
 
                 !
@@ -2355,7 +2355,8 @@ CONTAINS
                     HypoFluxNH4(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 7, 2) - c(i, 7, 1)) / hydrau%reach(i)%Ast                     !NH4 mgN/m^2/d
                     HypoFluxNO3(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 8, 2) - c(i, 8, 1)) / hydrau%reach(i)%Ast                     !NO3 mgN/m^2/d
                     HypoFluxSRP(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 10, 2) - c(i, 10, 1)) / hydrau%reach(i)%Ast                   !SRP mgP/m^2/d
-                    HypoFluxIC(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, nv - 1, 2) - c(i, nv - 1, 1)) / hydrau%reach(i)%Ast / Rates%rccc     !cT gC/m^2/d
+                    HypoFluxIC(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, nv - 1, 2) - c(i, nv - 1, 1)) &
+                        / hydrau%reach(i)%Ast / Rates%rccc     !cT gC/m^2/d
                 END DO
 
                 !
@@ -2509,8 +2510,10 @@ CONTAINS
                     !End If
                     prefamH = 0
                     If (Fi * c(i, 7, 2) + c(i, 8, 2) > 0) Then
-                        prefamH = Fi * c(i, 7, 2) * c(i, 8, 2) / (hydrau%reach(i)%khnxH + Fi * c(i, 7, 2)) / (hydrau%reach(i)%khnxH + c(i, 8, 2)) &
-                            + Fi * c(i, 7, 2) * hydrau%reach(i)%khnxH / (Fi * c(i, 7, 2) + c(i, 8, 2)) / (hydrau%reach(i)%khnxH + c(i, 8, 2))
+                        prefamH = Fi * c(i, 7, 2) * c(i, 8, 2) / (hydrau%reach(i)%khnxH + Fi * c(i, 7, 2)) &
+                            / (hydrau%reach(i)%khnxH + c(i, 8, 2)) &
+                            + Fi * c(i, 7, 2) * hydrau%reach(i)%khnxH / (Fi * c(i, 7, 2) + c(i, 8, 2)) &
+                            / (hydrau%reach(i)%khnxH + c(i, 8, 2))
                     End If
 
                     !'detritus (12)
@@ -2603,11 +2606,16 @@ CONTAINS
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Denitr * 50043.45_dp   !'denitrification
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * OrgNHydr * 50043.45_dp !'organic N hydrolysis
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * OrgPHydr * 50043.45_dp   !'organic P hydrolysis
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbn * Rates%anc / Rates%adc * prefamH * HeteroGrow * 50043.45_dp  !'hetero uptake of ammonia
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Rates%anc / Rates%adc * (1 - prefamH) * HeteroGrow * 50043.45_dp  !'hetero uptake of nitrate
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbp * Pcharge * Rates%apc / Rates%adc * HeteroGrow * 50043.45_dp  !'hetero uptake of SRP
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * Rates%anc / Rates%adc * HeteroResp * 50043.45_dp  !'hetero resp of ammonia
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * Rates%apc / Rates%adc * HeteroResp * 50043.45_dp  !'hetero resp of SRP
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbn * Rates%anc / Rates%adc * prefamH &
+							* HeteroGrow * 50043.45_dp  !'hetero uptake of ammonia
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Rates%anc / Rates%adc * (1 - prefamH) &
+							* HeteroGrow * 50043.45_dp  !'hetero uptake of nitrate
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbp * Pcharge * Rates%apc / Rates%adc &
+							* HeteroGrow * 50043.45_dp  !'hetero uptake of SRP
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * Rates%anc / Rates%adc &
+							* HeteroResp * 50043.45_dp  !'hetero resp of ammonia
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * Rates%apc / Rates%adc &
+							* HeteroResp * 50043.45_dp  !'hetero resp of SRP
 
                     end if		!gp 26-Oct-07
 
@@ -2739,9 +2747,17 @@ CONTAINS
         fpoc(1) = 0.65_DP; fpoc(2) = 0.2_DP;  fpoc(3) = 1.0_dp - fpoc(1) - fpoc(2)
         fpop(1) = 0.65_DP; fpop(2) = 0.2_DP;  fpop(3) = 1.0_dp - fpop(1) - fpop(2)
 
-        kdiaPON(1) = 0.035_DP; ThtaPON(1) = 1.1_DP; kdiaPON(2) = 0.0018_DP; ThtaPON(2) = 1.15_DP; kdiaPON(3) = 0; ThtaPON(3) = 1.17_DP
-        kdiaPOC(1) = 0.035_DP; ThtaPOC(1) = 1.1_DP; kdiaPOC(2) = 0.0018_DP; ThtaPOC(2) = 1.15_DP; kdiaPOC(3) = 0; ThtaPOC(3) = 1.17_DP
-        kdiaPOP(1) = 0.035_DP; ThtaPOP(1) = 1.1_DP; kdiaPOP(2) = 0.0018_DP; ThtaPOP(2) = 1.15_DP; kdiaPOP(3) = 0; ThtaPOP(3) = 1.17_DP
+        kdiaPON(1) = 0.035_DP; ThtaPON(1) = 1.1_DP
+		kdiaPON(2) = 0.0018_DP; ThtaPON(2) = 1.15_DP
+		kdiaPON(3) = 0; ThtaPON(3) = 1.17_DP
+
+		kdiaPOC(1) = 0.035_DP; ThtaPOC(1) = 1.1_DP
+		kdiaPOC(2) = 0.0018_DP; ThtaPOC(2) = 1.15_DP
+		kdiaPOC(3) = 0; ThtaPOC(3) = 1.17_DP
+
+		kdiaPOP(1) = 0.035_DP; ThtaPOP(1) = 1.1_DP
+		kdiaPOP(2) = 0.0018_DP; ThtaPOP(2) = 1.15_DP
+		kdiaPOP(3) = 0; ThtaPOP(3) = 1.17_DP
 
         !compute input fluxes
         DO i = 1, 3
