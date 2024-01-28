@@ -914,58 +914,27 @@ contains
         type(rates_t), intent(in) :: rates
         real(r64), intent(in) :: o2
 
-        ! select case (rates%ikoxc)
-        !   case (1)
-        !     fcarb = o2 / (rates%ksocf + o2)
-        !   case (2)
-        !     fcarb = 1.0_r64 - exp(-rates%ksocf * o2)
-        !   case (3)
-        !     fcarb = o2 ** 2 / (rates%ksocf + o2 ** 2)
-        ! end select
         fcarb = setoxygeninhibenhance_(rates%ikoxc, rates%ksocf, o2)
-
-        ! select case (rates%ikoxn)
-        !   case (1)
-        !     fnitr = o2 / (rates%ksona + o2)
-        !   case (2)
-        !     ksona = 1.0_r64 - exp(-rates%ksona * o2)
-        !   case (3)
-        !     fnitr = o2 ** 2 / (rates%ksona + o2 ** 2)
-        ! end select
         fnitr = setoxygeninhibenhance_(rates%ikoxn, rates%ksona, o2)
-
-        ! select case (rates%ikoxdn)
-        !   case (1)
-        !     fdenitr = 1.0_r64 - o2 / (rates%ksodn + o2)
-        !   case (2)
-        !     fdenitr = exp(-rates%ksodn * o2)
-        !   case (3)
-        !     fdenitr = 1.0_r64 - o2 ** 2 / (rates%ksodn + o2 ** 2)
-        ! end select
         fdenitr = 1 - setoxygeninhibenhance_(rates%ikoxdn, rates%ksodn, o2)
-
-        ! select case (rates%ikoxp)
-        !   case (1)
-        !     frespp = o2 / (rates%ksop + o2)
-        !   case (2)
-        !     frespp = 1.0_r64 - exp(-rates%ksop * o2)
-        !   case (3)
-        !     frespp = o2 ** 2 / (rates%ksop + o2 ** 2)
-        ! end select
         frespp = setoxygeninhibenhance_(rates%ikoxp, rates%ksop, o2)
-
-        ! select case (rates%ikoxb)
-        !   case (1)
-        !     frespb = o2 / (rates%ksob + o2)
-        !   case (2)
-        !     frespb = 1.0_r64 - exp(-rates%ksob * o2)
-        !   case (3)
-        !     frespb = o2 ** 2 / (rates%ksob + o2 ** 2)
-        ! end select
         frespb = setoxygeninhibenhance_(rates%ikoxb, rates%ksob, o2)
 
-
     end subroutine setoxygeninhibenhance
+
+    real(r64) function setoxygeninhibenhance_(model, rate, oxygen)
+        integer(i32), intent(in) ::  model
+        real(r64), intent(in) :: rate, oxygen
+        !real(r64), intent(out) :: res_frespb
+        select case (model)
+          case (1)
+            setoxygeninhibenhance_ = oxygen / (rate + oxygen)
+          case (2)
+            setoxygeninhibenhance_ = 1.0_r64 - exp(-rate * oxygen)
+          case (3)
+            setoxygeninhibenhance_ = oxygen ** 2 / (rate + oxygen ** 2)
+        end select
+    end function setoxygeninhibenhance_
 
     pure function ikox(xdum)
         character(len=30), intent(in) :: xdum
@@ -980,19 +949,5 @@ contains
             ikox = 2 !"L/mgO2"
         end select
     end function
-
-    real(r64) function setoxygeninhibenhance_(arg_ikoxb, arg_ksob, arg_o2)
-        integer(i32), intent(in) ::  arg_ikoxb
-        real(r64), intent(in) :: arg_ksob, arg_o2
-        !real(r64), intent(out) :: res_frespb
-        select case (arg_ikoxb)
-          case (1)
-            setoxygeninhibenhance_ = arg_o2 / (arg_ksob + arg_o2)
-          case (2)
-            setoxygeninhibenhance_ = 1.0_r64 - exp(-arg_ksob * arg_o2)
-          case (3)
-            setoxygeninhibenhance_ = arg_o2 ** 2 / (arg_ksob + arg_o2 ** 2)
-        end select
-    end function setoxygeninhibenhance_
 
 end module m_rates
