@@ -8,6 +8,7 @@ MODULE Class_Integration
     USE Class_Output
     USE Class_Headwater
     USE Class_downstream
+    use class_hydraulics, only: riverhydraulics_type
 
     IMPLICIT NONE
 

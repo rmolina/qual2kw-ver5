@@ -1,46 +1,45 @@
 !sourceinbackup.f90
 
 module class_sourcein
-    use nrtype, only: dp, i4b, nv, pii, cpw, rhow
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use nrtype, only: nv, pii, cpw, rhow
     use class_rivertopo, only: rivertopo_type
     use class_phsolve, only: ct
     use m_water_quality, only: t_water_quality
     use class_hydraulics, only: riverhydraulics_type
     implicit none
-
     private
     public sourcein_, load, ndiff, npt, sourcescalc
-!	public :: qpt, qpta
 
     !derived type for diffusion load/source
     type diffusion_type					!contain the raw data for diffusin load and source
         character(len=30) name
-        real(dp) xdup, xddn
-        real(dp) :: q =0.0				!if load, then >0; source, then <0
-        real(dp) te
-        real(dp) c(nv-1)
-        real(dp) ph
-        integer(i4b) beginrch			!beginning reach number
+        real(r64) xdup, xddn
+        real(r64) :: q =0.0				!if load, then >0; source, then <0
+        real(r64) te
+        real(r64) c(nv-1)
+        real(r64) ph
+        integer(i32) beginrch			!beginning reach number
     end type diffusion_type
     !derived type for point load/source
     type point_type							!
         character(len=30) name
-        real(dp) x
-        real(dp) :: q	=0.0				!if load, then >0; source, then <0
-        real(dp) :: temean=0, teamp=0, temaxtime =0
-        real(dp) cmean(nv-2), camp(nv-2), cmaxtime(nv-2)
-        real(dp) phmean, phamp, phmaxtime
-        integer(i4b) beginrch			!beginning reach number
+        real(r64) x
+        real(r64) :: q	=0.0				!if load, then >0; source, then <0
+        real(r64) :: temean=0, teamp=0, temaxtime =0
+        real(r64) cmean(nv-2), camp(nv-2), cmaxtime(nv-2)
+        real(r64) phmean, phamp, phmaxtime
+        integer(i32) beginrch			!beginning reach number
     end type point_type
 
-    integer(i4b) npt, ndiff
+    integer(i32) npt, ndiff
 
     !contains the original point and diffusion data
     type(point_type), pointer :: point(:)
     type(diffusion_type), pointer :: diffu(:)
     type(t_water_quality), allocatable :: load(:)				!combined load from both point and diffusion
-    real(dp), allocatable :: heatdiff(:), loaddiff(:,:) 	!diffusion load not vary by time
-    real(dp), allocatable:: qpta(:), qpt (:)
+    real(r64), allocatable :: heatdiff(:), loaddiff(:,:) 	!diffusion load not vary by time
+    real(r64), allocatable:: qpta(:), qpt (:)
 
 contains
 
@@ -49,16 +48,16 @@ contains
         tepttamp, tepttmaxtime, cpttmean, cpttamp, cpttmaxtime, phpttmean, &
         phpttamp, phpttmaxtime, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
-        integer(i4b), intent(in) :: nr, nptin, ndiffin, flag
+        integer(i32), intent(in) :: nr, nptin, ndiffin, flag
         type(rivertopo_type), intent(in) :: topo									!river topology
         type(riverhydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
-        real(dp) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
-        real(dp) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
-        real(dp) phpttmean(:), phpttamp(:), phpttmaxtime(:)
+        real(r64) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
+        real(r64) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
+        real(r64) phpttmean(:), phpttamp(:), phpttmaxtime(:)
         character(len=30), intent(in) :: ptname(:)
-        real(dp), intent(in) :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
+        real(r64), intent(in) :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
         character(len=30), intent(in) :: diffname(:)
-        integer(i4b) status(5), i
+        integer(i32) status(5), i
 
         allocate(qpta(nr), stat=status(1))
         allocate(qpt (nr), stat=status(2))
@@ -91,14 +90,14 @@ contains
     subroutine pointin_(nr, nptin, topo, flag, ptname, xptt, qptta, qptt, tepttmean, tepttamp, tepttmaxtime, &
         cpttmean, cpttamp, cpttmaxtime, phpttmean, phpttamp, phpttmaxtime)
 
-        integer(i4b), intent(in) :: nr, nptin, flag
+        integer(i32), intent(in) :: nr, nptin, flag
         type(rivertopo_type), intent(in) :: topo									!river topology
-        real(dp) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
-        real(dp) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
-        real(dp) phpttmean(:), phpttamp(:), phpttmaxtime(:)
+        real(r64) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
+        real(r64) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
+        real(r64) phpttmean(:), phpttamp(:), phpttmaxtime(:)
         character(len=30), intent(in) :: ptname(:)
 
-        integer(i4b) i, j, status
+        integer(i32) i, j, status
         logical(2) cond1
         npt=nptin
 
@@ -158,12 +157,12 @@ contains
     subroutine nonpointin_(nr, topo, flag, ndiffin, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
         type(rivertopo_type) topo									!river topology
-        integer(i4b), intent(in) ::	ndiffin, nr, flag
-        real(dp), intent(in) :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
+        integer(i32), intent(in) ::	ndiffin, nr, flag
+        real(r64), intent(in) :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
         character(len=30), intent(in) :: diffname(:)
-        integer(i4b) i, j, k, status
+        integer(i32) i, j, k, status
         logical(2) cond1, cond2, cond3, cond4, cond5
-        real(dp) qd, lend
+        real(r64) qd, lend
         ndiff=ndiffin							!number of diffusion source and abstraction
 
         heatdiff=0
@@ -192,7 +191,7 @@ contains
 
                 if (diffu(i)%c(nv - 2) == 0) diffu(i)%c(nv - 2) = 100.0
                 if (phind(i)==0) then
-                    diffu(i)%ph = 7.0_dp
+                    diffu(i)%ph = 7.0_r64
                 else
                     diffu(i)%ph = phind(i)
                 end if
@@ -257,16 +256,16 @@ contains
     subroutine sourcescalc(t, nr, flag)
         !gp new sub to evaluate point source sine functions and distribute loads to reaches at time t
 
-        real(dp), intent(in) :: t
-        integer(i4b), intent(in) :: nr, flag
+        real(r64), intent(in) :: t
+        integer(i32), intent(in) :: nr, flag
 !	type(rivertopo_type) topo									!river topology
-        integer(i4b) i, j, k, kk
-        real(dp) teptt(nr)
-        real(dp) :: heat(nr)
-        real(dp) :: loadi(nr, nv)
+        integer(i32) i, j, k, kk
+        real(r64) teptt(nr)
+        real(r64) :: heat(nr)
+        real(r64) :: loadi(nr, nv)
         logical(2) cond1, cond2, cond3, cond4, cond5
         type(t_water_quality) :: ptt
-        real(dp) qd, lend
+        real(r64) qd, lend
 
         heat = 0;	loadi =0
 
@@ -285,12 +284,12 @@ contains
                 if (ptt%c(nv - 2) == 0) ptt%c(nv - 2) = 100
                 ptt%ph = sinday(t, point(i)%phmean, point(i)%phamp, point(i)%phmaxtime)
                 if (ptt%ph < 0.01) then
-                    ptt%ph = 0.01_dp
+                    ptt%ph = 0.01_r64
                 elseif (ptt%ph > 13.99) then
-                    ptt%ph = 13.99_dp
+                    ptt%ph = 13.99_r64
                 end if
 
-                if (point(i)%phmean == 0) ptt%ph = 7.0_dp
+                if (point(i)%phmean == 0) ptt%ph = 7.0_r64
                 ptt%c(nv - 1) = ct(ptt%ph, ptt%c(nv - 2), ptt%te, ptt%c(1))
 
                 j=point(i)%beginrch
@@ -333,9 +332,9 @@ contains
     pure function sinday(t, xmean, xamp, xmaxtime)
         !gp new function sinday to calculate a constituent
         !   at a particular time of day given daily mean, amplitude=(max-min)/2, and time of max (days)
-        real(dp) sinday
-        real(dp), intent(in) :: t, xmean, xamp, xmaxtime
-        sinday = xmean + xamp * cos(2.0_dp * pii * (t - xmaxtime))
+        real(r64) sinday
+        real(r64), intent(in) :: t, xmean, xamp, xmaxtime
+        sinday = xmean + xamp * cos(2.0_r64 * pii * (t - xmaxtime))
 
     end function
 
@@ -343,14 +342,14 @@ contains
     pure function sinday2(t, xmin, xmax, xmaxtime)
         !gp new function sinday2 to calculate a constituent
         !   at a particular time of day given daily min, max, and time of max
-        real(dp) sinday2
-        real(dp), intent(in) :: t, xmin, xmax, xmaxtime
-        real(dp) xmean, xamp, xtheta, xomega
+        real(r64) sinday2
+        real(r64), intent(in) :: t, xmin, xmax, xmaxtime
+        real(r64) xmean, xamp, xtheta, xomega
 
-        xmean = (xmax + xmin) / 2.0_dp
-        xamp = (xmax - xmin) / 2.0_dp
-        xtheta = (xmaxtime - 0.25_dp) * 2.0_dp * pii
-        xomega = 2.0_dp * pii
+        xmean = (xmax + xmin) / 2.0_r64
+        xamp = (xmax - xmin) / 2.0_r64
+        xtheta = (xmaxtime - 0.25_r64) * 2.0_r64 * pii
+        xomega = 2.0_r64 * pii
         sinday2 = xmean + xamp * sin(xomega * t - xtheta)
 
     end function
