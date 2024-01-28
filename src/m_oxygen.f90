@@ -3,21 +3,21 @@ module m_oxygen
     use m_rates, only: rates_t
     implicit none
     private
-    public oxygen_inhibition_and_enhancement, oxsat
+    public oxygen_inhibition_and_enhancement, oxygen_saturation
 
 contains
-    pure function oxsat(temp, elev)
+    pure function oxygen_saturation(temp, elev)
 
-        real(r64) oxsat
+        real(r64) oxygen_saturation
         real(r64), intent(in) :: temp, elev
         real(r64) taa, lnosf
 
         taa = temp + 273.15_r64
         lnosf = -139.34411_r64 + 157570.1_r64 / taa - 66423080.0_r64 / taa ** 2 &
             + 12438000000.0_r64 / taa ** 3 - 862194900000.0_r64 / taa ** 4
-        oxsat = exp(lnosf) * (1 - 0.0001148_r64 * elev)
+        oxygen_saturation = exp(lnosf) * (1 - 0.0001148_r64 * elev)
 
-    end function oxsat
+    end function oxygen_saturation
 
     subroutine oxygen_inhibition_and_enhancement(rates, o2, fcarb, fnitr, fdenitr, frespp, frespb)
 

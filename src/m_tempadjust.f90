@@ -1,7 +1,7 @@
 module m_tempadjust
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_rates, only: rates_t
-    use m_oxygen, only: oxsat
+    use m_oxygen, only: oxygen_saturation
     use class_hydraulics, only: RiverHydraulics_type
     use m_meteorology, only: t_meteorology
     implicit none
@@ -107,7 +107,7 @@ contains
             end if
             kat(i) = hydrau%reach(i)%ka * rates%tka ** (te(i, 1) - 20.0_r64)
             kact(i) = (32.0_r64 / 44.0_r64) ** 0.25_r64 * kat(i)
-            hydrau%reach(i)%os = oxsat(te(i, 1), hydrau%reach(i)%elev)
+            hydrau%reach(i)%os = oxygen_saturation(te(i, 1), hydrau%reach(i)%elev)
             kgat(i) = hydrau%reach(i)%kga * rates%tkga ** (te(i, 1) - 20.0_r64)
             kdeat(i) = hydrau%reach(i)%kdea * rates%tkdea ** (te(i, 1) - 20.0_r64)
             kreat(i) = hydrau%reach(i)%krea * rates%tkrea ** (te(i, 1) - 20.0_r64)
