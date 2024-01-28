@@ -25,7 +25,7 @@ module m_rivertopo
     end type t_rivertopo
 
     interface t_rivertopo
-        procedure :: rivertopo_
+        procedure :: t_rivertopo_ctor
     end interface t_rivertopo
 
 !	type(rivertopo_type) topo
@@ -51,7 +51,7 @@ contains
 
     !data structure constructor
     !gp 17-nov-04 function rivertopo_(nrch, rlab2, rname, xrdn) result(topo)
-    function rivertopo_(nrch, rlab2, rname, xrdn, geomethod) result(topo)		!gp 17-nov-04
+    function t_rivertopo_ctor(nrch, rlab2, rname, xrdn, geomethod) result(topo)		!gp 17-nov-04
 
         type(t_rivertopo) topo
         integer(i4b), intent(in) :: nrch
@@ -90,7 +90,7 @@ contains
             !		nelem = nelem + topo%reach(i)%elems					!calculate total elements
         end do
         !	call allocateelementarray(nelem)
-    end function rivertopo_
+    end function t_rivertopo_ctor
 
     subroutine allocatereacharray(topo, nrch)
 
