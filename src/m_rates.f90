@@ -512,38 +512,30 @@ contains
             !2.inorganic suspended solids settling velocity
             call validate_user_rate(hydrau%reach(i)%vss, rates%vss)
 
-            !3.slow cbod hydrolysis rate
-            call validate_user_rate(hydrau%reach(i)%khc, rates%khc)
+            !slow cbod
+            call validate_user_rate(hydrau%reach(i)%khc, rates%khc) !hydrolysis rate
+            call validate_user_rate(hydrau%reach(i)%kdcs, rates%kdcs) !oxidation rate
 
-            !4.slow cbod oxidation rate
-            call validate_user_rate(hydrau%reach(i)%kdcs, rates%kdcs)
+            !fast cbod 
+            call validate_user_rate(hydrau%reach(i)%kdc, rates%kdc) !oxidation rate (kdc)
 
-            !5.fast cbod oxidation rate
-            call validate_user_rate(hydrau%reach(i)%kdc, rates%kdc)
+            !organic n
+            call validate_user_rate(hydrau%reach(i)%khn, rates%khn) !hydrolysis rate (khn)
+            call validate_user_rate(hydrau%reach(i)%von, rates%von) !settling velocity (von)
 
-            !6. organic n hydrolysis rate (khn)
-            call validate_user_rate(hydrau%reach(i)%khn, rates%khn)
+            !ammonium 
+            call validate_user_rate(hydrau%reach(i)%kn, rates%kn) !nitrification rate (kn)
 
-            !7. organic n settling velocity (von)
-            call validate_user_rate(hydrau%reach(i)%von, rates%von)
+            !nitrate
+            call validate_user_rate(hydrau%reach(i)%ki, rates%ki) !denitrification rate (ki)
+            call validate_user_rate(hydrau%reach(i)%vdi, rates%vdi) !sed denitrification transfer coeff (vdi)
 
-            !8. ammonium nitrification rate (kn)
-            call validate_user_rate(hydrau%reach(i)%kn, rates%kn)
+            !organic p 
+            call validate_user_rate(hydrau%reach(i)%khp, rates%khp) !hydrolysis (khp)
+            call validate_user_rate(hydrau%reach(i)%vop, rates%vop) !settling velocity (vop)
 
-            !9. nitrate denitrification rate (ki)
-            call validate_user_rate(hydrau%reach(i)%ki, rates%ki)
-
-            !10. nitrate sed denitrification transfer coeff (vdi)
-            call validate_user_rate(hydrau%reach(i)%vdi, rates%vdi)
-
-            !11. organic p hydrolysis (khp)
-            call validate_user_rate(hydrau%reach(i)%khp, rates%khp)
-
-            !12. organic p settling velocity (vop)
-            call validate_user_rate(hydrau%reach(i)%vop, rates%vop)
-
-            !13. inorganic p settling veloctiy (vip)
-            call validate_user_rate(hydrau%reach(i)%vip, rates%vip)
+            !inorganic p 
+            call validate_user_rate(hydrau%reach(i)%vip, rates%vip) !settling veloctiy (vip)
 
             !phytoplankton
             call validate_user_rate(hydrau%reach(i)%kga, rates%kga) !max growth rate (kga)
@@ -603,7 +595,6 @@ contains
 
     end subroutine validate_user_rates
 
-
     pure subroutine validate_user_rate(user_rate, default_rate)
         real(r64), intent(in) :: default_rate
         real(r64), intent(inout) :: user_rate
@@ -612,7 +603,6 @@ contains
             user_rate = default_rate
         end if
     end subroutine validate_user_rate
-
 
     pure function ikox(xdum)
         character(len=30), intent(in) :: xdum
