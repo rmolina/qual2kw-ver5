@@ -5,7 +5,7 @@ module class_rates
     implicit none
 
     private
-    public rates_ctor, rates_t, setoxygeninhibenhance, tempadjust
+    public rates_t, setoxygeninhibenhance, tempadjust
 
     type rates_t
         real(r64) mga, mgd !scc, for v1_3
@@ -149,9 +149,11 @@ module class_rates
         real(r64) kreah, kdeah, ksnh, ksph, khnxh, ahmax
         real(r64) :: tkreah=1.07, tkdeah=1.07
 
+    end type rates_t
 
-    end type
-! type(rates_type) rates
+    interface rates_t
+        procedure :: rates_ctor
+    end interface rates_t
 
 contains
 

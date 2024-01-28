@@ -10,7 +10,7 @@ contains
 
         USE Class_LightHeat
         USE Class_SourceIn
-        USE Class_Rates
+        USE Class_Rates, only: rates_t
         USE m_water_quality, ONLY:t_water_quality
         USE Class_Headwater, ONLY: Headwater_, Headwater_type
         USE Class_downstream
@@ -943,7 +943,7 @@ contains
         !							kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax, &
         !							apath, kgen, tkgen, vgen, useGenericAsCOD, &
         !							NUpWCfrac, PUpWCfrac)
-        stochRate= rates_ctor(nRch, hydrau, mgC,mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, &
+        stochRate= rates_t(nRch, hydrau, mgC,mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, &
             Ksodn, Ksop, Ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
             kn, tkn, ki, tki, vdi, tvdi, khp, tkhp,vop, vip, kspi, kga, &
             tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, Isat, khnx, &
