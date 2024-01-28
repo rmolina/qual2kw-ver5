@@ -2,8 +2,10 @@
 ! calculate solar radiation
 
 MODULE Class_SolarCalc
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     USE nrtype
-    USE Class_SolarPosition		!All the solar position function in "solarposition.f90"
+    use m_date, only: date_t
+    USE Class_SolarPosition, only: calcJD, degToRad, radToDeg, solarposition, sunrise, sunset
     USE Class_SystemParams
     USE m_RiverTopo
     IMPLICIT NONE
@@ -203,6 +205,7 @@ CONTAINS
         REAL(DP) az							!solar azimuth in deg from N
         REAL(DP) erv						!earth radius vector distance to sun in AU
 
+        REAL(DP) Julday
 
         curdayfrac = tday
         curHourFrac = curdayfrac * 24.0_DP - Int(curdayfrac * 24.0_DP)     !intermediate calc
@@ -228,12 +231,13 @@ CONTAINS
             If (el <= 0) Then
                 Jsnt = 0
             Else
+                Julday = calcJD(today%year, today%month, today%day)
                 SELECT CASE (Solar%solarMethod)
                   CASE ("Bras")							!clear sky Iclear units of W/m^2
-                    Iclear = BrasSolar(today%Julday, today%year, tday, el, Solar%nfacBras, erv)
+                    Iclear = BrasSolar(Julday, today%year, tday, el, Solar%nfacBras, erv)
                   CASE DEFAULT
                     ! ("Ryan-Stolzenbach")
-                    Iclear = RyanStolzSolar(today%Julday, today%year, tday, el, Solar%atcRyanStolz, elev, erv)
+                    Iclear = RyanStolzSolar(Julday, today%year, tday, el, Solar%atcRyanStolz, elev, erv)
                 End SELECT
                 Jsnt = Iclear / (4.183076_DP * 100.0_DP * 100.0_DP / 86400.0_DP)   !convert from W/m^2 to cal/cm^2/d
             End If

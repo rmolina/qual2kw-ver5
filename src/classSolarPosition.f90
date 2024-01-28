@@ -4,7 +4,7 @@ MODULE Class_SolarPosition
     USE nrtype
     IMPLICIT NONE
     PRIVATE															!All private, unless declare public
-    PUBLIC solarelevation, radToDeg, degToRad, sunrise, sunset, solarnoon, solarposition
+    PUBLIC solarelevation, radToDeg, degToRad, sunrise, sunset, solarnoon, solarposition, calcJD
 
     !The sunrise/sunset and solar position functions are a VBA translation of
     !NOAA!s sunrise/sunset calculator and NOAA!s solar position calculator
@@ -52,6 +52,7 @@ MODULE Class_SolarPosition
     !
 CONTAINS
     PURE Function radToDeg(angleRad)
+        use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
         USE nrtype
         IMPLICIT NONE
 
