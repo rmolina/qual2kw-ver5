@@ -12,24 +12,24 @@ module class_sourcein
     public sourcein_, load, ndiff, npt, sourcescalc
 
     !derived type for diffusion load/source
-    type diffusion_type					!contain the raw data for diffusin load and source
+    type diffusion_type !contain the raw data for diffusin load and source
         character(len=30) name
         real(r64) xdup, xddn
-        real(r64) :: q =0.0				!if load, then >0; source, then <0
+        real(r64) :: q =0.0 !if load, then >0; source, then <0
         real(r64) te
         real(r64) c(nv-1)
         real(r64) ph
-        integer(i32) beginrch			!beginning reach number
+        integer(i32) beginrch !beginning reach number
     end type diffusion_type
     !derived type for point load/source
-    type point_type							!
+    type point_type !
         character(len=30) name
         real(r64) x
-        real(r64) :: q	=0.0				!if load, then >0; source, then <0
+        real(r64) :: q =0.0 !if load, then >0; source, then <0
         real(r64) :: temean=0, teamp=0, temaxtime =0
         real(r64) cmean(nv-2), camp(nv-2), cmaxtime(nv-2)
         real(r64) phmean, phamp, phmaxtime
-        integer(i32) beginrch			!beginning reach number
+        integer(i32) beginrch !beginning reach number
     end type point_type
 
     integer(i32) npt, ndiff
@@ -37,8 +37,8 @@ module class_sourcein
     !contains the original point and diffusion data
     type(point_type), pointer :: point(:)
     type(diffusion_type), pointer :: diffu(:)
-    type(t_water_quality), allocatable :: load(:)				!combined load from both point and diffusion
-    real(r64), allocatable :: heatdiff(:), loaddiff(:,:) 	!diffusion load not vary by time
+    type(t_water_quality), allocatable :: load(:) !combined load from both point and diffusion
+    real(r64), allocatable :: heatdiff(:), loaddiff(:,:) !diffusion load not vary by time
     real(r64), allocatable:: qpta(:), qpt (:)
 
 contains
@@ -49,8 +49,8 @@ contains
         phpttamp, phpttmaxtime, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
         integer(i32), intent(in) :: nr, nptin, ndiffin, flag
-        type(t_rivertopo), intent(in) :: topo									!river topology
-        type(riverhydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
+        type(t_rivertopo), intent(in) :: topo !river topology
+        type(riverhydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
         real(r64) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
         real(r64) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
         real(r64) phpttmean(:), phpttamp(:), phpttmaxtime(:)
@@ -71,7 +71,7 @@ contains
             end if
         end do
         qpta = 0
-        qpt  = 0
+        qpt = 0
 
         call pointin_(nr, nptin, topo, flag, ptname, xptt, qptta, qptt, tepttmean, tepttamp, tepttmaxtime, &
             cpttmean, cpttamp, cpttmaxtime, phpttmean, phpttamp, phpttmaxtime)
@@ -91,7 +91,7 @@ contains
         cpttmean, cpttamp, cpttmaxtime, phpttmean, phpttamp, phpttmaxtime)
 
         integer(i32), intent(in) :: nr, nptin, flag
-        type(t_rivertopo), intent(in) :: topo									!river topology
+        type(t_rivertopo), intent(in) :: topo !river topology
         real(r64) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
         real(r64) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
         real(r64) phpttmean(:), phpttamp(:), phpttmaxtime(:)
@@ -111,11 +111,11 @@ contains
                 point(i)%name = ptname(i)
                 point(i)%x = xptt(i)
                 if (qptta(i)>0) then
-                    point(i)%q = -qptta(i)					!if load, then >0; source, then <0
+                    point(i)%q = -qptta(i) !if load, then >0; source, then <0
                 else
-                    point(i)%q = qptt(i)						!if load, then >0; source, then <0
+                    point(i)%q = qptt(i) !if load, then >0; source, then <0
                 end if
-                point(i)%temean   = tepttmean(i)
+                point(i)%temean = tepttmean(i)
                 point(i)%teamp = tepttamp(i)
                 point(i)%temaxtime = tepttmaxtime(i)
 
@@ -138,7 +138,7 @@ contains
                     end if
                     if (cond1) then
                         if (point(i)%q < 0) then
-                            qpta(j) = qpta(j) -  point(i)%q
+                            qpta(j) = qpta(j) - point(i)%q
                         else
                             qpt(j) = qpt(j) + point(i)%q
                         end if
@@ -156,14 +156,14 @@ contains
 
     subroutine nonpointin_(nr, topo, flag, ndiffin, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
-        type(t_rivertopo) topo									!river topology
-        integer(i32), intent(in) ::	ndiffin, nr, flag
+        type(t_rivertopo) topo !river topology
+        integer(i32), intent(in) :: ndiffin, nr, flag
         real(r64), intent(in) :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
         character(len=30), intent(in) :: diffname(:)
         integer(i32) i, j, k, status
         logical(2) cond1, cond2, cond3, cond4, cond5
         real(r64) qd, lend
-        ndiff=ndiffin							!number of diffusion source and abstraction
+        ndiff=ndiffin !number of diffusion source and abstraction
 
         heatdiff=0
         loaddiff=0
@@ -180,11 +180,11 @@ contains
                 diffu(i)%xdup = xdup(i)
                 diffu(i)%xddn = xddn(i)
                 if (qdifa(i)>0) then
-                    diffu(i)%q	= -qdifa(i)					!if load, then >0; source, then <0
+                    diffu(i)%q = -qdifa(i) !if load, then >0; source, then <0
                 else
-                    diffu(i)%q	= qdif(i)
+                    diffu(i)%q = qdif(i)
                 end if
-                diffu(i)%te   = tedif(i)
+                diffu(i)%te = tedif(i)
                 do j=1, nv-2
                     diffu(i)%c(j) =cdif(i,j)
                 end do
@@ -233,7 +233,7 @@ contains
                     end if
 
                     if (lend>0 .and. qd>0) then
-!					qpt(i) = qpt(i) + lend * qd
+! qpt(i) = qpt(i) + lend * qd
                         heatdiff(j) = heatdiff(j) + lend * qd * diffu(i)%te
                         do k = 1, nv - 1
                             loaddiff(j, k) = loaddiff(j, k) + lend * qd * diffu(i)%c(k)
@@ -244,10 +244,10 @@ contains
             end do
         end if
         !distribute point flows to elements for hydraulics
-!  do i = 1, nr
-!    qpt(i) = 0
-!    qpta(i) = 0
-!  end do
+! do i = 1, nr
+! qpt(i) = 0
+! qpta(i) = 0
+! end do
 
     end subroutine nonpointin_
 
@@ -258,7 +258,7 @@ contains
 
         real(r64), intent(in) :: t
         integer(i32), intent(in) :: nr, flag
-!	type(rivertopo_type) topo									!river topology
+! type(rivertopo_type) topo !river topology
         integer(i32) i, j, k, kk
         real(r64) teptt(nr)
         real(r64) :: heat(nr)
@@ -267,7 +267,7 @@ contains
         type(t_water_quality) :: ptt
         real(r64) qd, lend
 
-        heat = 0;	loadi =0
+        heat = 0; loadi =0
 
         if (npt > 0) then
             !gp evaluate the point source diel sine functions for the current time step
@@ -293,10 +293,10 @@ contains
                 ptt%c(nv - 1) = ct(ptt%ph, ptt%c(nv - 2), ptt%te, ptt%c(1))
 
                 j=point(i)%beginrch
-                if (point(i)%q <= 0) then	!abstraction
-!						qpta(j) = qpta(j) - point(i)%q
-                else												!load
-!				qpt(j) = qpt(j) + point(i)%q
+                if (point(i)%q <= 0) then !abstraction
+! qpta(j) = qpta(j) - point(i)%q
+                else !load
+! qpt(j) = qpt(j) + point(i)%q
                     heat(j) = heat(j) + point(i)%q * rhow * cpw * ptt%te
                     do k = 1, nv - 1
                         loadi(j, k) = loadi(j, k) + point(i)%q * ptt%c(k)
@@ -304,7 +304,7 @@ contains
                 end if
             end do
 
-        else		!no point sources
+        else !no point sources
         end if
 
         !generate average reach input temperatures and concentrations
@@ -323,7 +323,7 @@ contains
                     load(i)%c(j) = 0
                 end do
             end if
-!		q(i) = q(i - 1) + qpt(i) - qpta(i)
+! q(i) = q(i - 1) + qpt(i) - qpta(i)
         end do
 
     end subroutine
@@ -331,7 +331,7 @@ contains
 
     pure function sinday(t, xmean, xamp, xmaxtime)
         !gp new function sinday to calculate a constituent
-        !   at a particular time of day given daily mean, amplitude=(max-min)/2, and time of max (days)
+        ! at a particular time of day given daily mean, amplitude=(max-min)/2, and time of max (days)
         real(r64) sinday
         real(r64), intent(in) :: t, xmean, xamp, xmaxtime
         sinday = xmean + xamp * cos(2.0_r64 * pii * (t - xmaxtime))
@@ -341,7 +341,7 @@ contains
 
     pure function sinday2(t, xmin, xmax, xmaxtime)
         !gp new function sinday2 to calculate a constituent
-        !   at a particular time of day given daily min, max, and time of max
+        ! at a particular time of day given daily min, max, and time of max
         real(r64) sinday2
         real(r64), intent(in) :: t, xmin, xmax, xmaxtime
         real(r64) xmean, xamp, xtheta, xomega
