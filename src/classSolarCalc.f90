@@ -136,11 +136,11 @@ CONTAINS
     SUBROUTINE SolarCalc(nr, Solar, siteMeteo, hydrau, system)
         USE Class_SystemParams
         USE Class_Hydraulics
-        USE Class_Meteo
+        USE m_meteorology
 
         INTEGER(I4B), INTENT(IN) :: nr
         TYPE(solar_type), INTENT(INOUT) :: Solar
-        TYPE(Meteo_type) siteMeteo								!meteology information
+        TYPE(t_meteorolody) siteMeteo								!meteology information
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
         TYPE(SystemParams), INTENT(IN) :: system
 

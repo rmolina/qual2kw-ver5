@@ -1,164 +1,164 @@
-!Handle meteology data interpolation
-MODULE Class_Meteo
-    USE nrtype
-    USE Class_RiverTopo
-    USE Class_SystemParams, ONLY: steadystate
-    IMPLICIT NONE
+!handle meteology data interpolation
+module m_meteorology
+    use, intrinsic :: iso_fortran_env, only: dp=>real64, i4b=>int32
+    !use class_rivertopo
+    !use class_systemparams, only: steadystate
+    implicit none
 
-    PRIVATE !all variables and functions are private, unless declare public
+    private !all variables and functions are private, unless declare public
     !only the following subroutines are public
-    PUBLIC MeteoData_, InstanteousMeteo, Meteo_type
+    public meteodata_, instanteousmeteo, t_meteorolody
 
-    TYPE Meteo_type
+    type t_meteorolody
 
-        !gp 16-Jul-08
-        !REAL(DP), DIMENSION(:,:), POINTER :: shadeHH, TaHH, TdHH, UwHH, ccHH
-        REAL(DP), DIMENSION(:,:), POINTER :: shadeHH, TaHH, TdHH, UwHH, ccHH, solarHH
+        !gp 16-jul-08
+        !real(dp), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh
+        real(dp), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh, solarhh
 
-        !instantenous Meteorology data
+        !instantenous meteorology data
 
-        !gp 16-Jul-08
-        !REAL(DP), DIMENSION(:),   POINTER :: shadeT, Ta, Td, Uw, cc
-        REAL(DP), DIMENSION(:),   POINTER :: shadeT, Ta, Td, Uw, cc, solarT
+        !gp 16-jul-08
+        !real(dp), dimension(:),   pointer :: shadet, ta, td, uw, cc
+        real(dp), dimension(:),   pointer :: shadet, ta, td, uw, cc, solart
 
-        INTEGER(I4B) :: NumdatPnt= 24		!use to identify the size of time series
+        integer(i4b) :: numdatpnt= 24 !use to identify the size of time series
         !hardwire to (0-23 hour) for now
-    END TYPE Meteo_type
+    end type t_meteorolody
 
-CONTAINS
+contains
 
-    !gp 16-Jul-08
-    !FUNCTION MeteoData_(nr, shadeHHin, TaHHin, TdHHin, UwHHin, ccHHin) RESULT(Met)
-    FUNCTION MeteoData_(nr, shadeHHin, TaHHin, TdHHin, UwHHin, ccHHin, solarHHin) RESULT(Met)
+    !gp 16-jul-08
+    !function meteodata_(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin) result(met)
+    function meteodata_(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin) result(met)
 
-        TYPE(Meteo_type) Met
-        INTEGER(I4B), INTENT(IN) :: nr
+        type(t_meteorolody) met
+        integer(i4b), intent(in) :: nr
 
-        !gp 16-Jul-08
-        !REAL(DP), DIMENSION(0:,:), INTENT(IN) :: shadeHHin, TaHHin, TdHHin, UwHHin, ccHHin
-        REAL(DP), DIMENSION(0:,:), INTENT(IN) :: shadeHHin, TaHHin, TdHHin, UwHHin, ccHHin, solarHHin
+        !gp 16-jul-08
+        !real(dp), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin
+        real(dp), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin
 
-        !gp 16-Jul-08
-        !INTEGER(I4B) status(10), i
-        INTEGER(I4B) status(12), i
+        !gp 16-jul-08
+        !integer(i4b) status(10), i
+        integer(i4b) status(12), i
 
-        !IF (steadystate()) THEN
+        !if (steadystate()) then
 
-        !END IF
+        !end if
 
-        IF (nr > 0) THEN
-            ALLOCATE (Met%shadeHH(0:Met%NumdatPnt-1 ,nr), STAT=status(1))
-            ALLOCATE (Met%TaHH(0:Met%NumdatPnt-1,nr), STAT=status(2))
-            ALLOCATE (Met%TdHH(0:Met%NumdatPnt-1,nr), STAT=status(3))
-            ALLOCATE (Met%UwHH(0:Met%NumdatPnt-1,nr), STAT=status(4))
-            ALLOCATE (Met%ccHH(0:Met%NumdatPnt-1,nr), STAT=status(5))
+        if (nr > 0) then
+            allocate (met%shadehh(0:met%numdatpnt-1 ,nr), stat=status(1))
+            allocate (met%tahh(0:met%numdatpnt-1,nr), stat=status(2))
+            allocate (met%tdhh(0:met%numdatpnt-1,nr), stat=status(3))
+            allocate (met%uwhh(0:met%numdatpnt-1,nr), stat=status(4))
+            allocate (met%cchh(0:met%numdatpnt-1,nr), stat=status(5))
 
-            ALLOCATE (Met%shadeT(nr), STAT=status(6))
-            ALLOCATE (Met%Ta(nr), STAT=status(7))
-            ALLOCATE (Met%Td(nr), STAT=status(8))
-            ALLOCATE (Met%Uw(nr), STAT=status(9))
-            ALLOCATE (Met%cc(nr), STAT=status(10))
+            allocate (met%shadet(nr), stat=status(6))
+            allocate (met%ta(nr), stat=status(7))
+            allocate (met%td(nr), stat=status(8))
+            allocate (met%uw(nr), stat=status(9))
+            allocate (met%cc(nr), stat=status(10))
 
-            !gp 16-Jul-08
-            ALLOCATE (Met%solarHH(0:Met%NumdatPnt-1,nr), STAT=status(11))
-            ALLOCATE (Met%solarT(nr), STAT=status(12))
+            !gp 16-jul-08
+            allocate (met%solarhh(0:met%numdatpnt-1,nr), stat=status(11))
+            allocate (met%solart(nr), stat=status(12))
 
-            DO i=1, 10
-                IF (status(i)==1) STOP 'ERROR: Class_Meteo:AllocateMeteoDataArray.Allocation Failed'
-            END DO
+            do i=1, 10
+                if (status(i)==1) stop 'ERROR: Class_Meteo:AllocateMeteoDataArray.Allocation Failed'
+            end do
 
-            Met%shadeHH = shadeHHin
-            Met%TaHH = TaHHin
-            Met%TdHH = TdHHin
-            Met%UwHH = UwHHin
-            Met%ccHH = ccHHin
+            met%shadehh = shadehhin
+            met%tahh = tahhin
+            met%tdhh = tdhhin
+            met%uwhh = uwhhin
+            met%cchh = cchhin
 
-            !gp 16-Jul-08
-            Met%solarHH = solarHHin
+            !gp 16-jul-08
+            met%solarhh = solarhhin
 
-        ELSE
-            PRINT *, 'ERROR:element number must be great than 0'
-            STOP 'Class_Meteo:AllocateMeteoDataArray failed'
-        END IF
+        else
+            print *, 'ERROR:element number must be great than 0'
+            stop 'Class_Meteo:AllocateMeteoDataArray failed'
+        end if
 
-    END FUNCTION MeteoData_
+    end function meteodata_
 
 
-!interpolate Hourly Meteology data
-    SUBROUTINE InstanteousMeteo(nr, t, Met)
+!interpolate hourly meteology data
+    subroutine instanteousmeteo(nr, t, met)
 
-        INTEGER(I4B), INTENT(IN) :: nr
-        TYPE(Meteo_type), INTENT(INOUT) :: Met
-        REAL(DP), INTENT(IN) :: t
+        integer(i4b), intent(in) :: nr
+        type(t_meteorolody), intent(inout) :: met
+        real(dp), intent(in) :: t
 
-        CALL InterpolateHelper(nr, t, Met%Ta, Met%TaHH, Met%NumdatPnt)
-        CALL InterpolateHelper(nr, t, Met%Td, Met%TdHH, Met%NumdatPnt)
-        CALL InterpolateHelper(nr, t, Met%Uw, Met%UwHH, Met%NumdatPnt)
-        CALL InterpolateHelper(nr, t, Met%cc, Met%ccHH, Met%NumdatPnt)
+        call interpolatehelper(nr, t, met%ta, met%tahh, met%numdatpnt)
+        call interpolatehelper(nr, t, met%td, met%tdhh, met%numdatpnt)
+        call interpolatehelper(nr, t, met%uw, met%uwhh, met%numdatpnt)
+        call interpolatehelper(nr, t, met%cc, met%cchh, met%numdatpnt)
 
-        !gp 16-Jul-08
-        CALL InterpolateHelper(nr, t, Met%solarT, Met%solarHH, Met%NumdatPnt)
+        !gp 16-jul-08
+        call interpolatehelper(nr, t, met%solart, met%solarhh, met%numdatpnt)
 
         !shade use different method
-        CALL InterpolateShade(nr, t, Met%shadeT, Met%shadeHH, Met%NumdatPnt)
-    END SUBROUTINE InstanteousMeteo
+        call interpolateshade(nr, t, met%shadet, met%shadehh, met%numdatpnt)
+    end subroutine instanteousmeteo
 
 
     !private subroutine
-    SUBROUTINE InterpolateHelper(nr, t, Interp, c, upbound)
-        !for interpolation of instantaneous values from hourly point estimates of 2D array
+    subroutine interpolatehelper(nr, t, interp, c, upbound)
+        !for interpolation of instantaneous values from hourly point estimates of 2d array
         !input arrays have dimensions of (ihour, k) where ihour is hour (0 to 23)
         !and k is variable number (1 to 15) or reach number (1-1000)
-        INTEGER(I4B), INTENT(IN) :: nr
-        REAL(DP), INTENT(OUT) :: Interp(:)
-        REAL(DP), INTENT(IN) :: t, c (0:,:)
-        INTEGER(I4B), INTENT(IN):: upBound
-        REAL(DP) t_hr
-        INTEGER(I4B) t0_hr, t1_hr, k
+        integer(i4b), intent(in) :: nr
+        real(dp), intent(out) :: interp(:)
+        real(dp), intent(in) :: t, c (0:,:)
+        integer(i4b), intent(in):: upbound
+        real(dp) t_hr
+        integer(i4b) t0_hr, t1_hr, k
 
-        t_hr = (t - Int(t)) * (upBound)
+        t_hr = (t - int(t)) * (upbound)
 
-        If (t_hr < upBound-1) Then
-            t0_hr = Int(t_hr)
+        if (t_hr < upbound-1) then
+            t0_hr = int(t_hr)
             t1_hr = t0_hr + 1
-        Else
-            t0_hr = upBound-1
+        else
+            t0_hr = upbound-1
             t1_hr = 0
-        End If
+        end if
 
-        DO k=1, nr
-            Interp(k) = c(t0_hr, k) + (t_hr - t0_hr) * (c(t1_hr, k) - c(t0_hr, k))
-        END DO
+        do k=1, nr
+            interp(k) = c(t0_hr, k) + (t_hr - t0_hr) * (c(t1_hr, k) - c(t0_hr, k))
+        end do
 
-    End SUBROUTINE
+    end subroutine
 
 
-    SUBROUTINE InterpolateShade(nr, t, hourlyShade, shadeHH, upbound)
+    subroutine interpolateshade(nr, t, hourlyshade, shadehh, upbound)
         !input values of hourly shade are integrated values that apply to the entire hour
         !therefore this function assigns the constant hourly values for each hourly period of the simulation
 
         !input arrays have dimensions of (ihour, k) where ihour is hour (0 to 23)
         !and k is variable number (1 to 15) or reach number (1-1000)
-        INTEGER(I4B), INTENT(IN) :: nr
-        REAL(DP), INTENT(OUT) :: HourlyShade(:)
-        REAL(DP), INTENT(IN):: t, shadeHH(0:,:)
-        INTEGER(I4B), INTENT(IN):: upbound
-        REAL(DP) t_hr
-        INTEGER(I4B) t0_hr, t1_hr, k
+        integer(i4b), intent(in) :: nr
+        real(dp), intent(out) :: hourlyshade(:)
+        real(dp), intent(in):: t, shadehh(0:,:)
+        integer(i4b), intent(in):: upbound
+        real(dp) t_hr
+        integer(i4b) t0_hr, t1_hr, k
 
-        t_hr = (t - Int(t)) * (upBound)
+        t_hr = (t - int(t)) * (upbound)
 
-        If (t_hr < upBound-1) Then
-            t0_hr = Int(t_hr)
+        if (t_hr < upbound-1) then
+            t0_hr = int(t_hr)
             t1_hr = t0_hr + 1
-        Else
-            t0_hr = upBound-1
+        else
+            t0_hr = upbound-1
             t1_hr = 0
-        End If
+        end if
 
-        DO k=1, nr
-            hourlyShade(k) = shadeHH(t0_hr, k)
-        END DO
-    End SUBROUTINE InterpolateShade
+        do k=1, nr
+            hourlyshade(k) = shadehh(t0_hr, k)
+        end do
+    end subroutine interpolateshade
 
-END MODULE Class_Meteo
+end module m_meteorology

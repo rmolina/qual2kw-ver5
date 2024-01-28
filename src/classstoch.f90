@@ -810,12 +810,12 @@ CONTAINS
         kreaT, vdiT, kacT, &
         kgenT)
         USE Class_Hydraulics
-        USE Class_Meteo
+        USE m_meteorology
 
         INTEGER(I4B), INTENT(IN) :: nr
         TYPE(Rates_type) Rates
         TYPE(RiverHydraulics_type) hydrau
-        TYPE(Meteo_type) siteMeteo
+        TYPE(t_meteorolody) siteMeteo
 
         REAL(DP), DIMENSION(0:,:), INTENT(IN) :: Te
 

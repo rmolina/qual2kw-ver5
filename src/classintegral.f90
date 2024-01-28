@@ -15,7 +15,7 @@ CONTAINS
 !----------------------------------------------------------------------------------
     SUBROUTINE Integration(sys, Rates, Meteo, Solar, HW, DB, hydrau, pr, nr)
         USE Class_SystemParams
-        USE Class_Meteo
+        USE m_meteorology
         USE Class_SolarCalc
         USE Class_Hydraulics
 
@@ -23,7 +23,7 @@ CONTAINS
         TYPE(Integral_type) intg				!integral data structure
         TYPE(SystemParams) sys
         TYPE(Rates_type), INTENT(IN) :: Rates
-        TYPE(Meteo_type) Meteo
+        TYPE(t_meteorolody) Meteo
         TYPE(solar_type) Solar					!solar radiation
         TYPE(Headwater_type) HW					!headwater
         TYPE(Downstream_type) DB				!downstream boundary
@@ -911,7 +911,7 @@ CONTAINS
     SUBROUTINE Derivs(nr, Meteo, Solar, HW, DB, hydrau, sys, Te, c, INb, IPb, &
         Rates, dTe, dc, dINb, dIPb, t)
 
-        USE Class_Meteo
+        USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
         USE Class_Hydraulics
@@ -922,7 +922,7 @@ CONTAINS
 
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr
-        TYPE(Meteo_type) :: Meteo
+        TYPE(t_meteorolody) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         TYPE(Headwater_type) HW							!headwater
         TYPE(Downstream_type) DB						!downstream boundary
@@ -2988,7 +2988,7 @@ CONTAINS
     SUBROUTINE odeint (begin, sys, Rates, Meteo, Solar, &
         HW, DB, hydrau, pr, nr, t1, t2, dt1, saveSteps, stateVariables)
 
-        USE Class_Meteo
+        USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
         USE Class_Headwater
@@ -3009,7 +3009,7 @@ CONTAINS
         !gp 08-Jan-10
         CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
 
-        TYPE(Meteo_type) :: Meteo
+        TYPE(t_meteorolody) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
 !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type) HW							!headwater
@@ -3086,7 +3086,7 @@ CONTAINS
     SUBROUTINE rkqs(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
         scal, Rates, dTe, dc, dINb, dIPb, t, dttry, dtdid, dtnext, stateVariables)
 
-        USE Class_Meteo
+        USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
         USE Class_Headwater
@@ -3109,7 +3109,7 @@ CONTAINS
         !gp 08-Jan-10
         CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
 
-        TYPE(Meteo_type) :: Meteo
+        TYPE(t_meteorolody) :: Meteo
         TYPE(solar_type) Solar						!solar radiation
         TYPE(Headwater_type), INTENT(IN) :: HW				!headwater
         TYPE(Downstream_type), INTENT(IN) :: DB				!downstream boundary
@@ -3220,7 +3220,7 @@ CONTAINS
     SUBROUTINE rkck(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
         Rates, dTe, dc, dINb, dIPb, t, dt, outIntg, err, stateVariables)
 
-        USE Class_Meteo
+        USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
         USE Class_Headwater
@@ -3236,7 +3236,7 @@ CONTAINS
         !gp 08-Jan-10
         CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
 
-        TYPE(Meteo_type) :: Meteo
+        TYPE(t_meteorolody) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type), INTENT(IN) :: HW					!headwater
@@ -3470,7 +3470,7 @@ CONTAINS
     SUBROUTINE rk4(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
         Rates, dTe, dc, dINb, dIPb, t, dt, stateVariables)
 
-        USE Class_Meteo
+        USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
         USE Class_Headwater
@@ -3482,7 +3482,7 @@ CONTAINS
 
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr
-        TYPE(Meteo_type) :: Meteo
+        TYPE(t_meteorolody) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         !TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type), INTENT(IN) :: HW					!headwater

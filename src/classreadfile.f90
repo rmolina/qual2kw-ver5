@@ -6,7 +6,7 @@ contains
         USE Class_SystemParams    !, ONLY: SystemParams, SystemParams_
         USE Class_RiverTopo
         USE Class_Hydraulics
-        USE Class_Meteo
+        USE m_meteorology
 
         USE Class_LightHeat
         USE Class_SourceIn
@@ -20,7 +20,7 @@ contains
 
         TYPE(SystemParams), INTENT(OUT) :: system
         TYPE(RiverHydraulics_type), INTENT(OUT) :: hydrau
-        TYPE(Meteo_type), INTENT(OUT) :: siteMeteo
+        TYPE(t_meteorolody), INTENT(OUT) :: siteMeteo
         TYPE(Headwater_type) HW
         TYPE(Downstream_type) DB
         TYPE(Rates_type) stochRate				!stoch, reaction, temperature rate
