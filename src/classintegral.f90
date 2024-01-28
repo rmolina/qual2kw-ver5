@@ -2034,7 +2034,7 @@ CONTAINS
                     !
                     !'gp 03-Dec-09
                     !'fraction of ionized ammonia
-                    hh = 10.0_dp ** -pHs(i, 2)
+                    hh = 10.0_dp ** (-pHs(i, 2))
                     Kamm = 10.0_dp ** (-(0.09018_dp + 2729.92_dp / (Te(i, 2) + 273.15_dp)))
                     Fi = hh / (hh + Kamm)
                     !'phosphate fractions of H2PO4- (FPO41), HPO4-- (FPO42), and PO4--- (FPO43)
