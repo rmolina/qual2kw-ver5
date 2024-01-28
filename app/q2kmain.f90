@@ -72,7 +72,7 @@ program Q2KMain
     TYPE(Rates_type) Rates			!stoch, reaction, temperature and all other rate
     TYPE(solar_type) :: Solar		!solar radiation
     TYPE(SystemParams) sys			!declare the system parameter variables
-    TYPE(RiverTopo_type) Topo		!river topology
+    TYPE(t_rivertopo) Topo		!river topology
     TYPE(Outdata_type) prOut
     INTEGER(I4B) i, j, k
     INTEGER(I4B) begintime, endtime
