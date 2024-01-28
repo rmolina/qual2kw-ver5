@@ -3,7 +3,7 @@
 MODULE Class_SourceIn
     USE nrtype
     USE Class_RiverTopo					!only num of reach and num of element
-    USE Class_WaterQuality
+    USE m_water_quality
     USE Class_Hydraulics
     IMPLICIT NONE
 
@@ -36,7 +36,7 @@ MODULE Class_SourceIn
     !contains the original point and diffusion data
     TYPE(Point_type), POINTER :: point(:)
     TYPE(Diffusion_type), POINTER :: diffu(:)
-    TYPE(WaterQuality_type), ALLOCATABLE :: load(:)				!combined load from both point and diffusion
+    TYPE(t_water_quality), ALLOCATABLE :: load(:)				!combined load from both point and diffusion
     REAL(DP), ALLOCATABLE :: HeatDiff(:), loadDiff(:,:) 	!diffusion load not vary by time
     REAL(DP), ALLOCATABLE:: Qpta(:), Qpt (:)
 
@@ -265,7 +265,7 @@ CONTAINS
         REAL(DP) :: Heat(nr)
         REAL(DP) :: Loadi(nr, nv)
         LOGICAL(2) cond1, cond2, cond3, cond4, cond5
-        TYPE(WaterQuality_type) :: ptt
+        TYPE(t_water_quality) :: ptt
         REAL(DP) Qd, Lend
 
         Heat = 0;	Loadi =0

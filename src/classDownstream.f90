@@ -1,7 +1,7 @@
 
 MODULE Class_Downstream
     USE nrtype
-    USE Class_WaterQuality
+    USE m_water_quality
 !	USE Class_SystemParams	!, ONLY:steadystate
 !	USE Class_RiverTopo	!, ONLY: nHw
     IMPLICIT NONE
@@ -10,13 +10,13 @@ MODULE Class_Downstream
     TYPE Downstream_type
         LOGICAL(LGT) :: downstreamBound =.FALSE.			!specify downsteam boundary
         INTEGER(I4B) :: NumdatPnt = 24						!Number of data points per day
-        TYPE(WaterQuality_type), POINTER :: Dat(:)			!downstream boundary time series data
+        TYPE(t_water_quality), POINTER :: Dat(:)			!downstream boundary time series data
     END TYPE
 
 CONTAINS
 
     FUNCTION Downstream_(DBFilein, downstreamBound) RESULT(DB)
-        TYPE(WaterQuality_type), INTENT(IN) :: DBFilein(0:)
+        TYPE(t_water_quality), INTENT(IN) :: DBFilein(0:)
         LOGICAL(LGT), INTENT(IN) :: downstreamBound
         TYPE(Downstream_type) DB
         INTEGER(I4B) :: status

@@ -1,7 +1,7 @@
 !classhadwater.f90
 
 MODULE Class_Headwater
-    USE Class_WaterQuality
+    USE m_water_quality
     USE Class_SystemParams	!, ONLY:steadystate
     USE Class_RiverTopo	!, ONLY: nHw
     USE Class_Phsolve, ONLY: cT
@@ -12,7 +12,7 @@ MODULE Class_Headwater
 
     TYPE Headwater_type
         INTEGER(I4B) :: NumdatPnt = 24					!Number of data points per day
-        TYPE(WaterQuality_type), POINTER :: dat(:)			!headwater data(time:headwaterID)
+        TYPE(t_water_quality), POINTER :: dat(:)			!headwater data(time:headwaterID)
     END TYPE Headwater_type
 
 CONTAINS
@@ -20,7 +20,7 @@ CONTAINS
     !HEADWATER DATA STRUCUTRE CONSTRUCTOR
     FUNCTION Headwater_(HwFileIn) RESULT(Hw)
         TYPE(Headwater_type) Hw
-        TYPE(WaterQuality_type), INTENT(IN) :: HwFileIn(:)
+        TYPE(t_water_quality), INTENT(IN) :: HwFileIn(:)
         INTEGER(I4B) i, status
 
 !		IF (steadystate()) THEN
