@@ -1,100 +1,101 @@
-!classhadwater.f90
+module m_headwater
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use nrtype, only: nv
+    use m_water_quality, only: t_water_quality
+    use class_phsolve, only: ct
+    implicit none
+    private
+    public :: headwater_t, instanteousheadwater
 
-MODULE Class_Headwater
-    USE m_water_quality
-    USE Class_SystemParams	!, ONLY:steadystate
-    USE m_RiverTopo	!, ONLY: nHw
-    USE Class_Phsolve, ONLY: cT
-    IMPLICIT NONE
+    type headwater_t
+        integer(i32) :: numdatpnt = 24 !number of data points per day
+        type(t_water_quality), pointer :: dat(:) !headwater data(time:headwaterid)
+    end type headwater_t
 
-!	PRIVATE
-!	PUBLIC :: Headwater_,
-
-    TYPE Headwater_type
-        INTEGER(I4B) :: NumdatPnt = 24					!Number of data points per day
-        TYPE(t_water_quality), POINTER :: dat(:)			!headwater data(time:headwaterID)
-    END TYPE Headwater_type
-
-CONTAINS
-
-    !HEADWATER DATA STRUCUTRE CONSTRUCTOR
-    FUNCTION Headwater_(HwFileIn) RESULT(Hw)
-        TYPE(Headwater_type) Hw
-        TYPE(t_water_quality), INTENT(IN) :: HwFileIn(:)
-        INTEGER(I4B) i, status
-
-!		IF (steadystate()) THEN
-        ALLOCATE (Hw%dat(0:Hw%NumdatPnt-1),STAT=status)
-
-        IF (status==1) STOP 'ERROR: Class_Headwater(Headwater_) Insufficient memory for dyanmic allocation'
-
-        Hw%dat = HwFileIn
-
-!		ELSE		!dyanmic simulation
-        !ToDo: implement
-!			STOP 'dynamic simulation has not been implemented yet!'
-!		END IF
-    END FUNCTION Headwater_
+    interface headwater_t
+        procedure :: headwater_ctor
+    end interface headwater_t
 
 
-! Interpolate Instanteneous Headwater data
-    SUBROUTINE InstanteousHeadwater(Hw, t, Te, c, pH)
-        USE Class_Phsolve, ONLY: cT
+contains
 
-        TYPE(Headwater_type), INTENT(IN):: Hw
-        REAL(DP), INTENT(IN) :: t
-        REAL(DP):: Te, c(:), pH
-        REAL(DP) t_hr
-        INTEGER(I4B) t0_hr, t1_hr
+    !headwater data strucutre constructor
+    function headwater_ctor(hwfilein) result(hw)
+        type(headwater_t) hw
+        type(t_water_quality), intent(in) :: hwfilein(:)
+        integer(i32) status
 
-        t_hr = (t - Int(t)) * Hw%NumdatPnt
-        IF (t_hr < Hw%NumdatPnt-1) Then
-            t0_hr = Int(t_hr)
+! if (steadystate()) then
+        allocate (hw%dat(0:hw%numdatpnt-1),stat=status)
+
+        if (status==1) stop 'ERROR: Class_Headwater(Headwater_) Insufficient memory for dyanmic allocation'
+
+        hw%dat = hwfilein
+
+! else !dyanmic simulation
+        !todo: implement
+! stop 'dynamic simulation has not been implemented yet!'
+! end if
+    end function headwater_ctor
+
+
+! interpolate instanteneous headwater data
+    subroutine instanteousheadwater(hw, t, te, c, ph)
+
+        type(headwater_t), intent(in):: hw
+        real(r64), intent(in) :: t
+        real(r64):: te, c(:), ph
+        real(r64) t_hr
+        integer(i32) t0_hr, t1_hr
+
+        t_hr = (t - int(t)) * hw%numdatpnt
+        if (t_hr < hw%numdatpnt-1) then
+            t0_hr = int(t_hr)
             t1_hr = t0_hr + 1
-        ELSE
-            t0_hr = Hw%NumdatPnt-1
+        else
+            t0_hr = hw%numdatpnt-1
             t1_hr = 0
-        END IF
+        end if
 
-        !gp 12-Jan-06
-        !WRITE(10,'(4F13.4)')	Hw%dat(t0_hr)%Te + (t_hr - t0_hr) * (Hw%dat(t1_hr)%Te - Hw%dat(t0_hr)%Te), &
-        !						Hw%dat(t0_hr)%c + (t_hr - t0_hr) 	* (Hw%dat(t1_hr)%c - Hw%dat(t0_hr)%c), &
-        !						Hw%dat(t0_hr)%pH + (t_hr - t0_hr) * (Hw%dat(t1_hr)%pH - Hw%dat(t0_hr)%pH), &
-        !						cT(pH, c(nv-2), Te, c(1))
+        !gp 12-jan-06
+        !write(10,'(4f13.4)') hw%dat(t0_hr)%te + (t_hr - t0_hr) * (hw%dat(t1_hr)%te - hw%dat(t0_hr)%te), &
+        ! hw%dat(t0_hr)%c + (t_hr - t0_hr) * (hw%dat(t1_hr)%c - hw%dat(t0_hr)%c), &
+        ! hw%dat(t0_hr)%ph + (t_hr - t0_hr) * (hw%dat(t1_hr)%ph - hw%dat(t0_hr)%ph), &
+        ! ct(ph, c(nv-2), te, c(1))
 
-        Te = Hw%dat(t0_hr)%Te + (t_hr - t0_hr) * (Hw%dat(t1_hr)%Te - Hw%dat(t0_hr)%Te)
-        c = Hw%dat(t0_hr)%c + (t_hr - t0_hr) 	* (Hw%dat(t1_hr)%c - Hw%dat(t0_hr)%c)
-        pH = Hw%dat(t0_hr)%pH + (t_hr - t0_hr) * (Hw%dat(t1_hr)%pH - Hw%dat(t0_hr)%pH)
-        !solve Total Carbon concentration
-        c(nv-1)=cT(pH, c(nv-2), Te, c(1))
+        te = hw%dat(t0_hr)%te + (t_hr - t0_hr) * (hw%dat(t1_hr)%te - hw%dat(t0_hr)%te)
+        c = hw%dat(t0_hr)%c + (t_hr - t0_hr) * (hw%dat(t1_hr)%c - hw%dat(t0_hr)%c)
+        ph = hw%dat(t0_hr)%ph + (t_hr - t0_hr) * (hw%dat(t1_hr)%ph - hw%dat(t0_hr)%ph)
+        !solve total carbon concentration
+        c(nv-1)=ct(ph, c(nv-2), te, c(1))
 
-        !gp 12-Jan-06
-        !WRITE(10,'(4F13.4)') Te, c, pH, c(nv-1)
+        !gp 12-jan-06
+        !write(10,'(4f13.4)') te, c, ph, c(nv-1)
 
-    END SUBROUTINE InstanteousHeadwater
+    end subroutine instanteousheadwater
 
 
-    Function Interpolate_hourly(t, c)
+    function interpolate_hourly(t, c)
         !for interpolation of instantaneous values from hourly point estimates
 
-        REAL(DP) interpolate_hourly
-        REAL(DP),INTENT(IN) :: c(:), t
-        REAL(DP) t_hr
-        INTEGER(I4B) t0_hr, t1_hr
+        real(r64) interpolate_hourly
+        real(r64),intent(in) :: c(:), t
+        real(r64) t_hr
+        integer(i32) t0_hr, t1_hr
 
-        t_hr = (t - Int(t)) * 24
+        t_hr = (t - int(t)) * 24
 
-        IF (t_hr < 23) Then
-            t0_hr = Int(t_hr)
+        if (t_hr < 23) then
+            t0_hr = int(t_hr)
             t1_hr = t0_hr + 1
-        ELSE
+        else
             t0_hr = 23
             t1_hr = 0
-        END IF
+        end if
 
-        Interpolate_hourly = c(t0_hr) + (t_hr - t0_hr) * (c(t1_hr) - c(t0_hr))
+        interpolate_hourly = c(t0_hr) + (t_hr - t0_hr) * (c(t1_hr) - c(t0_hr))
 
-    END FUNCTION
+    end function
 
 
-END MODULE Class_Headwater
+end module m_headwater

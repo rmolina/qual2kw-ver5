@@ -6,7 +6,7 @@ MODULE Class_Integration
     USE m_rates
     USE Class_IntegrationData
     USE Class_Output
-    USE Class_Headwater
+    USE m_headwater
     USE m_downstream
     use class_hydraulics, only: riverhydraulics_type
     use m_tempadjust, only: temp_adjust 
@@ -28,7 +28,7 @@ CONTAINS
         TYPE(rates_t), INTENT(IN) :: Rates
         TYPE(meteorology_t) Meteo
         TYPE(solar_type) Solar					!solar radiation
-        TYPE(Headwater_type) HW					!headwater
+        TYPE(headwater_t) HW					!headwater
         TYPE(downstream_t) DB				!downstream boundary
         TYPE(RiverHydraulics_type) hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(Outdata_type), INTENT(OUT) :: pr			!print out data structure
@@ -927,7 +927,7 @@ CONTAINS
         INTEGER(I4B), INTENT(IN) :: nr
         TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
-        TYPE(Headwater_type) HW							!headwater
+        TYPE(headwater_t) HW							!headwater
         TYPE(downstream_t) DB						!downstream boundary
         TYPE(RiverHydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
@@ -2994,7 +2994,7 @@ CONTAINS
         USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
-        USE Class_Headwater
+        USE m_headwater
         USE Class_Hydraulics
         USE m_rates
         USE Class_SourceIn
@@ -3015,7 +3015,7 @@ CONTAINS
         TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
 !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
-        TYPE(Headwater_type) HW							!headwater
+        TYPE(headwater_t) HW							!headwater
         TYPE(downstream_t) DB						!downstream boundary
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
@@ -3092,7 +3092,7 @@ CONTAINS
         USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
-        USE Class_Headwater
+        USE m_headwater
         USE Class_Hydraulics
         USE m_rates
         USE Class_SourceIn
@@ -3114,7 +3114,7 @@ CONTAINS
 
         TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar						!solar radiation
-        TYPE(Headwater_type), INTENT(IN) :: HW				!headwater
+        TYPE(headwater_t), INTENT(IN) :: HW				!headwater
         TYPE(downstream_t), INTENT(IN) :: DB				!downstream boundary
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau		!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
@@ -3226,7 +3226,7 @@ CONTAINS
         USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
-        USE Class_Headwater
+        USE m_headwater
         USE Class_Hydraulics
         USE m_rates
         USE Class_SourceIn
@@ -3242,7 +3242,7 @@ CONTAINS
         TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
-        TYPE(Headwater_type), INTENT(IN) :: HW					!headwater
+        TYPE(headwater_t), INTENT(IN) :: HW					!headwater
         TYPE(downstream_t), INTENT(IN) :: DB					!downstream boundary
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
@@ -3476,7 +3476,7 @@ CONTAINS
         USE m_meteorology
         USE Class_SolarCalc
         USE Class_LightHeat
-        USE Class_Headwater
+        USE m_headwater
         USE Class_Hydraulics
         USE m_rates
         USE Class_SourceIn
@@ -3488,7 +3488,7 @@ CONTAINS
         TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         !TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
-        TYPE(Headwater_type), INTENT(IN) :: HW					!headwater
+        TYPE(headwater_t), INTENT(IN) :: HW					!headwater
         TYPE(downstream_t), INTENT(IN) :: DB					!downstream boundary
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys

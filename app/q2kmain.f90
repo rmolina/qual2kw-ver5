@@ -43,7 +43,7 @@ program Q2KMain
     USE Class_SystemParams
     USE Class_Hydraulics
     USE m_meteorology
-    USE Class_Headwater
+    USE m_headwater
     USE m_downstream
     USE m_rates
     USE Class_SolarCalc
@@ -67,7 +67,7 @@ program Q2KMain
     !gp long file names are limited to 255 characters (260 for full paths)
     TYPE(RiverHydraulics_type) hydrau	!channel dimensions, hydraulics, physical characters
     TYPE(meteorology_t) Meteo			!meteology information
-    TYPE(Headwater_type) HW			!headwater
+    TYPE(headwater_t) HW			!headwater
     TYPE(downstream_t) DB		!downstream boundary
     TYPE(rates_t) Rates			!stoch, reaction, temperature and all other rate
     TYPE(solar_type) :: Solar		!solar radiation
