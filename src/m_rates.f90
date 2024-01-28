@@ -914,27 +914,48 @@ contains
         type(rates_t), intent(in) :: rates
         real(r64), intent(in) :: o2
 
-        fcarb = setoxygeninhibenhance_(rates%ikoxc, rates%ksocf, o2)
-        fnitr = setoxygeninhibenhance_(rates%ikoxn, rates%ksona, o2)
-        fdenitr = 1 - setoxygeninhibenhance_(rates%ikoxdn, rates%ksodn, o2)
-        frespp = setoxygeninhibenhance_(rates%ikoxp, rates%ksop, o2)
-        frespb = setoxygeninhibenhance_(rates%ikoxb, rates%ksob, o2)
+        fcarb = oxygen_attenuation(rates%ikoxc, rates%ksocf, o2)
+        fnitr = oxygen_attenuation(rates%ikoxn, rates%ksona, o2)
+        fdenitr = 1 - oxygen_attenuation(rates%ikoxdn, rates%ksodn, o2)
+        frespp = oxygen_attenuation(rates%ikoxp, rates%ksop, o2)
+        frespb = oxygen_attenuation(rates%ikoxb, rates%ksob, o2)
 
     end subroutine setoxygeninhibenhance
 
-    real(r64) function setoxygeninhibenhance_(model, rate, oxygen)
+    function oxygen_attenuation(model, rate, oxygen)
         integer(i32), intent(in) ::  model
         real(r64), intent(in) :: rate, oxygen
-        !real(r64), intent(out) :: res_frespb
+        real(r64) :: oxygen_attenuation
         select case (model)
           case (1)
-            setoxygeninhibenhance_ = oxygen / (rate + oxygen)
+            oxygen_attenuation = half_saturation_attenuation(rate, oxygen)
           case (2)
-            setoxygeninhibenhance_ = 1.0_r64 - exp(-rate * oxygen)
+            oxygen_attenuation = exponential_attenuation(rate, oxygen)
           case (3)
-            setoxygeninhibenhance_ = oxygen ** 2 / (rate + oxygen ** 2)
+            oxygen_attenuation = second_order_attenuation(rate, oxygen)
         end select
-    end function setoxygeninhibenhance_
+    end function oxygen_attenuation
+
+    function half_saturation_attenuation(rate, oxygen)
+        ! oxygen attenuation: half-saturation (EQ122)
+        real(r64), intent(in) :: rate, oxygen
+        real(r64) :: half_saturation_attenuation
+        half_saturation_attenuation = oxygen / (rate + oxygen)
+    end function half_saturation_attenuation
+
+    function exponential_attenuation(rate, oxygen)
+        ! oxygen attenuation: exponential (EQ123)
+        real(r64), intent(in) :: rate, oxygen
+        real(r64) :: exponential_attenuation
+        exponential_attenuation = 1.0_r64 - exp(-rate * oxygen)
+    end function exponential_attenuation
+
+    function second_order_attenuation(rate, oxygen)
+        ! oxygen attenuation: second-order half saturation (EQ124)
+        real(r64), intent(in) :: rate, oxygen
+        real(r64) :: second_order_attenuation
+        second_order_attenuation = oxygen ** 2 / (rate + oxygen ** 2)
+    end function second_order_attenuation
 
     pure function ikox(xdum)
         character(len=30), intent(in) :: xdum
