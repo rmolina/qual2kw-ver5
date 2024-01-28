@@ -1,9 +1,6 @@
-! classrivertopo.f90
-! data structure for reach and elements
 module m_rivertopo
-    use nrtype
-!	use class_element
-    use m_reach
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use m_reach, only: t_reach
     implicit none
     private
     public :: t_rivertopo
@@ -13,9 +10,9 @@ module m_rivertopo
 
     !/*module variables */
     type t_rivertopo
-        integer(i4b) nr									!number of reaches
-!		integer(i4b) ne									!number of elements
-        integer(i4b) :: nhw =1					!hardwired to 1 for mainstem only
+        integer(i32) nr									!number of reaches
+!		integer(i32) ne									!number of elements
+        integer(i32) :: nhw =1					!hardwired to 1 for mainstem only
 !		type(element_type), pointer :: elems(:) !element array, containing topology information
         type(t_reach), dimension(:),  pointer :: reach !reaches array,
 
@@ -35,17 +32,17 @@ contains
     !/* public functions */
 
     !pure function ne()
-    !	integer(i4b) ne
+    !	integer(i32) ne
     !	ne = topo%ne
     !end function ne
 
     !pure function nr()
-    !	integer(i4b) nr
+    !	integer(i32) nr
     !	nr = topo%nr
     !end function nr
 
     !pure function nhw()
-    !	integer(i4b) nhw
+    !	integer(i32) nhw
     !	nhw= topo%nhw
     !end function nhw
 
@@ -54,10 +51,10 @@ contains
     function t_rivertopo_ctor(nrch, rlab2, rname, xrdn, geomethod) result(topo)		!gp 17-nov-04
 
         type(t_rivertopo) topo
-        integer(i4b), intent(in) :: nrch
-        real(dp), intent(in) :: xrdn(0:)
+        integer(i32), intent(in) :: nrch
+        real(r64), intent(in) :: xrdn(0:)
         character(len=30), intent(in) :: rlab2(0:), rname(0:)
-        integer(i4b) i, j, nelem, status
+        integer(i32) i, j, nelem, status
 
         !gp 17-nov-04
         character(len=30), intent(in) :: geomethod		!gp 17-nov-04 depth or width for col t and u of 'reach' sheet
@@ -95,8 +92,8 @@ contains
     subroutine allocatereacharray(topo, nrch)
 
         type(t_rivertopo) topo
-        integer(i4b), intent(in) :: nrch
-        integer(i4b) status
+        integer(i32), intent(in) :: nrch
+        integer(i32) status
         if (.not. associated(topo%reach)) then
             if (nrch>0)then
                 topo%nr = nrch
@@ -116,8 +113,8 @@ contains
     end subroutine allocatereacharray
 
 !	subroutine allocateelementarray(nelem)
-!		integer(i4b), intent(in) :: nelem
-!		integer(i4b) status
+!		integer(i32), intent(in) :: nelem
+!		integer(i32) status
 
 !		if (.not. associated(topo%elems)) then
 !			if (nelem>0)then
