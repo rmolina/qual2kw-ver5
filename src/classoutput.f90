@@ -833,7 +833,7 @@ CONTAINS
                 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2'
 
             WRITE(8,'(34A13)') 'hr', 'solar', 'longat', 'back', 'air conv', 'evap', 'sed cond', 'hyporheic', 'tribs/GW', &
-				'advec/disp', 'reaeration', 'fast CBOD', 'slow CBOD', 'COD', 'nitrif', &
+                'advec/disp', 'reaeration', 'fast CBOD', 'slow CBOD', 'COD', 'nitrif', &
                 'phyto resp', 'phyto photo', 'botalg resp', 'botalg photo', &
                 'SOD', 'hyporheic', 'tribs/GW', 'advec/disp', &
                 'reaeration', 'fast CBOD', 'slow CBOD', &
