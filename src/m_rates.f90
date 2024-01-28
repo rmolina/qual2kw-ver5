@@ -503,14 +503,13 @@ contains
 
         integer(i32) i
 
-        !gp 08-feb-06
         do i=1, nr
             !1.reaeration coefficient
             !leave the value as it is
             !unless it is equal/great than zero, it will be calculated by reaeration model
 
-            !2.inorganic suspended solids settling velocity
-            call validate_user_rate(hydrau%reach(i)%vss, rates%vss)
+            !inorganic suspended solids
+            call validate_user_rate(hydrau%reach(i)%vss, rates%vss) !settling velocity
 
             !slow cbod
             call validate_user_rate(hydrau%reach(i)%khc, rates%khc) !hydrolysis rate
@@ -595,6 +594,7 @@ contains
 
     end subroutine validate_user_rates
 
+
     pure subroutine validate_user_rate(user_rate, default_rate)
         real(r64), intent(in) :: default_rate
         real(r64), intent(inout) :: user_rate
@@ -603,6 +603,7 @@ contains
             user_rate = default_rate
         end if
     end subroutine validate_user_rate
+
 
     pure function ikox(xdum)
         character(len=30), intent(in) :: xdum
@@ -618,6 +619,7 @@ contains
         end select
     end function ikox
 
+
     pure function ilight(xdum)
         character(len=30), intent(in) :: xdum
         integer(i32) ilight
@@ -631,7 +633,6 @@ contains
             ilight = 1 !"langleys/d"
         end select
     end function ilight
-
 
 
 end module m_rates
