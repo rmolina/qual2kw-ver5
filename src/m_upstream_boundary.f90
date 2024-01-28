@@ -1,27 +1,27 @@
-module m_headwater
+module m_upstream_boundary
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: nv
     use m_water_quality, only: t_water_quality
     use class_phsolve, only: ct
     implicit none
     private
-    public :: headwater_t, instanteousheadwater
+    public :: upstream_boundary_t, instanteousheadwater
 
-    type headwater_t
+    type upstream_boundary_t
         integer(i32) :: numdatpnt = 24 !number of data points per day
         type(t_water_quality), pointer :: dat(:) !headwater data(time:headwaterid)
-    end type headwater_t
+    end type upstream_boundary_t
 
-    interface headwater_t
-        procedure :: headwater_ctor
-    end interface headwater_t
+    interface upstream_boundary_t
+        procedure :: upstream_boundary_ctor
+    end interface upstream_boundary_t
 
 
 contains
 
     !headwater data strucutre constructor
-    function headwater_ctor(hwfilein) result(hw)
-        type(headwater_t) hw
+    function upstream_boundary_ctor(hwfilein) result(hw)
+        type(upstream_boundary_t) hw
         type(t_water_quality), intent(in) :: hwfilein(:)
         integer(i32) status
 
@@ -36,13 +36,13 @@ contains
         !todo: implement
 ! stop 'dynamic simulation has not been implemented yet!'
 ! end if
-    end function headwater_ctor
+    end function upstream_boundary_ctor
 
 
 ! interpolate instanteneous headwater data
     subroutine instanteousheadwater(hw, t, te, c, ph)
 
-        type(headwater_t), intent(in):: hw
+        type(upstream_boundary_t), intent(in):: hw
         real(r64), intent(in) :: t
         real(r64):: te, c(:), ph
         real(r64) t_hr
@@ -98,4 +98,4 @@ contains
     end function
 
 
-end module m_headwater
+end module m_upstream_boundary

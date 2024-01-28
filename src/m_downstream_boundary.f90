@@ -1,29 +1,29 @@
 
-module m_downstream
+module m_downstream_boundary
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: LGT, nv
     use m_water_quality, only: t_water_quality
     use class_phsolve, only: ct
     implicit none
     private
-    public :: downstream_t, instanteousdownstreamboundary
+    public :: downstream_boundary_t, instanteousdownstreamboundary
 
-    type downstream_t
+    type downstream_boundary_t
         logical(lgt) :: downstreambound =.false. !specify downsteam boundary
         integer(i32) :: numdatpnt = 24 !number of data points per day
         type(t_water_quality), pointer :: dat(:) !downstream boundary time series data
     end type
 
-    interface downstream_t
-        procedure :: downstream_ctor
-    end interface downstream_t
+    interface downstream_boundary_t
+        procedure :: downstream_boundary_ctor
+    end interface downstream_boundary_t
 
 contains
 
-    function downstream_ctor(dbfilein, downstreambound) result(db)
+    function downstream_boundary_ctor(dbfilein, downstreambound) result(db)
         type(t_water_quality), intent(in) :: dbfilein(0:)
         logical(lgt), intent(in) :: downstreambound
-        type(downstream_t) db
+        type(downstream_boundary_t) db
         integer(i32) :: status
 
         if (downstreambound) then
@@ -35,12 +35,12 @@ contains
         else
         end if
         db%downstreambound= downstreambound
-    end function downstream_ctor
+    end function downstream_boundary_ctor
 
 
     ! interpolate instanteous downstream boundary condition
     subroutine instanteousdownstreamboundary(db, t, lastte, lastc, te, c)
-        type(downstream_t), intent(in) :: db
+        type(downstream_boundary_t), intent(in) :: db
 
 ! type(headwaterdownstream_type), intent(in):: hdboundary
         real(r64), intent(in) :: lastte, lastc(:), t !last reach temperature
@@ -86,4 +86,4 @@ contains
         end if
     end subroutine instanteousdownstreamboundary
 
-end module m_downstream
+end module m_downstream_boundary

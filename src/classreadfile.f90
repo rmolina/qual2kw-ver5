@@ -12,8 +12,8 @@ contains
         USE Class_SourceIn
         USE m_rates, only: rates_t
         USE m_water_quality, ONLY:t_water_quality
-        USE m_headwater, ONLY: headwater_t
-        USE m_downstream
+        USE m_upstream_boundary, ONLY: upstream_boundary_t
+        USE m_downstream_boundary
         USE Class_SolarCalc
 
         IMPLICIT NONE
@@ -21,8 +21,8 @@ contains
         TYPE(SystemParams), INTENT(OUT) :: system
         TYPE(RiverHydraulics_type), INTENT(OUT) :: hydrau
         TYPE(meteorology_t), INTENT(OUT) :: siteMeteo
-        TYPE(headwater_t) HW
-        TYPE(downstream_t) DB
+        TYPE(upstream_boundary_t) HW
+        TYPE(downstream_boundary_t) DB
         TYPE(rates_t) stochRate				!stoch, reaction, temperature rate
         TYPE(t_rivertopo) Topo				!river topology
         TYPE(solar_type) :: siteSolar				!solar radiation
@@ -1017,8 +1017,8 @@ contains
             !ELSE !downstream boundary is not specified
         END IF
 
-        HW= headwater_t(HwIn)
-        DB= downstream_t(DBin,downstreamBoundary)
+        HW= upstream_boundary_t(HwIn)
+        DB= downstream_boundary_t(DBin,downstreamBoundary)
         IF (downstreamBoundary) DEALLOCATE(DBin, STAT=status(1))
         DEALLOCATE(HwIn, STAT=status(2))
 
