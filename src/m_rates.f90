@@ -545,132 +545,60 @@ contains
             !13. inorganic p settling veloctiy (vip)
             call validate_user_rate(hydrau%reach(i)%vip, rates%vip)
 
-            !14. phytoplankton max growth rate (kga)
-            call validate_user_rate(hydrau%reach(i)%kga, rates%kga)
+            !phytoplankton
+            call validate_user_rate(hydrau%reach(i)%kga, rates%kga) !max growth rate (kga)
+            call validate_user_rate(hydrau%reach(i)%krea, rates%krea) !respiration rate (krea)
+            call validate_user_rate(hydrau%reach(i)%kdea, rates%kdea) !death rate (kdea)
+            call validate_user_rate(hydrau%reach(i)%ksn, rates%ksn) !n half-sat (ksn)
+            call validate_user_rate(hydrau%reach(i)%ksp, rates%ksp) !p half-sat (ksp)
+            call validate_user_rate(hydrau%reach(i)%isat, rates%isat) !light sat (isat)
+            call validate_user_rate(hydrau%reach(i)%khnx, rates%khnx) !ammonia pref (khnx)
+            call validate_user_rate(hydrau%reach(i)%va, rates%va) !settling (va)
 
-            !phytoplankton respiration rate (krea)
-            call validate_user_rate(hydrau%reach(i)%krea, rates%krea)
+            !bottom plant
+            !initial biomass (botalg0) ? !leave the value as it is
+            call validate_user_rate(hydrau%reach(i)%kgaf, rates%kgaf) !max growth rate (kgaf)
+            call validate_user_rate(hydrau%reach(i)%abmax, rates%abmax) !first order carrying capacity (abmax)
+            call validate_user_rate(hydrau%reach(i)%krea1f, rates%krea1f) !respiration rate 1 (krea1f)
+            call validate_user_rate(hydrau%reach(i)%krea2f, rates%krea2f) !respiration rate 2 (krea2f)
+            call validate_user_rate(hydrau%reach(i)%kexaf, rates%kexaf) !excretion rate (kexaf)
+            call validate_user_rate(hydrau%reach(i)%kdeaf, rates%kdeaf) !death rate (kdeaf)
+            call validate_user_rate(hydrau%reach(i)%ksnf, rates%ksnf) !external n half-sat (ksnf)
+            call validate_user_rate(hydrau%reach(i)%kspf, rates%kspf) !external p half-sat (kspf)
+            call validate_user_rate(hydrau%reach(i)%isatf, rates%isatf) !light sat (isatf)
+            call validate_user_rate(hydrau%reach(i)%khnxf, rates%khnxf) !nh4 pref (khnxf)
+            call validate_user_rate(hydrau%reach(i)%ninbmin, rates%ninbmin) !subsistence quota for n (ninbmin)
+            call validate_user_rate(hydrau%reach(i)%nipbmin, rates%nipbmin) !subsistence quota for p (nipbmin)
+            call validate_user_rate(hydrau%reach(i)%ninbupmax, rates%ninbupmax) !max uptake of n (ninbupmax)
+            call validate_user_rate(hydrau%reach(i)%nipbupmax, rates%nipbupmax) !max uptake of p (nipbupmax)
+            call validate_user_rate(hydrau%reach(i)%kqn, rates%kqn) !internal n half-sat (kqn)
+            call validate_user_rate(hydrau%reach(i)%kqp, rates%kqp) !internal p half-sat (kqp)
+            call validate_user_rate(hydrau%reach(i)%nupwcfrac, rates%nupwcfrac) !fraction of n uptake from water column (nupwcfrac)
+            call validate_user_rate(hydrau%reach(i)%pupwcfrac, rates%pupwcfrac) !fraction of p uptake from water column (pupwcfrac)
 
-            !phytoplankton death rate (kdea)
-            call validate_user_rate(hydrau%reach(i)%kdea, rates%kdea)
+            !detritus(pom)
+            call validate_user_rate(hydrau%reach(i)%kdt, rates%kdt) !dissolution rate (kdt)
+            call validate_user_rate(hydrau%reach(i)%vdt, rates%vdt) !settling velocity (vdt)
 
-            !phytoplankton n half-sat (ksn)
-            call validate_user_rate(hydrau%reach(i)%ksn, rates%ksn)
+            !pathogen
+            call validate_user_rate(hydrau%reach(i)%kpath, rates%kpath) !dieoff rate (kpath)
+            call validate_user_rate(hydrau%reach(i)%vpath, rates%vpath) !settling rate (vpath)
+            call validate_user_rate(hydrau%reach(i)%apath, rates%apath) !light alpha (apath)
 
-            !phytoplankton p half-sat (ksp)
-            call validate_user_rate(hydrau%reach(i)%ksp, rates%ksp)
+            !hyporheic heterotroph
+            call validate_user_rate(hydrau%reach(i)%kgah, rates%kgah) !max growth rate (kgah)
+            call validate_user_rate(hydrau%reach(i)%ksch, rates%ksch) !half-sat for cbod (ksch)
+            call validate_user_rate(hydrau%reach(i)%kinhch, rates%kinhch) !o2 inhibition parameter (kinhch)
+            call validate_user_rate(hydrau%reach(i)%kreah, rates%kreah) !respiration rate (kreah)
+            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh) !death rate (kdeah)
+            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh) !n half-sat (ksnh)
+            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh) !p half-sat (ksph)
+            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh) !nh4 preference (khnxh)
+            call validate_user_rate(hydrau%reach(i)%ahmax, rates%ahmax) !first-order carrying capacity (ahmax)
 
-            !phytoplankton light sat (isat)
-            call validate_user_rate(hydrau%reach(i)%isat, rates%isat)
-
-            !phytoplankton ammonia pref (khnx)
-            call validate_user_rate(hydrau%reach(i)%khnx, rates%khnx)
-
-            !phytoplankton settling (va)
-            call validate_user_rate(hydrau%reach(i)%va, rates%va)
-
-            !bottom plant initial biomass (botalg0)
-            !leave the value as it is
-
-            !bottom plant max growth rate (kgaf)
-            call validate_user_rate(hydrau%reach(i)%kgaf, rates%kgaf)
-
-            !bottom plant first order carrying capacity (abmax)
-            call validate_user_rate(hydrau%reach(i)%abmax, rates%abmax)
-
-            !bottom plant respiration rate (kreaf)
-            call validate_user_rate(hydrau%reach(i)%krea1f, rates%krea1f)
-            call validate_user_rate(hydrau%reach(i)%krea2f, rates%krea2f)
-
-            !bottom plant excretion rate (kexaf)
-            call validate_user_rate(hydrau%reach(i)%kexaf, rates%kexaf)
-
-            !bottom plant death rate (kdeaf)
-            call validate_user_rate(hydrau%reach(i)%kdeaf, rates%kdeaf)
-
-            !bottom plant external n half-sat (ksnf)
-            call validate_user_rate(hydrau%reach(i)%ksnf, rates%ksnf)
-
-            !bottom plant external p half-sat (kspf)
-            call validate_user_rate(hydrau%reach(i)%kspf, rates%kspf)
-
-            !bottom plant light sat (isatf)
-            call validate_user_rate(hydrau%reach(i)%isatf, rates%isatf)
-
-            !bottom plant nh4 pref (khnxf)
-            call validate_user_rate(hydrau%reach(i)%khnxf, rates%khnxf)
-
-            !bottom plant subsistence quota for n (ninbmin)
-            call validate_user_rate(hydrau%reach(i)%ninbmin, rates%ninbmin)
-
-            !bottom plant subsistence quota for p (nipbmin)
-            call validate_user_rate(hydrau%reach(i)%nipbmin, rates%nipbmin)
-
-            !bottom plant max uptake of n (ninbupmax)
-            call validate_user_rate(hydrau%reach(i)%ninbupmax, rates%ninbupmax)
-
-            !bottom plant max uptake of p (nipbupmax)
-            call validate_user_rate(hydrau%reach(i)%nipbupmax, rates%nipbupmax)
-
-            !bottom plant internal n half-sat (kqn)
-            call validate_user_rate(hydrau%reach(i)%kqn, rates%kqn)
-
-            !bottom plant internal p half-sat (kqp)
-            call validate_user_rate(hydrau%reach(i)%kqp, rates%kqp)
-
-            !bottom plant fraction of n uptake from water column (nupwcfrac)
-            call validate_user_rate(hydrau%reach(i)%nupwcfrac, rates%nupwcfrac)
-
-            !bottom plant fraction of p uptake from water column (pupwcfrac)
-            call validate_user_rate(hydrau%reach(i)%pupwcfrac, rates%pupwcfrac)
-
-            !17. detritus(pom) dissolution rate (kdt)
-            call validate_user_rate(hydrau%reach(i)%kdt, rates%kdt)
-
-            !18. detritus(pom) settling velocity (vdt)
-            call validate_user_rate(hydrau%reach(i)%vdt, rates%vdt)
-
-            !pathogen dieoff rate (kpath)
-            call validate_user_rate(hydrau%reach(i)%kpath, rates%kpath)
-
-            !pathogen settling rate (vpath)
-            call validate_user_rate(hydrau%reach(i)%vpath, rates%vpath)
-
-            !pathogen light alpha (apath)
-            call validate_user_rate(hydrau%reach(i)%apath, rates%apath)
-
-            !hyporheic heterotroph max growth rate (kgah)
-            call validate_user_rate(hydrau%reach(i)%kgah, rates%kgah)
-
-            !hyporheic heterotroph half-sat for cbod (ksch)
-            call validate_user_rate(hydrau%reach(i)%ksch, rates%ksch)
-
-            !hyporheic heterotroph o2 inhibition parameter (kinhch)
-            call validate_user_rate(hydrau%reach(i)%kinhch, rates%kinhch)
-
-            !hyporheic heterotroph respiration rate (kreah)
-            call validate_user_rate(hydrau%reach(i)%kreah, rates%kreah)
-
-            !hyporheic heterotroph death rate (kdeah)
-            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh)
-
-            !hyporheic heterotroph n half-sat (ksnh)
-            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh)
-
-            !hyporheic heterotroph p half-sat (ksph)
-            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh)
-
-            !hyporheic heterotroph nh4 preference (khnxh)
-            call validate_user_rate(hydrau%reach(i)%khnxh, rates%khnxh)
-
-            !hyporheic heterotroph first-order carrying capacity (ahmax)
-            call validate_user_rate(hydrau%reach(i)%ahmax, rates%ahmax)
-
-            !generic constituent first-order loss rate constant (kgen)
-            call validate_user_rate(hydrau%reach(i)%kgen, rates%kgen)
-
-            !generic constituent settling rate (vgen)
-            call validate_user_rate(hydrau%reach(i)%vgen, rates%vgen)
+            !generic constituent
+            call validate_user_rate(hydrau%reach(i)%kgen, rates%kgen) ! first-order loss rate constant (kgen)
+            call validate_user_rate(hydrau%reach(i)%vgen, rates%vgen) ! settling rate (vgen)
         end do
 
     end subroutine validate_user_rates
