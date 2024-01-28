@@ -4,7 +4,7 @@
 
 MODULE Class_Hydraulics
     USE nrtype
-    USE Class_RiverTopo							!only reach number and element number used
+    use m_rivertopo !only reach number and element number used
 
     IMPLICIT NONE
     PRIVATE  AllocateHydrauArrays, DepthManning

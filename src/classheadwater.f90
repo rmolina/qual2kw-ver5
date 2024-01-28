@@ -3,7 +3,7 @@
 MODULE Class_Headwater
     USE m_water_quality
     USE Class_SystemParams	!, ONLY:steadystate
-    USE Class_RiverTopo	!, ONLY: nHw
+    USE m_RiverTopo	!, ONLY: nHw
     USE Class_Phsolve, ONLY: cT
     IMPLICIT NONE
 

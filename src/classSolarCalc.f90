@@ -5,7 +5,7 @@ MODULE Class_SolarCalc
     USE nrtype
     USE Class_SolarPosition		!All the solar position function in "solarposition.f90"
     USE Class_SystemParams
-    USE Class_RiverTopo
+    USE m_RiverTopo
     IMPLICIT NONE
     PRIVATE SolarCalcHelper
 
