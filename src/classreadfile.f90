@@ -6,7 +6,7 @@ contains
         USE Class_SystemParams    !, ONLY: SystemParams, SystemParams_
         USE Class_RiverTopo
         USE Class_Hydraulics
-        USE m_meteorology
+        USE m_meteorology, only: t_meteorology
 
         USE Class_LightHeat
         USE Class_SourceIn
@@ -1081,7 +1081,7 @@ contains
 
         !gp 16-Jul-08
         !siteMeteo = MeteoData_(nRch, shadeHH, TaHH, TdHH, UwHH, ccHH)
-        siteMeteo = MeteoData_(nRch, shadeHH, TaHH, TdHH, UwHH, ccHH, solarHH)
+        siteMeteo = t_meteorology(nRch, shadeHH, TaHH, TdHH, UwHH, ccHH, solarHH)
 
         !gp 16-Jul-08
         DEALLOCATE(solarHH, STAT=status(6))

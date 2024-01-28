@@ -3,7 +3,7 @@ module m_meteorology
     implicit none
     private
 
-    public meteodata_, instanteousmeteo, t_meteorology
+    public t_meteorology, instanteousmeteo
 
     type t_meteorology
 
@@ -21,11 +21,15 @@ module m_meteorology
         !hardwire to (0-23 hour) for now
     end type t_meteorology
 
+    interface t_meteorology
+        procedure :: t_meteorology_ctor
+    end interface t_meteorology
+
 contains
 
     !gp 16-jul-08
     !function meteodata_(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin) result(met)
-    function meteodata_(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin) result(met)
+    function t_meteorology_ctor(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin) result(met)
 
         type(t_meteorology) met
         integer(i32), intent(in) :: nr
@@ -77,7 +81,7 @@ contains
             stop 'Class_Meteo:AllocateMeteoDataArray failed'
         end if
 
-    end function meteodata_
+    end function t_meteorology_ctor
 
 
 !interpolate hourly meteology data
