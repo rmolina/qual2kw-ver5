@@ -2370,13 +2370,13 @@ CONTAINS
 
                     !'gp 03-Dec-09
                     !'fraction of ionized ammonia
-                    hh = 10.0_dp ** -pHs(i, 2)
+                    hh = 10.0_dp ** (-pHs(i, 2))
                     Kamm = 10.0_dp ** (-(0.09018_dp + 2729.92_dp / (Te(i, 2) + 273.15_dp)))
                     Fi = hh / (hh + Kamm)
                     !'phosphate fractions of H2PO4- (FPO41), HPO4-- (FPO42), and PO4--- (FPO43)
-                    KPO41 = 10.0_dp ** -2.15_dp
-                    KPO42 = 10.0_dp ** -7.2_dp
-                    KPO43 = 10.0_dp ** -12.35_dp
+                    KPO41 = 10.0_dp ** (-2.15_dp)
+                    KPO42 = 10.0_dp ** (-7.2_dp)
+                    KPO43 = 10.0_dp ** (-12.35_dp)
                     DPO = 1.0_dp / (hh ** 3.0_dp + KPO41 * hh ** 2.0_dp + KPO41 * KPO42 * hh + KPO41 * KPO42 * KPO43)
                     FPO41 = KPO41 * hh ** 2.0_dp * DPO         !'fraction of phosphate as H2PO4-
                     FPO42 = KPO41 * KPO42 * hh * DPO      !'fraction of phosphate as HPO4--
