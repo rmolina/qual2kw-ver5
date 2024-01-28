@@ -2,7 +2,7 @@ module m_rates
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     implicit none
     private
-    public rates_t, setoxygeninhibenhance, tempadjust
+    public rates_t, oxygen_inhibition_and_enhancement, tempadjust
 
     type rates_t
         real(r64) mga, mgd !scc, for v1_3
@@ -908,33 +908,49 @@ contains
 
     end function oxsat
 
-    subroutine setoxygeninhibenhance(rates, o2, fcarb, fnitr, fdenitr, frespp, frespb)
+    subroutine oxygen_inhibition_and_enhancement(rates, o2, fcarb, fnitr, fdenitr, frespp, frespb)
 
         real(r64), intent(out) :: fcarb, fnitr, fdenitr, frespp, frespb
         type(rates_t), intent(in) :: rates
         real(r64), intent(in) :: o2
 
-        fcarb = oxygen_attenuation(rates%ikoxc, rates%ksocf, o2)
-        fnitr = oxygen_attenuation(rates%ikoxn, rates%ksona, o2)
-        fdenitr = 1 - oxygen_attenuation(rates%ikoxdn, rates%ksodn, o2)
-        frespp = oxygen_attenuation(rates%ikoxp, rates%ksop, o2)
-        frespb = oxygen_attenuation(rates%ikoxb, rates%ksob, o2)
+        !oxygen inhibition of carbon oxidation
+        fcarb = oxygen_inhibition(rates%ikoxc, rates%ksocf, o2)
 
-    end subroutine setoxygeninhibenhance
+        !oxygen inhibition of nitrification
+        fnitr = oxygen_inhibition(rates%ikoxn, rates%ksona, o2)
 
-    function oxygen_attenuation(model, rate, oxygen)
+        !oxygen enhancement of denitrification
+        fdenitr = oxygen_enhancement(rates%ikoxdn, rates%ksodn, o2)
+
+        !oxygen inhibition of phytoplankton respiration
+        frespp = oxygen_inhibition(rates%ikoxp, rates%ksop, o2)
+
+        !oxygen inhibition of bottom plant respiration
+        frespb = oxygen_inhibition(rates%ikoxb, rates%ksob, o2)
+
+    end subroutine oxygen_inhibition_and_enhancement
+
+    function oxygen_inhibition(model, rate, oxygen)
         integer(i32), intent(in) ::  model
         real(r64), intent(in) :: rate, oxygen
-        real(r64) :: oxygen_attenuation
+        real(r64) :: oxygen_inhibition
         select case (model)
           case (1)
-            oxygen_attenuation = half_saturation_attenuation(rate, oxygen)
+            oxygen_inhibition = half_saturation_attenuation(rate, oxygen)
           case (2)
-            oxygen_attenuation = exponential_attenuation(rate, oxygen)
+            oxygen_inhibition = exponential_attenuation(rate, oxygen)
           case (3)
-            oxygen_attenuation = second_order_attenuation(rate, oxygen)
+            oxygen_inhibition = second_order_attenuation(rate, oxygen)
         end select
-    end function oxygen_attenuation
+    end function oxygen_inhibition
+
+    function oxygen_enhancement(model, rate, oxygen)
+        integer(i32), intent(in) ::  model
+        real(r64), intent(in) :: rate, oxygen
+        real(r64) :: oxygen_enhancement
+        oxygen_enhancement = 1 - oxygen_inhibition(model, rate, oxygen)
+    end function oxygen_enhancement
 
     function half_saturation_attenuation(rate, oxygen)
         ! oxygen attenuation: half-saturation (EQ122)

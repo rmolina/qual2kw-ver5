@@ -1340,7 +1340,7 @@ CONTAINS
                 !determine solar radiation
                 Iat(i) = lightheat%PAR * Solar%Jsnt(i)
 
-                CALL SetOxygenInhibEnhance(Rates, c(i, 3, 1), fcarb, fnitr, fdenitr, frespp, frespb)	!gp 27-Oct-04
+                CALL oxygen_inhibition_and_enhancement(Rates, c(i, 3, 1), fcarb, fnitr, fdenitr, frespp, frespb)	!gp 27-Oct-04
 
                 !light extinction
 
