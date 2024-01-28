@@ -20,7 +20,7 @@ contains
 
         TYPE(SystemParams), INTENT(OUT) :: system
         TYPE(RiverHydraulics_type), INTENT(OUT) :: hydrau
-        TYPE(t_meteorolody), INTENT(OUT) :: siteMeteo
+        TYPE(t_meteorology), INTENT(OUT) :: siteMeteo
         TYPE(Headwater_type) HW
         TYPE(Downstream_type) DB
         TYPE(Rates_type) stochRate				!stoch, reaction, temperature rate

@@ -815,7 +815,7 @@ CONTAINS
         INTEGER(I4B), INTENT(IN) :: nr
         TYPE(Rates_type) Rates
         TYPE(RiverHydraulics_type) hydrau
-        TYPE(t_meteorolody) siteMeteo
+        TYPE(t_meteorology) siteMeteo
 
         REAL(DP), DIMENSION(0:,:), INTENT(IN) :: Te
 
