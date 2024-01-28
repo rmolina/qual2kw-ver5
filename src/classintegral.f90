@@ -1624,13 +1624,17 @@ CONTAINS
                 !END IF
                 prefam = 0
                 IF (Fi * c(i, 7, 1) * c(i, 8, 1) > 0) THEN
-                    prefam = Fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnx + Fi * c(i, 7, 1)) / (hydrau%reach(i)%khnx + c(i, 8, 1)) &
-                        + Fi * c(i, 7, 1) * hydrau%reach(i)%khnx / (Fi * c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnx + c(i, 8, 1))
+                    prefam = Fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnx + Fi * c(i, 7, 1)) &
+                        / (hydrau%reach(i)%khnx + c(i, 8, 1)) &
+                        + Fi * c(i, 7, 1) * hydrau%reach(i)%khnx / (Fi * c(i, 7, 1) + c(i, 8, 1)) &
+                        / (hydrau%reach(i)%khnx + c(i, 8, 1))
                 END IF
                 prefamF = 0
                 IF (Fi * c(i, 7, 1) + c(i, 8, 1) > 0) THEN
-                    prefamF = Fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnxF + Fi * c(i, 7, 1)) / (hydrau%reach(i)%khnxF + c(i, 8, 1)) &
-                        + Fi * c(i, 7, 1) * hydrau%reach(i)%khnxF / (Fi * c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnxF + c(i, 8, 1))
+                    prefamF = Fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnxF + Fi * c(i, 7, 1)) &
+                        / (hydrau%reach(i)%khnxF + c(i, 8, 1)) &
+                        + Fi * c(i, 7, 1) * hydrau%reach(i)%khnxF / (Fi * c(i, 7, 1) + c(i, 8, 1)) &
+						/ (hydrau%reach(i)%khnxF + c(i, 8, 1))
                 END IF
 
                 !
@@ -1831,7 +1835,8 @@ CONTAINS
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) - Rates%rccd * BotAlgPhoto
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + Rates%rccd * BotAlgResp
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + Rates%rcco * CSOD * hydrau%reach(i)%Asd
-                dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + kacT(i) * hydrau%reach(i)%vol * (Khs(i, 1) * Rates%pco2 - alp0 * c(i, nv - 1, 1))  !gp end new block
+                dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + kacT(i) * hydrau%reach(i)%vol * (Khs(i, 1) &
+					* Rates%pco2 - alp0 * c(i, nv - 1, 1))  !gp end new block
 
                 !
                 ! --- (nv-2) Alkalinity (gCaCO3/day) ---
@@ -1861,9 +1866,12 @@ CONTAINS
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * Rates%apa * PhytoPhoto * 50043.45_dp   !'phyto photo uptake of P
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * Rates%ana * PhytoResp * 50043.45_dp   !'phyto resp of N
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * Rates%apa * PhytoResp * 50043.45_dp   !'phyto resp of P
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * Fi * BotAlgUptakeN * prefamF * hydrau%reach(i)%NUpWCfrac * 50043.45_dp !'periphyton N uptake (ammonia)
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * BotAlgUptakeN * (1 - prefamF) * hydrau%reach(i)%NUpWCfrac * 50043.45_dp  !'periphyton N uptake (nitrate)
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * BotAlgUptakeP * hydrau%reach(i)%PUpWCfrac * 50043.45_dp   !'periphyton P uptake
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * Fi * BotAlgUptakeN * prefamF &
+						* hydrau%reach(i)%NUpWCfrac * 50043.45_dp !'periphyton N uptake (ammonia)
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * BotAlgUptakeN * (1 - prefamF) &
+						* hydrau%reach(i)%NUpWCfrac * 50043.45_dp  !'periphyton N uptake (nitrate)
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * BotAlgUptakeP &
+						* hydrau%reach(i)%PUpWCfrac * 50043.45_dp   !'periphyton P uptake
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * BotAlgExc * NINb * 50043.45_dp !'periphyton excretion of N
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * BotAlgExc * NIPb * 50043.45_dp   !'periphyton excretion of P
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * 2.0_dp * NH4Nitrif * 50043.45_dp  !'nitrification ammonia loss and nitrate gain
