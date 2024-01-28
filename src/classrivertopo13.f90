@@ -5,6 +5,8 @@ module class_rivertopo
 !	use class_element
     use m_reach
     implicit none
+    private
+    public :: rivertopo_type, rivertopo_
 
 !	private															!unless declared public
 !	public :: ne, nr, nhw, river_
