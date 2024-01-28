@@ -23,7 +23,7 @@ contains
         TYPE(t_meteorology), INTENT(OUT) :: siteMeteo
         TYPE(Headwater_type) HW
         TYPE(Downstream_type) DB
-        TYPE(Rates_type) stochRate				!stoch, reaction, temperature rate
+        TYPE(rates_t) stochRate				!stoch, reaction, temperature rate
         TYPE(t_rivertopo) Topo				!river topology
         TYPE(solar_type) :: siteSolar				!solar radiation
 
@@ -943,7 +943,7 @@ contains
         !							kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax, &
         !							apath, kgen, tkgen, vgen, useGenericAsCOD, &
         !							NUpWCfrac, PUpWCfrac)
-        stochRate= Rates_(nRch, hydrau, mgC,mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, &
+        stochRate= rates_ctor(nRch, hydrau, mgC,mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, &
             Ksodn, Ksop, Ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
             kn, tkn, ki, tki, vdi, tvdi, khp, tkhp,vop, vip, kspi, kga, &
             tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, Isat, khnx, &

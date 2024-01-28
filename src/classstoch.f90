@@ -1,15 +1,13 @@
-! classstoch.f90
-
 !stoichiometry
-!include "nrtype.f90"
 module class_rates
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     !use nrtype
     implicit none
 
     private
-    public rates_, rates_type, setoxygeninhibenhance, tempadjust
-    type rates_type
+    public rates_ctor, rates_t, setoxygeninhibenhance, tempadjust
+
+    type rates_t
         real(r64) mga, mgd !scc, for v1_3
         real(r64) vss !inorganic suspended solids settling vol
         real(r64) anc, apc, adc
@@ -157,34 +155,7 @@ module class_rates
 
 contains
 
-    !gp 08-feb-06
-    !function rates_(mgc, mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, ksodn, ksop, &
-    ! ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
-    ! tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi, kga, tkga, krea, &
-    ! tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, va, typef, kgaf, &
-    ! tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, abmax, tkdeaf, ksnf, &
-    ! kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, ninbmin, nipbmin, &
-    ! ninbupmax, nipbupmax, kqn, kqp, kpath, tkpath, vpath, pco2, &
-    ! xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, &
-    ! kawindmethod, hco3use, hco3usef, typeh, kgah, tkgah, ksch, xdum8, kinhch, &
-    ! kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, & !gp 15-nov-04
-    ! apath, kgen, tkgen, vgen, usegenericascod, & !gp 08-dec-04
-    ! nupwcfrac, pupwcfrac) result(rates) !gp 26-jan-06
-
-    !gp 03-apr-08
-    !function rates_(nr, hydrau, mgc, mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, ksodn, ksop, &
-    ! ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
-    ! tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi, kga, tkga, krea, &
-    ! tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, va, typef, kgaf, &
-    ! tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, abmax, tkdeaf, ksnf, &
-    ! kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, ninbmin, nipbmin, &
-    ! ninbupmax, nipbupmax, kqn, kqp, kpath, tkpath, vpath, pco2, &
-    ! xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, &
-    ! kawindmethod, hco3use, hco3usef, typeh, kgah, tkgah, ksch, xdum8, kinhch, &
-    ! kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, &
-    ! apath, kgen, tkgen, vgen, usegenericascod, &
-    ! nupwcfrac, pupwcfrac) result(rates)
-    function rates_(nr, hydrau, mgc, mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, ksodn, ksop, &
+    function rates_ctor(nr, hydrau, mgc, mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, ksodn, ksop, &
         ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
         tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi, kga, tkga, krea, &
         tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, va, typef, kgaf, &
@@ -205,7 +176,7 @@ contains
         integer(i32), intent(in) :: nr !number of reach
         integer(i32) i
 
-        type(rates_type) rates
+        type(rates_t) rates
 
         !stoichiometry
         real(r64) :: mgc, mgn, mgp, mgd, mga
@@ -814,7 +785,7 @@ contains
         use m_meteorology
 
         integer(i32), intent(in) :: nr
-        type(rates_type) rates
+        type(rates_t) rates
         type(riverhydraulics_type) hydrau
         type(t_meteorology) sitemeteo
 
@@ -938,7 +909,7 @@ contains
     subroutine setoxygeninhibenhance(rates, o2, fcarb, fnitr, fdenitr, frespp, frespb)
 
         real(r64), intent(out) :: fcarb, fnitr, fdenitr, frespp, frespb
-        type(rates_type), intent(in) :: rates
+        type(rates_t), intent(in) :: rates
         real(r64), intent(in) :: o2
 
         select case (rates%ikoxc)

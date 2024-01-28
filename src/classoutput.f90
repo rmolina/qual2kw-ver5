@@ -307,7 +307,7 @@ CONTAINS
         TYPE(Outdata_type), INTENT(IN) :: pr
         TYPE(t_rivertopo) Topo
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
-        TYPE(Rates_type) Rates
+        TYPE(rates_t) Rates
         TYPE(SystemParams) system
 
         INTEGER(I4B), INTENT(IN) :: nr

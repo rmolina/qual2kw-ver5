@@ -23,7 +23,7 @@ CONTAINS
 
         TYPE(Integral_type) intg				!integral data structure
         TYPE(SystemParams) sys
-        TYPE(Rates_type), INTENT(IN) :: Rates
+        TYPE(rates_t), INTENT(IN) :: Rates
         TYPE(t_meteorology) Meteo
         TYPE(solar_type) Solar					!solar radiation
         TYPE(Headwater_type) HW					!headwater
@@ -442,7 +442,7 @@ CONTAINS
         !gp 17-Feb-05
         CHARACTER(LEN=30), INTENT(IN) :: showDielResults		!Yes or No (only used in Excel VBA)
 
-        TYPE(Rates_type), INTENT(IN) :: Rates
+        TYPE(rates_t), INTENT(IN) :: Rates
         TYPE(Integral_type), INTENT(IN) :: intg
         TYPE(outdata_type), INTENT(OUT) :: pr
 
@@ -676,7 +676,7 @@ CONTAINS
 
         INTEGER(I4B), INTENT(IN) :: nr
         REAL(DP), INTENT(IN) :: dt
-        TYPE(Rates_type), INTENT(IN) :: Rates
+        TYPE(rates_t), INTENT(IN) :: Rates
         !CHARACTER(LEN=30) :: IMeth   = 'Euler'		! integration method
         CHARACTER(LEN=30), INTENT(IN) :: IMethpH  ! pH solve method
 
@@ -934,7 +934,7 @@ CONTAINS
         !gp 27-Oct-04 REAL(DP), DIMENSION(:,:), POINTER :: Te, c
         REAL(DP), DIMENSION(:,:), POINTER :: Te		!gp 27-Oct-04
         REAL(DP), DIMENSION(:,:,:), POINTER :: c	!gp add dimension for nl
-        TYPE(Rates_type) Rates
+        TYPE(rates_t) Rates
         !gp 27-Oct-04 REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
         REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
         REAL(DP), INTENT(IN)::	t						!time
@@ -3018,7 +3018,7 @@ CONTAINS
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: begin
-        TYPE(Rates_type), INTENT(IN) :: Rates
+        TYPE(rates_t), INTENT(IN) :: Rates
         TYPE(Outdata_type), INTENT(OUT) :: pr	  !output data
         REAL(DP), INTENT(IN) :: t1, t2, dt1
         LOGICAL(4), INTENT(IN) :: saveSteps
@@ -3118,7 +3118,7 @@ CONTAINS
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: intg
         TYPE(Integral_type), INTENT(IN) :: scal
-        TYPE(Rates_type), INTENT(IN) :: Rates
+        TYPE(rates_t), INTENT(IN) :: Rates
         !gp 28-Oct-04 REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
         REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
         REAL(DP), INTENT(INOUT) :: t       				!initial time, double
@@ -3246,7 +3246,7 @@ CONTAINS
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(IN) :: intg
         TYPE(Integral_type), INTENT(OUT) :: outIntg, err 			!current value and incremented value
-        TYPE(Rates_type), INTENT(IN) :: Rates
+        TYPE(rates_t), INTENT(IN) :: Rates
 
         !gp 28-Oct-04 REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
         REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
@@ -3491,7 +3491,7 @@ CONTAINS
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: intg
-        TYPE(Rates_type), INTENT(IN) :: Rates
+        TYPE(rates_t), INTENT(IN) :: Rates
 
         !gp 28-Oct-04 REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
         REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
