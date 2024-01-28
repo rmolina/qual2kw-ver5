@@ -45,7 +45,7 @@ program Q2KMain
     USE m_meteorology
     USE Class_Headwater
     USE Class_Downstream
-    USE Class_Rates
+    USE m_rates
     USE Class_SolarCalc
 !	USE Class_RiverTopo
     USE Class_ReadFile
@@ -69,7 +69,7 @@ program Q2KMain
     TYPE(t_meteorology) Meteo			!meteology information
     TYPE(Headwater_type) HW			!headwater
     TYPE(Downstream_type) DB		!downstream boundary
-    TYPE(Rates_type) Rates			!stoch, reaction, temperature and all other rate
+    TYPE(rates_t) Rates			!stoch, reaction, temperature and all other rate
     TYPE(solar_type) :: Solar		!solar radiation
     TYPE(SystemParams) sys			!declare the system parameter variables
     TYPE(t_rivertopo) Topo		!river topology

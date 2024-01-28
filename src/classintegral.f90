@@ -3,7 +3,7 @@
 MODULE Class_Integration
     USE nrtype
     USE Class_Phsolve
-    USE Class_Rates
+    USE m_rates
     USE Class_IntegrationData
     USE Class_Output
     USE Class_Headwater
@@ -916,10 +916,10 @@ CONTAINS
         USE Class_SolarCalc
         USE Class_LightHeat
         USE Class_Hydraulics
-        USE Class_Rates
+        USE m_rates
         USE Class_SourceIn
         USE Class_Phsolve
-        USE Class_Rates
+        USE m_rates
 
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr
@@ -2994,10 +2994,10 @@ CONTAINS
         USE Class_LightHeat
         USE Class_Headwater
         USE Class_Hydraulics
-        USE Class_Rates
+        USE m_rates
         USE Class_SourceIn
         USE Class_Phsolve
-        USE Class_Rates
+        USE m_rates
         USE Class_output
         IMPLICIT NONE
 
@@ -3092,10 +3092,10 @@ CONTAINS
         USE Class_LightHeat
         USE Class_Headwater
         USE Class_Hydraulics
-        USE Class_Rates
+        USE m_rates
         USE Class_SourceIn
         USE Class_Phsolve
-        USE Class_Rates
+        USE m_rates
 
         IMPLICIT NONE
 
@@ -3226,10 +3226,10 @@ CONTAINS
         USE Class_LightHeat
         USE Class_Headwater
         USE Class_Hydraulics
-        USE Class_Rates
+        USE m_rates
         USE Class_SourceIn
         USE Class_Phsolve
-        USE Class_Rates
+        USE m_rates
 
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr
@@ -3476,10 +3476,10 @@ CONTAINS
         USE Class_LightHeat
         USE Class_Headwater
         USE Class_Hydraulics
-        USE Class_Rates
+        USE m_rates
         USE Class_SourceIn
         USE Class_Phsolve
-        USE Class_Rates
+        USE m_rates
 
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr

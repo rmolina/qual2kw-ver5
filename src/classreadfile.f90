@@ -10,7 +10,7 @@ contains
 
         USE Class_LightHeat
         USE Class_SourceIn
-        USE Class_Rates, only: rates_t
+        USE m_rates, only: rates_t
         USE m_water_quality, ONLY:t_water_quality
         USE Class_Headwater, ONLY: Headwater_, Headwater_type
         USE Class_downstream

@@ -1,5 +1,5 @@
 !stoichiometry
-module class_rates
+module m_rates
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     !use nrtype
     implicit none
@@ -974,4 +974,4 @@ contains
             ikox = 2 !"L/mgO2" End
         end select
     end function
-end module class_rates
+end module m_rates
