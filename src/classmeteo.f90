@@ -2,19 +2,13 @@ module m_meteorology
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     implicit none
     private
-
     public t_meteorology, instanteousmeteo
 
     type t_meteorology
-
-        !gp 16-jul-08
-        !real(r64), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh
         real(r64), dimension(:,:), pointer :: shadehh, tahh, tdhh, uwhh, cchh, solarhh
 
         !instantenous meteorology data
 
-        !gp 16-jul-08
-        !real(r64), dimension(:),   pointer :: shadet, ta, td, uw, cc
         real(r64), dimension(:),   pointer :: shadet, ta, td, uw, cc, solart
 
         integer(i32) :: numdatpnt= 24 !use to identify the size of time series
@@ -27,24 +21,14 @@ module m_meteorology
 
 contains
 
-    !gp 16-jul-08
-    !function meteodata_(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin) result(met)
     function t_meteorology_ctor(nr, shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin) result(met)
 
         type(t_meteorology) met
         integer(i32), intent(in) :: nr
 
-        !gp 16-jul-08
-        !real(r64), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin
         real(r64), dimension(0:,:), intent(in) :: shadehhin, tahhin, tdhhin, uwhhin, cchhin, solarhhin
 
-        !gp 16-jul-08
-        !integer(i32) status(10), i
         integer(i32) status(12), i
-
-        !if (steadystate()) then
-
-        !end if
 
         if (nr > 0) then
             allocate (met%shadehh(0:met%numdatpnt-1 ,nr), stat=status(1))
@@ -59,7 +43,6 @@ contains
             allocate (met%uw(nr), stat=status(9))
             allocate (met%cc(nr), stat=status(10))
 
-            !gp 16-jul-08
             allocate (met%solarhh(0:met%numdatpnt-1,nr), stat=status(11))
             allocate (met%solart(nr), stat=status(12))
 
@@ -73,7 +56,6 @@ contains
             met%uwhh = uwhhin
             met%cchh = cchhin
 
-            !gp 16-jul-08
             met%solarhh = solarhhin
 
         else
@@ -96,7 +78,6 @@ contains
         call interpolatehelper(nr, t, met%uw, met%uwhh, met%numdatpnt)
         call interpolatehelper(nr, t, met%cc, met%cchh, met%numdatpnt)
 
-        !gp 16-jul-08
         call interpolatehelper(nr, t, met%solart, met%solarhh, met%numdatpnt)
 
         !shade use different method
