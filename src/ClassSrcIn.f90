@@ -3,7 +3,7 @@
 module class_sourcein
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: nv, pii, cpw, rhow
-    use m_rivertopo, only: rivertopo_type
+    use m_rivertopo, only: t_rivertopo
     use class_phsolve, only: ct
     use m_water_quality, only: t_water_quality
     use class_hydraulics, only: riverhydraulics_type
@@ -49,7 +49,7 @@ contains
         phpttamp, phpttmaxtime, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
         integer(i32), intent(in) :: nr, nptin, ndiffin, flag
-        type(rivertopo_type), intent(in) :: topo									!river topology
+        type(t_rivertopo), intent(in) :: topo									!river topology
         type(riverhydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
         real(r64) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
         real(r64) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
@@ -91,7 +91,7 @@ contains
         cpttmean, cpttamp, cpttmaxtime, phpttmean, phpttamp, phpttmaxtime)
 
         integer(i32), intent(in) :: nr, nptin, flag
-        type(rivertopo_type), intent(in) :: topo									!river topology
+        type(t_rivertopo), intent(in) :: topo									!river topology
         real(r64) xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
         real(r64) cpttmean(:,:), cpttamp(:,:), cpttmaxtime(:,:)
         real(r64) phpttmean(:), phpttamp(:), phpttmaxtime(:)
@@ -156,7 +156,7 @@ contains
 
     subroutine nonpointin_(nr, topo, flag, ndiffin, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
-        type(rivertopo_type) topo									!river topology
+        type(t_rivertopo) topo									!river topology
         integer(i32), intent(in) ::	ndiffin, nr, flag
         real(r64), intent(in) :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
         character(len=30), intent(in) :: diffname(:)

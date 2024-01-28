@@ -6,13 +6,13 @@ module m_rivertopo
     use m_reach
     implicit none
     private
-    public :: rivertopo_type
+    public :: t_rivertopo
 
 !	private															!unless declared public
 !	public :: ne, nr, nhw, river_
 
     !/*module variables */
-    type rivertopo_type
+    type t_rivertopo
         integer(i4b) nr									!number of reaches
 !		integer(i4b) ne									!number of elements
         integer(i4b) :: nhw =1					!hardwired to 1 for mainstem only
@@ -22,11 +22,11 @@ module m_rivertopo
         !gp 17-nov-04
         character(len=30) geomethod		!gp 17-nov-04 depth or width for col t and u of 'reach' sheet
 
-    end type rivertopo_type
+    end type t_rivertopo
 
-    interface rivertopo_type
+    interface t_rivertopo
         procedure :: rivertopo_
-    end interface rivertopo_type
+    end interface t_rivertopo
 
 !	type(rivertopo_type) topo
     !steady state data types
@@ -53,7 +53,7 @@ contains
     !gp 17-nov-04 function rivertopo_(nrch, rlab2, rname, xrdn) result(topo)
     function rivertopo_(nrch, rlab2, rname, xrdn, geomethod) result(topo)		!gp 17-nov-04
 
-        type(rivertopo_type) topo
+        type(t_rivertopo) topo
         integer(i4b), intent(in) :: nrch
         real(dp), intent(in) :: xrdn(0:)
         character(len=30), intent(in) :: rlab2(0:), rname(0:)
@@ -94,7 +94,7 @@ contains
 
     subroutine allocatereacharray(topo, nrch)
 
-        type(rivertopo_type) topo
+        type(t_rivertopo) topo
         integer(i4b), intent(in) :: nrch
         integer(i4b) status
         if (.not. associated(topo%reach)) then

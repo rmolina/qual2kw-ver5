@@ -305,7 +305,7 @@ CONTAINS
 !	USE Class_Integration
 
         TYPE(Outdata_type), INTENT(IN) :: pr
-        TYPE(RiverTopo_type) Topo
+        TYPE(t_rivertopo) Topo
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
         TYPE(Rates_type) Rates
         TYPE(SystemParams) system
