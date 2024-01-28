@@ -1,13 +1,11 @@
-!classwaterquality.f90
-!water quality constituent type
-MODULE Class_WaterQuality
-    USE nrtype
-    IMPLICIT NONE
+module class_waterquality
+    use nrtype
+    implicit none
 
-    TYPE WaterQuality_type
-        REAL(DP) :: Te =0.0
-        REAL(DP) :: c(1:nv) =0.0
-        REAL(DP) :: pH = 7.0
-    END TYPE
+    type waterquality_type
+        real(dp) :: te = 0.0
+        real(dp) :: c(1:nv) = 0.0
+        real(dp) :: ph = 7.0
+    end type
 
-END MODULE
+end module
