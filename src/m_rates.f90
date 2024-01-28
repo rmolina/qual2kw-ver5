@@ -971,7 +971,7 @@ contains
           case ("2nd order")
             ikox = 3 !"mgO2/L"
           case default !"Exponential"
-            ikox = 2 !"L/mgO2" End
+            ikox = 2 !"L/mgO2"
         end select
     end function
 end module m_rates
