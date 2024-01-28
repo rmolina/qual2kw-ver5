@@ -262,8 +262,8 @@ contains
 
         !gp 24-Jun-09
         !READ(8,*) timezone, pco2, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, showDielResults, stateVariables, calcSedFlux, simAlk	!gp 26-Oct-07
-        READ(8,*) timezone, pco2, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, showDielResults, stateVariables, calcSedFlux, simAlk, &
-            writeDynamic
+        READ(8,*) timezone, pco2, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, showDielResults, &
+            stateVariables, calcSedFlux, simAlk, writeDynamic
 
         !READ(8,*) IMeth, IMethpH
 
