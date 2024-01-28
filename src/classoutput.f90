@@ -53,7 +53,8 @@ MODULE Class_Output
 
         !gp 05-Jul-05 heat/DO/CO2 fluxes
         REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxJsnt, pr_saveHeatFluxLongat, pr_saveHeatFluxBack, pr_saveHeatFluxConv
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxEvap, pr_saveHeatFluxJsed, pr_saveHeatFluxJhyporheic, pr_saveHeatFluxTribs
+        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxEvap, pr_saveHeatFluxJsed, pr_saveHeatFluxJhyporheic, &
+            pr_saveHeatFluxTribs
         REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxAdvecDisp
         REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxReaer, pr_saveDOfluxCBODfast, pr_saveDOfluxCBODslow, pr_saveDOfluxNitrif
         REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxPhytoResp, pr_saveDOfluxPhytoPhoto, pr_saveDOfluxBotalgResp, &
@@ -831,8 +832,8 @@ CONTAINS
                 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', &
                 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2'
 
-            WRITE(8,'(34A13)') 'hr', 'solar', 'longat', 'back', 'air conv', 'evap', 'sed cond', 'hyporheic', 'tribs/GW', 'advec/disp', &
-                'reaeration', 'fast CBOD', 'slow CBOD', 'COD', 'nitrif', &
+            WRITE(8,'(34A13)') 'hr', 'solar', 'longat', 'back', 'air conv', 'evap', 'sed cond', 'hyporheic', 'tribs/GW', &
+				'advec/disp', 'reaeration', 'fast CBOD', 'slow CBOD', 'COD', 'nitrif', &
                 'phyto resp', 'phyto photo', 'botalg resp', 'botalg photo', &
                 'SOD', 'hyporheic', 'tribs/GW', 'advec/disp', &
                 'reaeration', 'fast CBOD', 'slow CBOD', &
