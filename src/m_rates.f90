@@ -1,5 +1,6 @@
 module m_rates
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use class_hydraulics, only: riverhydraulics_type
     implicit none
     private
     public rates_t
@@ -173,7 +174,6 @@ contains
 
         !gp 08-feb-06
         !this function also assigns global rates to the unspecified reach-specific rates in hydrau
-        use class_hydraulics
         type(riverhydraulics_type), intent(inout) :: hydrau !assign reach-specific rates
         integer(i32), intent(in) :: nr !number of reach
         integer(i32) i
@@ -258,11 +258,11 @@ contains
         rates%ksocf = ksocf
 
         !oxygen inhibition of nitrification
-        rates%ikoxn= ikox(xdum2)
+        rates%ikoxn = ikox(xdum2)
         rates%ksona = ksona
 
         !oxygen enhancement of denitrification
-        rates%ikoxdn= ikox(xdum3)
+        rates%ikoxdn = ikox(xdum3)
         rates%ksodn = ksodn
 
         !oxygen inhibition of phytoplankton respiration
@@ -321,14 +321,15 @@ contains
         rates%ksp = ksp
         rates%ksc = ksc
 
-        select case (xdum6)
-          case ("Smith")
-            rates%ilight = 2 !"langleys/d"
-          case ("Steele")
-            rates%ilight = 3 !"langleys/d"
-          case default !"half saturation"
-            rates%ilight = 1 !"langleys/d"
-        end select
+        ! select case (xdum6)
+        !   case ("Smith")
+        !     rates%ilight = 2 !"langleys/d"
+        !   case ("Steele")
+        !     rates%ilight = 3 !"langleys/d"
+        !   case default !"half saturation"
+        !     rates%ilight = 1 !"langleys/d"
+        ! end select
+        rates%ilight = ilight(xdum6)
 
         rates%isat = isat
         if (khnx > 0) rates%khnx = khnx
@@ -365,16 +366,16 @@ contains
         gd = mgd / 1000.0_r64
 
 
-!gp 03-apr-08 starting with version b42a02, these inputs are now per unit dry weight instead of chl a
-! !convert bottom algae rates to a mga basis
-! if (typef == "zero-order") rates%kgaf = kgaf * gd / mga !scc 08/09/2004
-! rates%abmax = abmax * gd / mga !scc 08/09/2004
-! rates%ninbmin = ninbmin * mga / gd !scc 08/09/2004
-! rates%nipbmin = nipbmin * mga / gd !scc 08/09/2004
-! rates%ninbupmax = ninbupmax * mga / gd !scc 08/09/2004
-! rates%nipbupmax = nipbupmax * mga / gd !scc 08/09/2004
-! rates%kqn = kqn * mga / gd !scc 08/09/2004
-! rates%kqp = kqp * mga / gd !scc 08/09/2004
+        !gp 03-apr-08 starting with version b42a02, these inputs are now per unit dry weight instead of chl a
+        ! !convert bottom algae rates to a mga basis
+        ! if (typef == "zero-order") rates%kgaf = kgaf * gd / mga !scc 08/09/2004
+        ! rates%abmax = abmax * gd / mga !scc 08/09/2004
+        ! rates%ninbmin = ninbmin * mga / gd !scc 08/09/2004
+        ! rates%nipbmin = nipbmin * mga / gd !scc 08/09/2004
+        ! rates%ninbupmax = ninbupmax * mga / gd !scc 08/09/2004
+        ! rates%nipbupmax = nipbupmax * mga / gd !scc 08/09/2004
+        ! rates%kqn = kqn * mga / gd !scc 08/09/2004
+        ! rates%kqp = kqp * mga / gd !scc 08/09/2004
         if (typef == "Zero-order") rates%kgaf = kgaf !gd/m^2/day
         rates%abmax = abmax !gd/m^2
         rates%ninbmin = ninbmin !mgn/gd
@@ -772,7 +773,7 @@ contains
             end if
         end do
 
-    end function
+    end function rates_ctor
 
     pure function ikox(xdum)
         character(len=30), intent(in) :: xdum
@@ -786,6 +787,22 @@ contains
           case default !"Exponential"
             ikox = 2 !"L/mgO2"
         end select
-    end function
+    end function ikox
+
+    pure function ilight(xdum)
+        character(len=30), intent(in) :: xdum
+        integer(i32) ilight
+
+        select case (xdum)
+          case ("Smith")
+            ilight = 2 !"langleys/d"
+          case ("Steele")
+            ilight = 3 !"langleys/d"
+          case default !"half saturation"
+            ilight = 1 !"langleys/d"
+        end select
+    end function ilight
+
+
 
 end module m_rates
