@@ -996,8 +996,8 @@ contains
             ikox = 1 !"mgO2/L"
           case ("2nd order")
             ikox = 3 !"mgO2/L"
-          CASE DEFAULT !"Exponential"
+          case default !"Exponential"
             ikox = 2 !"L/mgO2" End
-        END SELECT
-    END FUNCTION
-END MODULE Class_Rates
+        end select
+    end function
+end module class_rates
