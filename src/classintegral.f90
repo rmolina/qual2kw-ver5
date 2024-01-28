@@ -9,6 +9,8 @@ MODULE Class_Integration
     USE Class_Headwater
     USE Class_downstream
     use class_hydraulics, only: riverhydraulics_type
+    use m_tempadjust, only: temp_adjust 
+    use m_oxygen, only: oxygen_inhibition_and_enhancement
 
     IMPLICIT NONE
 
@@ -1199,7 +1201,7 @@ CONTAINS
             !CALL TempAdjust(Rates, hydrau,Meteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
             !								kreaFT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
             !								kreaT, vdiT, kacT, kgenT)	!gp 30-Nov-04 add kgenT
-            CALL TempAdjust(Rates, hydrau,Meteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
+            CALL temp_adjust(Rates, hydrau,Meteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
                 krea1FT, krea2FT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
                 kreaT, vdiT, kacT, kgenT)	!gp 30-Nov-04 add kgenT
 
