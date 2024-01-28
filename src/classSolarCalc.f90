@@ -102,11 +102,11 @@ CONTAINS
     SUBROUTINE SunriseSunset(nr, Solar, hydrau, today)
         !gp calculate sunrise, sunset, and photoperid
         USE Class_Hydraulics, ONLY: RiverHydraulics_type
-        USE Class_Date
+        USE m_date
         IMPLICIT NONE
 
         INTEGER(I4B), INTENT(IN) :: nr
-        TYPE(SimDate), INTENT(IN) :: today						!11/16/04
+        TYPE(date_t), INTENT(IN) :: today						!11/16/04
         TYPE(solar_type), INTENT(INOUT) :: Solar
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
 
@@ -173,14 +173,14 @@ CONTAINS
 
         !solar radiation at the current reach at this time step
 !		USE  Class_Hydraulics, ONLY: channel
-        USE Class_Date
+        USE m_date
 
         !gp 23-Jun-09
         USE Class_LightHeat
 
         IMPLICIT NONE
         TYPE(solar_type), INTENT(IN) :: Solar
-        TYPE(SimDate), INTENT(IN) :: today							!11/16/04
+        TYPE(date_t), INTENT(IN) :: today							!11/16/04
 
         !gp 23-Jun-09
         !TYPE(LightHeat_type), INTENT(IN) :: lightheat

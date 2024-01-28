@@ -2,7 +2,7 @@
 !/* System parameters */
 MODULE Class_SystemParams
     USE nrtype
-    USE Class_Date
+    USE m_date, only: date_t
     IMPLICIT NONE
 
 !	PRIVATE		!/* All data and subroutines are private unless declare as public */
@@ -16,10 +16,10 @@ MODULE Class_SystemParams
         REAL(DP) timezone
 
         REAL(DP) dtuser
-        TYPE(SimDate) today				!11/16/04 current date
+        TYPE(date_t) today				!11/16/04 current date
         REAL(DP) :: dt, tday =0					!timestep, time of the day
         LOGICAL(LGT) :: steadystate =.TRUE.		!identify the simulation type
-        TYPE(SimDate) LastDay			!11/16/04 last day of simulation, for dynamic
+        TYPE(date_t) LastDay			!11/16/04 last day of simulation, for dynamic
         INTEGER(I4B) days						!final time for steady state only
 
         !gp 29-Oct-09
@@ -92,7 +92,7 @@ CONTAINS
 
         system%BASINNAME=BASINNAME ; system%FILENAME=FILENAME; system%PATH=PATH
         system%TITLE = TITLE;
-        system%today = Date_(year,month,day); system%timezone=timezone
+        system%today = date_t(year,month,day); system%timezone=timezone
         system%dtuser = dtuser  ; system%days = tf
 
         !time-step control
