@@ -3,7 +3,7 @@
 module class_sourcein
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: nv, pii, cpw, rhow
-    use class_rivertopo, only: rivertopo_type
+    use m_rivertopo, only: rivertopo_type
     use class_phsolve, only: ct
     use m_water_quality, only: t_water_quality
     use class_hydraulics, only: riverhydraulics_type

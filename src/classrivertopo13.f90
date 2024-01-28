@@ -1,6 +1,6 @@
 ! classrivertopo.f90
 ! data structure for reach and elements
-module class_rivertopo
+module m_rivertopo
     use nrtype
 !	use class_element
     use m_reach
@@ -144,4 +144,4 @@ contains
 
     end subroutine
 
-end module class_rivertopo
+end module m_rivertopo

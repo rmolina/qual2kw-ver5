@@ -4,7 +4,7 @@ contains
     SUBROUTINE ReadInputfile(system, hydrau, siteMeteo, HW, DB, stochRate, topo, siteSolar)
         USE nrtype
         USE Class_SystemParams    !, ONLY: SystemParams, SystemParams_
-        USE Class_RiverTopo, only: rivertopo_type
+        USE m_rivertopo, only: rivertopo_type
         USE Class_Hydraulics
         USE m_meteorology, only: t_meteorology
 
