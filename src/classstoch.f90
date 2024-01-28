@@ -1,1003 +1,1003 @@
 ! classstoch.f90
 
 !stoichiometry
-!INCLUDE "NRTYPE.F90"
-MODULE Class_Rates
-    USE nrtype
-    IMPLICIT NONE
+!include "nrtype.f90"
+module class_rates
+    use nrtype
+    implicit none
 
-    PRIVATE
-    PUBLIC Rates_, Rates_type, SetOxygenInhibEnhance, TempAdjust
-    TYPE Rates_type
-        REAL(DP) mgA, mgD !SCC, for v1_3
-        REAL(DP) vss !inorganic suspended solids settling vol
-        REAL(DP) anc, apc, adc
-        REAL(DP) ana, apa, ada, aca
-        REAL(DP) ronp, ano
-        REAL(DP) :: roc =2.67 !roc - O2 for carbon oxidation
-        REAL(DP) :: ron =4.57 !ron - O2 for NH4 nitrification
-        REAL(DP) roa !roa - O2 for Chlorophyll
-        REAL(DP) :: tka = 1.024 !temp correction for reaeration
+    private
+    public rates_, rates_type, setoxygeninhibenhance, tempadjust
+    type rates_type
+        real(dp) mga, mgd !scc, for v1_3
+        real(dp) vss !inorganic suspended solids settling vol
+        real(dp) anc, apc, adc
+        real(dp) ana, apa, ada, aca
+        real(dp) ronp, ano
+        real(dp) :: roc =2.67 !roc - o2 for carbon oxidation
+        real(dp) :: ron =4.57 !ron - o2 for nh4 nitrification
+        real(dp) roa !roa - o2 for chlorophyll
+        real(dp) :: tka = 1.024 !temp correction for reaeration
 
-        REAL(DP) ralkda, ralkdn
-        REAL(DP) racc
-        REAL(DP) acca, acco, accd, accc
+        real(dp) ralkda, ralkdn
+        real(dp) racc
+        real(dp) acca, acco, accd, accc
 
-        CHARACTER(LEN=30) kai !Reaeration model
-        CHARACTER(LEN=30) kawindmethod !Reaeartion wind effect
-        INTEGER(I4B) IkoxC !oxygen inhibition CBOD oxidation model
-        INTEGER(I4B) IkoxN !oxygen inhibition nitrification model
-        INTEGER(I4B) IkoxDN !Oxygen enhancement of denitrification model
-        INTEGER(I4B) IkoxP !oxygen inhibition of Phytoplankton respiration
-        INTEGER(I4B) IkoxB !
-        INTEGER(I4B) Ilight !light model
+        character(len=30) kai !reaeration model
+        character(len=30) kawindmethod !reaeartion wind effect
+        integer(i4b) ikoxc !oxygen inhibition cbod oxidation model
+        integer(i4b) ikoxn !oxygen inhibition nitrification model
+        integer(i4b) ikoxdn !oxygen enhancement of denitrification model
+        integer(i4b) ikoxp !oxygen inhibition of phytoplankton respiration
+        integer(i4b) ikoxb !
+        integer(i4b) ilight !light model
 
-        REAL(DP) Ksocf !oxygen inhibition CBOD oxidation parameter
-        REAL(DP) Ksona !oxygen inhibition nitrification parameter
-        REAL(DP) Ksodn !Oxygen enhancement of denitrification parameter
-        REAL(DP) Ksop
-        REAL(DP) Ksob
+        real(dp) ksocf !oxygen inhibition cbod oxidation parameter
+        real(dp) ksona !oxygen inhibition nitrification parameter
+        real(dp) ksodn !oxygen enhancement of denitrification parameter
+        real(dp) ksop
+        real(dp) ksob
 
 
-        !slow CBOD
-        REAL(DP) khc !slow CBOD hydrolysis rate
-        REAL(DP) :: tkhc =1.05 !slow CBOD hydrolysis temp correction
-        REAL(DP) kdcs !slow CBOD oxidation rate
-        REAL(DP) :: tkdcs =1.05 !slow CBOD oxidation temp correction
-        !Fast CBOD
-        REAL(DP) kdc !fast CBOD oxidation rate
-        REAL(DP) :: tkdc=1.05 !fast CBOD oxidation temp correction
-        !Nitrogen
-        REAL(DP) khn !organic N hydrolysis rate
-        REAL(DP) :: tkhn=1.05 !organic N hydrolysis temp correction
-        REAL(DP) von !Organic N settling velocity
-        REAL(DP) kn !Ammonium nitrification rate
-        REAL(DP) :: tkn=1.05 !Ammonium nitrification temp correction
-        REAL(DP) ki !Nitrate denitrification
-        REAL(DP) :: tki=1.05 !Nitrate denitrification rate
-        REAL(DP) vdi !Nitrate sed denitrification transfer coeff
-        REAL(DP) :: tvdi=1.05 !Nitrate sed denitrification transfer coeff temp correction
+        !slow cbod
+        real(dp) khc !slow cbod hydrolysis rate
+        real(dp) :: tkhc =1.05 !slow cbod hydrolysis temp correction
+        real(dp) kdcs !slow cbod oxidation rate
+        real(dp) :: tkdcs =1.05 !slow cbod oxidation temp correction
+        !fast cbod
+        real(dp) kdc !fast cbod oxidation rate
+        real(dp) :: tkdc=1.05 !fast cbod oxidation temp correction
+        !nitrogen
+        real(dp) khn !organic n hydrolysis rate
+        real(dp) :: tkhn=1.05 !organic n hydrolysis temp correction
+        real(dp) von !organic n settling velocity
+        real(dp) kn !ammonium nitrification rate
+        real(dp) :: tkn=1.05 !ammonium nitrification temp correction
+        real(dp) ki !nitrate denitrification
+        real(dp) :: tki=1.05 !nitrate denitrification rate
+        real(dp) vdi !nitrate sed denitrification transfer coeff
+        real(dp) :: tvdi=1.05 !nitrate sed denitrification transfer coeff temp correction
         !phosphorus
-        REAL(DP) khp !organic P hydrolysis
-        REAL(DP) :: tkhp=1.05 !organic P hydrolysis temp correction
-        REAL(DP) vop !organic P settling velocity
-        REAL(DP) vip !inorganic P settling velocity
-        REAL(DP) kspi !Sed P oxygen attenuation half sat constant
+        real(dp) khp !organic p hydrolysis
+        real(dp) :: tkhp=1.05 !organic p hydrolysis temp correction
+        real(dp) vop !organic p settling velocity
+        real(dp) vip !inorganic p settling velocity
+        real(dp) kspi !sed p oxygen attenuation half sat constant
 
-        !Phytoplanton
-        REAL(DP) kga !Phytoplankton max growth rate
-        REAL(DP) :: tkga=1.066 !phytoplankton max growth temp correction
-        REAL(DP) krea !phytoplankton respiration rate
-        REAL(DP) :: tkrea=1.05 !phytoplankton respiration temp correction
-        REAL(DP) kdea !phytoplankton death rate
-        REAL(DP) :: tkdea=1.05 !phytoplankton death temp correction
-        REAL(DP) ksn !nitrogen half sat constant
-        REAL(DP) ksp !phosphorus half sat constant
-        REAL(DP) ksc !inorganic carbon half sat
-        REAL(DP) Isat !light constant
-        REAL(DP) :: khnx=15.0 !Ammonia preference
-        REAL(DP) va !settling velocity of phytoplankton
+        !phytoplanton
+        real(dp) kga !phytoplankton max growth rate
+        real(dp) :: tkga=1.066 !phytoplankton max growth temp correction
+        real(dp) krea !phytoplankton respiration rate
+        real(dp) :: tkrea=1.05 !phytoplankton respiration temp correction
+        real(dp) kdea !phytoplankton death rate
+        real(dp) :: tkdea=1.05 !phytoplankton death temp correction
+        real(dp) ksn !nitrogen half sat constant
+        real(dp) ksp !phosphorus half sat constant
+        real(dp) ksc !inorganic carbon half sat
+        real(dp) isat !light constant
+        real(dp) :: khnx=15.0 !ammonia preference
+        real(dp) va !settling velocity of phytoplankton
 
         !bottom algae
-        REAL(DP) kgaF !max growth rate
-        REAL(DP) :: tkgaF=1.066 !max growth temp correction
+        real(dp) kgaf !max growth rate
+        real(dp) :: tkgaf=1.066 !max growth temp correction
 
-        !gp 03-Apr-08
-        !REAL(DP) kreaF !botalg respiration rate
-        REAL(DP) krea1F !botalg basal respiration rate
-        REAL(DP) krea2F !botalg photo respiration rate
+        !gp 03-apr-08
+        !real(dp) kreaf !botalg respiration rate
+        real(dp) krea1f !botalg basal respiration rate
+        real(dp) krea2f !botalg photo respiration rate
 
-        REAL(DP) :: tkreaF=1.05 !phytoplankton respiration temp correction
-        REAL(DP) kdeaF !phytoplankton death rate
-        REAL(DP) :: tkdeaF=1.05 !phytoplankton death temp correction
-        REAL(DP) ksnF !nitrogen half sat constant
-        REAL(DP) kspF !phosphorus half sat constant
-        REAL(DP) kscF !inorganic carbon half sat
-        REAL(DP) abmax !First-order model carrying capacity
-        REAL(DP) kexaF !Excretion rate
-        REAL(DP) :: tkexaF =1.05 !Excretion rate temp correction
+        real(dp) :: tkreaf=1.05 !phytoplankton respiration temp correction
+        real(dp) kdeaf !phytoplankton death rate
+        real(dp) :: tkdeaf=1.05 !phytoplankton death temp correction
+        real(dp) ksnf !nitrogen half sat constant
+        real(dp) kspf !phosphorus half sat constant
+        real(dp) kscf !inorganic carbon half sat
+        real(dp) abmax !first-order model carrying capacity
+        real(dp) kexaf !excretion rate
+        real(dp) :: tkexaf =1.05 !excretion rate temp correction
 
-        INTEGER(I4B) IlightF !light model
-        REAL(DP) IsatF !light constant
-        REAL(DP) :: khnxF=15.0 !Ammonia preference
-        CHARACTER(LEN=30) :: typeF ='Zero-order' !Bottom algae growth model,zero-first order
-        !POM
-        REAL(DP) kdt !POM dissolution rate
-        REAL(DP) :: tkdt=1.05 !POM dissolution temp correction
-        REAL(DP) vdt !POM settling velocity
-        !Luxury uptake
-        REAL(DP) NINbmin
-        REAL(DP) NIPbmin
-        REAL(DP) NINbupmax
-        REAL(DP) NIPbupmax
-        REAL(DP) KqN
-        REAL(DP) KqP
+        integer(i4b) ilightf !light model
+        real(dp) isatf !light constant
+        real(dp) :: khnxf=15.0 !ammonia preference
+        character(len=30) :: typef ='Zero-order' !bottom algae growth model,zero-first order
+        !pom
+        real(dp) kdt !pom dissolution rate
+        real(dp) :: tkdt=1.05 !pom dissolution temp correction
+        real(dp) vdt !pom settling velocity
+        !luxury uptake
+        real(dp) ninbmin
+        real(dp) nipbmin
+        real(dp) ninbupmax
+        real(dp) nipbupmax
+        real(dp) kqn
+        real(dp) kqp
 
-        !gp 26-Jan-06
-        REAL(DP) NUpWCfrac
-        REAL(DP) PUpWCfrac
+        !gp 26-jan-06
+        real(dp) nupwcfrac
+        real(dp) pupwcfrac
 
-        !Pathogens
-        REAL(DP) kpath !decay
-        REAL(DP) :: tkpath=1.07 !decay temp correction
-        REAL(DP) vpath !settling velocity
+        !pathogens
+        real(dp) kpath !decay
+        real(dp) :: tkpath=1.07 !decay temp correction
+        real(dp) vpath !settling velocity
 
-        !gp 30-Nov-04 new rates
-        REAL(DP) apath !alpha constant for light mortality of pathogen indicator
-        REAL(DP) kgen !decay of generic constituent
-        REAL(DP) :: tkgen=1.07 !decay temp correction for generic constituent
-        REAL(DP) vgen !settling velocity of generic constituent
+        !gp 30-nov-04 new rates
+        real(dp) apath !alpha constant for light mortality of pathogen indicator
+        real(dp) kgen !decay of generic constituent
+        real(dp) :: tkgen=1.07 !decay temp correction for generic constituent
+        real(dp) vgen !settling velocity of generic constituent
 
-        !gp 08-Dec-04
-        CHARACTER(LEN=30) useGenericAsCOD
+        !gp 08-dec-04
+        character(len=30) usegenericascod
 
-        !pH
-        REAL(DP) pco2 !partial pressure of carbon dioxide
-        REAL(DP) ralkaa, ralkan, ralkbn, ralkbp
-        REAL(DP) ralkden, rondn, ralkn
-        REAL(DP) rcca, rcco, rccd, rccc
+        !ph
+        real(dp) pco2 !partial pressure of carbon dioxide
+        real(dp) ralkaa, ralkan, ralkbn, ralkbp
+        real(dp) ralkden, rondn, ralkn
+        real(dp) rcca, rcco, rccd, rccc
 
-        !gp 03-Nov-04
-        CHARACTER(LEN=30) typeH, xdum8
-        REAL(DP) :: tkgaH=1.047
-        REAL(DP) kgaH, kscH, kinhcH
-        INTEGER(I4B) IkoxCH
+        !gp 03-nov-04
+        character(len=30) typeh, xdum8
+        real(dp) :: tkgah=1.047
+        real(dp) kgah, ksch, kinhch
+        integer(i4b) ikoxch
 
-        !gp 15-Nov-04
-        CHARACTER(LEN=30) hco3use, hco3useF
+        !gp 15-nov-04
+        character(len=30) hco3use, hco3usef
 
-        !gp 15-Nov-04
-        REAL(DP) kreaH, kdeaH, ksnH, kspH, khnxH, ahmax
-        REAL(DP) :: tkreaH=1.07, tkdeaH=1.07
+        !gp 15-nov-04
+        real(dp) kreah, kdeah, ksnh, ksph, khnxh, ahmax
+        real(dp) :: tkreah=1.07, tkdeah=1.07
 
 
-    END TYPE
-! TYPE(Rates_type) Rates
+    end type
+! type(rates_type) rates
 
-CONTAINS
+contains
 
-    !gp 08-Feb-06
-    !FUNCTION Rates_(mgC, mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, Ksodn, Ksop, &
-    ! Ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
+    !gp 08-feb-06
+    !function rates_(mgc, mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, ksodn, ksop, &
+    ! ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
     ! tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi, kga, tkga, krea, &
-    ! tkrea, kdea, tkdea, ksn, ksp, ksc, Isat, khnx, va, typeF, kgaF, &
-    ! tkgaF, kreaF, tkreaF, kexaF, tkexaF, kdeaF, abmax, tkdeaF, ksnF, &
-    ! kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt, NINbmin, NIPbmin, &
-    ! NINbupmax, NIPbupmax, KqN, KqP, kpath, tkpath, vpath, pco2, &
+    ! tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, va, typef, kgaf, &
+    ! tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, abmax, tkdeaf, ksnf, &
+    ! kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, ninbmin, nipbmin, &
+    ! ninbupmax, nipbupmax, kqn, kqp, kpath, tkpath, vpath, pco2, &
     ! xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, &
-    ! kawindmethod, hco3use, hco3useF, typeH, kgaH, tkgaH, kscH, xdum8, kinhcH, &
-    ! kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax, & !gp 15-Nov-04
-    ! apath, kgen, tkgen, vgen, useGenericAsCOD, & !gp 08-Dec-04
-    ! NUpWCfrac, PUpWCfrac) RESULT(Rates) !gp 26-Jan-06
+    ! kawindmethod, hco3use, hco3usef, typeh, kgah, tkgah, ksch, xdum8, kinhch, &
+    ! kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, & !gp 15-nov-04
+    ! apath, kgen, tkgen, vgen, usegenericascod, & !gp 08-dec-04
+    ! nupwcfrac, pupwcfrac) result(rates) !gp 26-jan-06
 
-    !gp 03-Apr-08
-    !FUNCTION Rates_(nr, hydrau, mgC, mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, Ksodn, Ksop, &
-    ! Ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
+    !gp 03-apr-08
+    !function rates_(nr, hydrau, mgc, mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, ksodn, ksop, &
+    ! ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
     ! tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi, kga, tkga, krea, &
-    ! tkrea, kdea, tkdea, ksn, ksp, ksc, Isat, khnx, va, typeF, kgaF, &
-    ! tkgaF, kreaF, tkreaF, kexaF, tkexaF, kdeaF, abmax, tkdeaF, ksnF, &
-    ! kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt, NINbmin, NIPbmin, &
-    ! NINbupmax, NIPbupmax, KqN, KqP, kpath, tkpath, vpath, pco2, &
+    ! tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, va, typef, kgaf, &
+    ! tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, abmax, tkdeaf, ksnf, &
+    ! kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, ninbmin, nipbmin, &
+    ! ninbupmax, nipbupmax, kqn, kqp, kpath, tkpath, vpath, pco2, &
     ! xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, &
-    ! kawindmethod, hco3use, hco3useF, typeH, kgaH, tkgaH, kscH, xdum8, kinhcH, &
-    ! kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax, &
-    ! apath, kgen, tkgen, vgen, useGenericAsCOD, &
-    ! NUpWCfrac, PUpWCfrac) RESULT(Rates)
-    FUNCTION Rates_(nr, hydrau, mgC, mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, Ksodn, Ksop, &
-        Ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
+    ! kawindmethod, hco3use, hco3usef, typeh, kgah, tkgah, ksch, xdum8, kinhch, &
+    ! kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, &
+    ! apath, kgen, tkgen, vgen, usegenericascod, &
+    ! nupwcfrac, pupwcfrac) result(rates)
+    function rates_(nr, hydrau, mgc, mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, ksodn, ksop, &
+        ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von, kn, &
         tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi, kga, tkga, krea, &
-        tkrea, kdea, tkdea, ksn, ksp, ksc, Isat, khnx, va, typeF, kgaF, &
-        tkgaF, krea1F, krea2F, tkreaF, kexaF, tkexaF, kdeaF, abmax, tkdeaF, ksnF, &
-        kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt, NINbmin, NIPbmin, &
-        NINbupmax, NIPbupmax, KqN, KqP, kpath, tkpath, vpath, pco2, &
+        tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, va, typef, kgaf, &
+        tkgaf, krea1f, krea2f, tkreaf, kexaf, tkexaf, kdeaf, abmax, tkdeaf, ksnf, &
+        kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, ninbmin, nipbmin, &
+        ninbupmax, nipbupmax, kqn, kqp, kpath, tkpath, vpath, pco2, &
         xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, &
-        kawindmethod, hco3use, hco3useF, typeH, kgaH, tkgaH, kscH, xdum8, kinhcH, &
-        kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax, &
-        apath, kgen, tkgen, vgen, useGenericAsCOD, &
-        NUpWCfrac, PUpWCfrac) RESULT(Rates)
+        kawindmethod, hco3use, hco3usef, typeh, kgah, tkgah, ksch, xdum8, kinhch, &
+        kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, &
+        apath, kgen, tkgen, vgen, usegenericascod, &
+        nupwcfrac, pupwcfrac) result(rates)
 
 
-        !gp 08-Feb-06
+        !gp 08-feb-06
         !this function also assigns global rates to the unspecified reach-specific rates in hydrau
-        USE Class_Hydraulics
-        TYPE(RiverHydraulics_type), INTENT(INOUT) :: hydrau !assign reach-specific rates
-        INTEGER(I4B), INTENT(IN) :: nr !number of reach
-        INTEGER(I4B) i
+        use class_hydraulics
+        type(riverhydraulics_type), intent(inout) :: hydrau !assign reach-specific rates
+        integer(i4b), intent(in) :: nr !number of reach
+        integer(i4b) i
 
-        TYPE(Rates_type) Rates
+        type(rates_type) rates
 
         !stoichiometry
-        REAL(DP) :: mgC, mgN, mgP, mgD, mgA
-        REAL(DP), INTENT(IN) :: vss, tka, roc, ron
-        REAL(DP), INTENT(IN) :: Ksocf, Ksona, Ksodn, Ksop, Ksob, khc, kdcs, tkdcs, tkhc, kdc, tkdc, khn
-        REAL(DP), INTENT(IN) :: tkhn, von, kn, tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi
-        REAL(DP), INTENT(IN) :: kga, tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, Isat
+        real(dp) :: mgc, mgn, mgp, mgd, mga
+        real(dp), intent(in) :: vss, tka, roc, ron
+        real(dp), intent(in) :: ksocf, ksona, ksodn, ksop, ksob, khc, kdcs, tkdcs, tkhc, kdc, tkdc, khn
+        real(dp), intent(in) :: tkhn, von, kn, tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi
+        real(dp), intent(in) :: kga, tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, isat
 
-        !gp 03-Apr-08
-        !REAL(DP), INTENT(IN) :: khnx, va, kgaF, tkgaF, kreaF, tkreaF, kexaF, tkexaF, kdeaF
-        REAL(DP), INTENT(IN) :: khnx, va, kgaF, tkgaF, krea1F, krea2F, tkreaF, kexaF, tkexaF, kdeaF
+        !gp 03-apr-08
+        !real(dp), intent(in) :: khnx, va, kgaf, tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf
+        real(dp), intent(in) :: khnx, va, kgaf, tkgaf, krea1f, krea2f, tkreaf, kexaf, tkexaf, kdeaf
 
-        REAL(DP), INTENT(IN) :: tkdeaF, abmax, ksnF, kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt
-        REAL(DP), INTENT(IN) :: NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqN, KqP
+        real(dp), intent(in) :: tkdeaf, abmax, ksnf, kspf, kscf, isatf, khnxf, kdt, tkdt, vdt
+        real(dp), intent(in) :: ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp
 
-        !gp 26-Jan-06
-        REAL(DP), INTENT(IN) :: NUpWCfrac, PUpWCfrac
+        !gp 26-jan-06
+        real(dp), intent(in) :: nupwcfrac, pupwcfrac
 
-        REAL(DP), INTENT(IN) :: kpath, tkpath, vpath, pco2
+        real(dp), intent(in) :: kpath, tkpath, vpath, pco2
 
-        !gp 30-Nov-04
-        REAL(DP), INTENT(IN) :: apath, kgen, tkgen, vgen !gp 30-Nov-04 new paramters for pathogen and generic constituent
+        !gp 30-nov-04
+        real(dp), intent(in) :: apath, kgen, tkgen, vgen !gp 30-nov-04 new paramters for pathogen and generic constituent
 
-        !gp 08-Dec-04
-        CHARACTER(LEN=30), INTENT(IN) :: useGenericAsCOD
+        !gp 08-dec-04
+        character(len=30), intent(in) :: usegenericascod
 
-        !org C, N inhition model, Denitrification enhance model, Algae light model, perihyte light model
-        CHARACTER(LEN=30), INTENT(IN) :: xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, kawindmethod
+        !org c, n inhition model, denitrification enhance model, algae light model, perihyte light model
+        character(len=30), intent(in) :: xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, kawindmethod
 
-        !gp 03-Nov-04
-        CHARACTER(LEN=30), INTENT(IN) :: typeH, xdum8
-        REAL(DP), INTENT(IN) :: kgaH, tkgaH, kscH, kinhcH
+        !gp 03-nov-04
+        character(len=30), intent(in) :: typeh, xdum8
+        real(dp), intent(in) :: kgah, tkgah, ksch, kinhch
 
-        !gp 15-Nov-04
-        CHARACTER(LEN=30), INTENT(IN) :: hco3use, hco3useF
+        !gp 15-nov-04
+        character(len=30), intent(in) :: hco3use, hco3usef
 
-        !gp 15-Nov-04
-        REAL(DP), INTENT(IN) :: kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax
+        !gp 15-nov-04
+        real(dp), intent(in) :: kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax
 
 
-        CHARACTER(LEN=30) :: typeF !Bottom algae growth model,zero-first order
+        character(len=30) :: typef !bottom algae growth model,zero-first order
 
-        REAL(DP) gC, gD
+        real(dp) gc, gd
 
-        If (mgC <= 0) mgC = 40.0_dp
-        If (mgN <= 0) mgN = 7.2_dp
-        If (mgP <= 0) mgP = 1.0_dp
-        If (mgD <= 0) mgD = 100.0_dp
-        If (mgA <= 0) mgA = 1.0_dp
+        if (mgc <= 0) mgc = 40.0_dp
+        if (mgn <= 0) mgn = 7.2_dp
+        if (mgp <= 0) mgp = 1.0_dp
+        if (mgd <= 0) mgd = 100.0_dp
+        if (mga <= 0) mga = 1.0_dp
 
-        Rates%mgA= mgA; Rates%mgD=mgD !SCC, for v1_3
+        rates%mga= mga; rates%mgd=mgd !scc, for v1_3
         !suspended solids
-        Rates%vss= vss
+        rates%vss= vss
 
         !oxygen
-        SELECT CASE (kai)
-            !CASE 'Internal'
-          CASE ("O'Connor-Dobbins", &
+        select case (kai)
+            !case 'internal'
+          case ("O'Connor-Dobbins", &
               "Churchill", &
               "Owens-Gibbs", &
               "Thackston-Dawson", &
               "Tsivoglou-Neal", &
               "USGS(pool-riffle)", &
               "USGS(channel-control)")
-            Rates%kai = kai
-          CASE DEFAULT
-            Rates%kai = "Internal"
-        END SELECT
+            rates%kai = kai
+          case default
+            rates%kai = "internal"
+        end select
 
-        Rates%kawindmethod = kawindmethod
-        IF (tka>0) Rates%tka = tka
-        IF (roc>0) Rates%roc = roc
-        IF (ron>0) Rates%ron = ron
+        rates%kawindmethod = kawindmethod
+        if (tka>0) rates%tka = tka
+        if (roc>0) rates%roc = roc
+        if (ron>0) rates%ron = ron
 
-        !Oxygen inhibition of carbon oxidation
-        Rates%IkoxC= Ikox(xdum1)
-        Rates%Ksocf = Ksocf
+        !oxygen inhibition of carbon oxidation
+        rates%ikoxc= ikox(xdum1)
+        rates%ksocf = ksocf
 
-        !Oxygen inhibition of nitrification
-        Rates%IkoxN= Ikox(xdum2)
-        Rates%Ksona = Ksona
+        !oxygen inhibition of nitrification
+        rates%ikoxn= ikox(xdum2)
+        rates%ksona = ksona
 
-        !Oxygen enhancement of denitrification
-        Rates%IkoxDN= Ikox(xdum3)
-        Rates%Ksodn = Ksodn
+        !oxygen enhancement of denitrification
+        rates%ikoxdn= ikox(xdum3)
+        rates%ksodn = ksodn
 
-        !Oxygen inhibition of phytoplankton respiration
-        Rates%IkoxP = Ikox(xdum4)
-        Rates%Ksop= Ksop
+        !oxygen inhibition of phytoplankton respiration
+        rates%ikoxp = ikox(xdum4)
+        rates%ksop= ksop
 
-        !Oxygen inhibition of bottom plant respiration
-        Rates%IkoxB = Ikox(xdum5)
-        Rates%Ksob= Ksob
+        !oxygen inhibition of bottom plant respiration
+        rates%ikoxb = ikox(xdum5)
+        rates%ksob= ksob
 
-        !slow CBOD
-        Rates%khc = khc
-        IF (tkhc>0) Rates%tkhc = tkhc
-        Rates%kdcs= kdcs
-        IF (tkdcs>0) Rates%tkdcs = tkdcs
+        !slow cbod
+        rates%khc = khc
+        if (tkhc>0) rates%tkhc = tkhc
+        rates%kdcs= kdcs
+        if (tkdcs>0) rates%tkdcs = tkdcs
 
-        !fast CBOD
-        Rates%kdc = kdc
-        IF (tkdc>0) Rates%tkdc = tkdc
+        !fast cbod
+        rates%kdc = kdc
+        if (tkdc>0) rates%tkdc = tkdc
 
-        !organic N
-        Rates%khn = khn
-        IF (tkhn>0) Rates%tkhn = tkhn
-        !organic N settling vel
-        Rates%von =von
+        !organic n
+        rates%khn = khn
+        if (tkhn>0) rates%tkhn = tkhn
+        !organic n settling vel
+        rates%von =von
 
-        !Ammonium
-        Rates%kn = kn
-        IF (tkn>0) Rates%tkn = tkn
+        !ammonium
+        rates%kn = kn
+        if (tkn>0) rates%tkn = tkn
 
-        !Nitrate
-        Rates%ki = ki
-        If (tki > 0) Rates%tki=tki
-        Rates%vdi = vdi
-        if (tvdi>0) Rates%tvdi = tvdi
+        !nitrate
+        rates%ki = ki
+        if (tki > 0) rates%tki=tki
+        rates%vdi = vdi
+        if (tvdi>0) rates%tvdi = tvdi
 
-        !organic P
-        Rates%khp = khp
-        IF (tkhp>0) Rates%tkhp = tkhp
+        !organic p
+        rates%khp = khp
+        if (tkhp>0) rates%tkhp = tkhp
 
-        Rates%vop = vop
-        Rates%vip = vip
-        Rates%kspi = kspi
+        rates%vop = vop
+        rates%vip = vip
+        rates%kspi = kspi
 
         !phytoplankton
-        Rates%kga = kga
-        IF (tkga>0) Rates%tkga =tkga
+        rates%kga = kga
+        if (tkga>0) rates%tkga =tkga
 
-        Rates%krea = krea
-        IF (tkrea>0) Rates%tkrea = tkrea
+        rates%krea = krea
+        if (tkrea>0) rates%tkrea = tkrea
 
-        Rates%kdea = kdea
-        IF (tkdea>0) Rates%tkdea = tkdea
+        rates%kdea = kdea
+        if (tkdea>0) rates%tkdea = tkdea
 
-        Rates%ksn = ksn
-        Rates%ksp = ksp
-        Rates%ksc = ksc
+        rates%ksn = ksn
+        rates%ksp = ksp
+        rates%ksc = ksc
 
-        SELECT CASE (xdum6)
-          CASE ("Smith")
-            Rates%Ilight = 2 !"langleys/d"
-          CASE ("Steele")
-            Rates%Ilight = 3 !"langleys/d"
-          CASE DEFAULT !"Half saturation"
-            Rates%Ilight = 1 !"langleys/d"
-        END SELECT
+        select case (xdum6)
+          case ("Smith")
+            rates%ilight = 2 !"langleys/d"
+          case ("Steele")
+            rates%ilight = 3 !"langleys/d"
+          case default !"half saturation"
+            rates%ilight = 1 !"langleys/d"
+        end select
 
-        Rates%Isat = Isat
-        IF (khnx > 0) Rates%khnx = khnx
-        Rates%va = va
+        rates%isat = isat
+        if (khnx > 0) rates%khnx = khnx
+        rates%va = va
 
         !bottom algae
-        Rates%kgaF = kgaF
-        IF (tkgaF>0) Rates%tkgaF = tkgaF
+        rates%kgaf = kgaf
+        if (tkgaf>0) rates%tkgaf = tkgaf
 
-        !gp 03-Apr-08
-        !Rates%kreaF = kreaF
-        Rates%krea1F = krea1F
-        Rates%krea2F = krea2F
+        !gp 03-apr-08
+        !rates%kreaf = kreaf
+        rates%krea1f = krea1f
+        rates%krea2f = krea2f
 
-        IF (tkreaF>0) Rates%tkreaF = tkreaF
+        if (tkreaf>0) rates%tkreaf = tkreaf
 
-        Rates%kexaF = kexaF !excretion rate
-        IF (tkexaF > 0) Rates%tkexaF = tkexaF
+        rates%kexaf = kexaf !excretion rate
+        if (tkexaf > 0) rates%tkexaf = tkexaf
 
-        Rates%kdeaF = kdeaF
-        IF (tkdeaF>0) Rates%tkdeaF= tkdeaF
-        Rates%ksnF = ksnF
-        Rates%kspF = kspF
-        Rates%kscF = kscF
+        rates%kdeaf = kdeaf
+        if (tkdeaf>0) rates%tkdeaf= tkdeaf
+        rates%ksnf = ksnf
+        rates%kspf = kspf
+        rates%kscf = kscf
 
-        !Rates%abmax= abmax !SCC 08/09/2004
+        !rates%abmax= abmax !scc 08/09/2004
 
-        IF (typeF/="First-order") THEN
-            typeF="Zero-order"
-        END IF
-        Rates%typeF = typeF
+        if (typef/="First-order") then
+            typef="Zero-order"
+        end if
+        rates%typef = typef
 
-        gC = mgC / 1000.0_dp
-        gD = mgD / 1000.0_dp
+        gc = mgc / 1000.0_dp
+        gd = mgd / 1000.0_dp
 
 
-!gp 03-Apr-08 Starting with version b42a02, these inputs are now per unit dry weight instead of chl a
-! !convert bottom algae rates to a mgA basis
-! If (typeF == "Zero-order") Rates%kgaF = kgaF * gD / mgA !SCC 08/09/2004
-! Rates%abmax = abmax * gD / mgA !SCC 08/09/2004
-! Rates%NINbmin = NINbmin * mgA / gD !SCC 08/09/2004
-! Rates%NIPbmin = NIPbmin * mgA / gD !SCC 08/09/2004
-! Rates%NINbupmax = NINbupmax * mgA / gD !SCC 08/09/2004
-! Rates%NIPbupmax = NIPbupmax * mgA / gD !SCC 08/09/2004
-! Rates%KqN = KqN * mgA / gD !SCC 08/09/2004
-! Rates%KqP = KqP * mgA / gD !SCC 08/09/2004
-        If (typeF == "Zero-order") Rates%kgaF = kgaF !gD/m^2/day
-        Rates%abmax = abmax !gD/m^2
-        Rates%NINbmin = NINbmin !mgN/gD
-        Rates%NIPbmin = NIPbmin !mgP/gD
-        Rates%NINbupmax = NINbupmax !mgN/gD/day
-        Rates%NIPbupmax = NIPbupmax !mgP/gD/day
-        Rates%KqN = KqN !mgN/gD
-        Rates%KqP = KqP !mgP/gD
+!gp 03-apr-08 starting with version b42a02, these inputs are now per unit dry weight instead of chl a
+! !convert bottom algae rates to a mga basis
+! if (typef == "zero-order") rates%kgaf = kgaf * gd / mga !scc 08/09/2004
+! rates%abmax = abmax * gd / mga !scc 08/09/2004
+! rates%ninbmin = ninbmin * mga / gd !scc 08/09/2004
+! rates%nipbmin = nipbmin * mga / gd !scc 08/09/2004
+! rates%ninbupmax = ninbupmax * mga / gd !scc 08/09/2004
+! rates%nipbupmax = nipbupmax * mga / gd !scc 08/09/2004
+! rates%kqn = kqn * mga / gd !scc 08/09/2004
+! rates%kqp = kqp * mga / gd !scc 08/09/2004
+        if (typef == "Zero-order") rates%kgaf = kgaf !gd/m^2/day
+        rates%abmax = abmax !gd/m^2
+        rates%ninbmin = ninbmin !mgn/gd
+        rates%nipbmin = nipbmin !mgp/gd
+        rates%ninbupmax = ninbupmax !mgn/gd/day
+        rates%nipbupmax = nipbupmax !mgp/gd/day
+        rates%kqn = kqn !mgn/gd
+        rates%kqp = kqp !mgp/gd
 
-        SELECT CASE (xdum7)
-          CASE ("Smith")
-            Rates%IlightF = 2 !"langleys/d"
-          CASE ("Steele")
-            Rates%IlightF = 3 !"langleys/d"
-          CASE DEFAULT !"Half saturation"
-            Rates%IlightF = 1 ! "langleys/d"
-        END SELECT
+        select case (xdum7)
+          case ("Smith")
+            rates%ilightf = 2 !"langleys/d"
+          case ("Steele")
+            rates%ilightf = 3 !"langleys/d"
+          case default !"half saturation"
+            rates%ilightf = 1 ! "langleys/d"
+        end select
 
-        Rates%Isatf = Isatf
-        If (khnxF > 0) Rates%khnxF = khnxF
+        rates%isatf = isatf
+        if (khnxf > 0) rates%khnxf = khnxf
 
-        !Rates%NINbmin= NINbmin !SCC 08/09/2004
-        !Rates%NIPbmin= NIPbmin !SCC 08/09/2004
-        !Rates%NINbupmax =NINbupmax !SCC 08/09/2004
-        !Rates%NIPbupmax =NIPbupmax !SCC 08/09/2004
-        !Rates%KqN = KqN !SCC 08/09/2004
-        !Rates%KqP =KqP !SCC 08/09/2004
+        !rates%ninbmin= ninbmin !scc 08/09/2004
+        !rates%nipbmin= nipbmin !scc 08/09/2004
+        !rates%ninbupmax =ninbupmax !scc 08/09/2004
+        !rates%nipbupmax =nipbupmax !scc 08/09/2004
+        !rates%kqn = kqn !scc 08/09/2004
+        !rates%kqp =kqp !scc 08/09/2004
 
-        !gp 26-Jan-06
-        Rates%NUpWCfrac = NUpWCfrac
-        Rates%PUpWCfrac = PUpWCfrac
+        !gp 26-jan-06
+        rates%nupwcfrac = nupwcfrac
+        rates%pupwcfrac = pupwcfrac
 
-        !detritus (POM)
-        Rates%kdt = kdt
-        IF (tkdt>0) Rates%tkdt = tkdt
-        Rates%vdt = vdt
+        !detritus (pom)
+        rates%kdt = kdt
+        if (tkdt>0) rates%tkdt = tkdt
+        rates%vdt = vdt
 
-        !Pathogens
-        Rates%kpath = kpath
-        IF (tkpath>0) Rates%tkpath = tkpath
-        Rates%vpath = vpath
+        !pathogens
+        rates%kpath = kpath
+        if (tkpath>0) rates%tkpath = tkpath
+        rates%vpath = vpath
 
-        !gp 30-Nov-04 new param for pathogens and generic constituent
-        Rates%apath = apath
-        Rates%kgen = kgen
-        IF (tkgen>0) Rates%tkgen = tkgen
-        Rates%vgen = vgen
+        !gp 30-nov-04 new param for pathogens and generic constituent
+        rates%apath = apath
+        rates%kgen = kgen
+        if (tkgen>0) rates%tkgen = tkgen
+        rates%vgen = vgen
 
-        !gp 08-Dec-04
-        Rates%useGenericAsCOD = useGenericAsCOD
+        !gp 08-dec-04
+        rates%usegenericascod = usegenericascod
 
-        !pH
-        Rates%pco2 = pco2 ! / 1.0e6
+        !ph
+        rates%pco2 = pco2 ! / 1.0e6
 
-        !gp 15-Nov-04 HCO3- use by phytoplankton and bottom algae
-        Rates%hco3use = hco3use
-        Rates%hco3useF = hco3useF
+        !gp 15-nov-04 hco3- use by phytoplankton and bottom algae
+        rates%hco3use = hco3use
+        rates%hco3usef = hco3usef
 
-        !gp 03-Nov-04 parameters for hyporheic heterotrophic biofilm oxidation of fast CBOD
-        Rates%typeH = typeH
-        Rates%kgaH = kgaH
-        IF (tkgaH>0) Rates%tkgaH = tkgaH
-        Rates%kscH = kscH
-        Rates%IkoxCH= Ikox(xdum8)
-        Rates%kinhcH = kinhcH
+        !gp 03-nov-04 parameters for hyporheic heterotrophic biofilm oxidation of fast cbod
+        rates%typeh = typeh
+        rates%kgah = kgah
+        if (tkgah>0) rates%tkgah = tkgah
+        rates%ksch = ksch
+        rates%ikoxch= ikox(xdum8)
+        rates%kinhch = kinhch
 
-        !gp 15-Nov-04 rates for level 2 hyporheic biofilm growth
-        Rates%kreaH = kreaH
-        IF (tkreaH>0) Rates%tkreaH = tkreaH
-        Rates%kdeaH = kdeaH
-        IF (tkdeaH>0) Rates%tkdeaH = tkdeaH
-        Rates%ksnH = ksnH
-        Rates%kspH = kspH
-        Rates%khnxH = khnxH
-        Rates%ahmax = ahmax
+        !gp 15-nov-04 rates for level 2 hyporheic biofilm growth
+        rates%kreah = kreah
+        if (tkreah>0) rates%tkreah = tkreah
+        rates%kdeah = kdeah
+        if (tkdeah>0) rates%tkdeah = tkdeah
+        rates%ksnh = ksnh
+        rates%ksph = ksph
+        rates%khnxh = khnxh
+        rates%ahmax = ahmax
 
-        Rates%anc = mgN / gC
-        Rates%apc = mgP / gC
-        Rates%ron = ron / 1000.0_dp
-        Rates%adc = mgD / mgC
-        Rates%roa = roc * gC / mgA
-        Rates%ana = mgN / mgA
-        Rates%apa = mgP / mgA
-        Rates%aca = gC / mgA
-        Rates%ada = gD / mgA
+        rates%anc = mgn / gc
+        rates%apc = mgp / gc
+        rates%ron = ron / 1000.0_dp
+        rates%adc = mgd / mgc
+        rates%roa = roc * gc / mga
+        rates%ana = mgn / mga
+        rates%apa = mgp / mga
+        rates%aca = gc / mga
+        rates%ada = gd / mga
 
-        !gp 03-Dec-09
-        !!pH/Inorganic carbon stoichiometry
-        !Rates%ralkaa = 14.0_dp / 106.0_dp / 12.0_dp * Rates%aca / 1000.0_dp
-        !Rates%ralkan = 18.0_dp / 106.0_dp / 12.0_dp * Rates%aca / 1000.0_dp
-        !Rates%ralkda = 14.0_dp / 106.0_dp / 12.0_dp / Rates%adc / 1000.0_dp
-        !Rates%ralkdn = 18.0_dp / 106.0_dp / 12.0_dp / Rates%adc / 1000.0_dp
-        !Rates%ralkn = 2.0_dp / 14.0_dp / 1000.0_dp / 1000.0_dp
-        !Rates%ralkden = 4.0_dp / (4.0_dp * 14.0_dp) / 1000.0_dp / 1000.0_dp
-        !Rates%racc = 14.0_dp / 106.0_dp / 12.0_dp / 1000.0_dp
-        !Rates%rondn = roc * 5.0_dp * 12.0_dp / (4.0_dp * 14.0_dp) / 1000.0_dp
-        !Rates%acca = gC / mgA / 12.0_dp / 1000.0_dp
-        !Rates%acco = 1.0_dp / 12.0_dp / roc / 1000.0_dp
-        !Rates%accd = gC / gD / 12.0_dp / 1000.0_dp
-        !Rates%accc = 1.0_dp / 12.0_dp / 1000.0_dp
+        !gp 03-dec-09
+        !!ph/inorganic carbon stoichiometry
+        !rates%ralkaa = 14.0_dp / 106.0_dp / 12.0_dp * rates%aca / 1000.0_dp
+        !rates%ralkan = 18.0_dp / 106.0_dp / 12.0_dp * rates%aca / 1000.0_dp
+        !rates%ralkda = 14.0_dp / 106.0_dp / 12.0_dp / rates%adc / 1000.0_dp
+        !rates%ralkdn = 18.0_dp / 106.0_dp / 12.0_dp / rates%adc / 1000.0_dp
+        !rates%ralkn = 2.0_dp / 14.0_dp / 1000.0_dp / 1000.0_dp
+        !rates%ralkden = 4.0_dp / (4.0_dp * 14.0_dp) / 1000.0_dp / 1000.0_dp
+        !rates%racc = 14.0_dp / 106.0_dp / 12.0_dp / 1000.0_dp
+        !rates%rondn = roc * 5.0_dp * 12.0_dp / (4.0_dp * 14.0_dp) / 1000.0_dp
+        !rates%acca = gc / mga / 12.0_dp / 1000.0_dp
+        !rates%acco = 1.0_dp / 12.0_dp / roc / 1000.0_dp
+        !rates%accd = gc / gd / 12.0_dp / 1000.0_dp
+        !rates%accc = 1.0_dp / 12.0_dp / 1000.0_dp
         !
-        !!pH/Inorganic carbon stoichiometry
-        !Rates%ralkaa = 14.0_dp / 106.0_dp / 12.0_dp * Rates%aca / 1000.0_dp
-        !Rates%ralkan = 18.0_dp / 106.0_dp / 12.0_dp * Rates%aca / 1000.0_dp
-        !Rates%ralkbn = 16.0_dp / 16.0_dp / 14.0_dp / 1000.0_dp / 1000.0_dp
-        !Rates%ralkbp = 2.0_dp / 1.0_dp / 31.0_dp / 1000.0_dp / 1000.0_dp
-        !Rates%ralkn = 2.0_dp / 14.0_dp / 1000.0_dp / 1000.0_dp
-        !Rates%ralkden = 4.0_dp / (4.0_dp * 14.0_dp) / 1000.0_dp / 1000.0_dp
-        !Rates%rondn = Rates%roc * 5.0_dp * 12.0_dp / (4.0_dp * 14.0_dp) / 1000.0_dp
-        !Rates%rcca = gC / mgA / 12.0_dp / 1000.0_dp
-        !Rates%rcco = 1.0_dp / 12.0_dp / Rates%roc / 1000.0_dp
-        !Rates%rccd = gC / gD / 12.0_dp / 1000.0_dp
-        !Rates%rccc = 1.0_dp / 12.0_dp / 1000.0_dp
-        Rates%ralkbn = 1.0_dp / 14.0067_dp / 1000.0_dp / 1000.0_dp
-        Rates%ralkbp = 1.0_dp / 30.973762_dp / 1000.0_dp / 1000.0_dp !multiplied later by speciation of phosphate in sub derivs
-        Rates%rondn = Rates%roc * 5.0_dp * 12.0107_dp / (4.0_dp * 14.0067_dp) / 1000.0_dp
-        Rates%rcca = gC / mgA / 12.0107_dp / 1000.0_dp
-        Rates%rcco = 1.0_dp / 12.0107_dp / Rates%roc / 1000.0_dp
-        Rates%rccd = gC / gD / 12.0107_dp / 1000.0_dp
-        Rates%rccc = 1.0_dp / 12.0107_dp / 1000.0_dp
+        !!ph/inorganic carbon stoichiometry
+        !rates%ralkaa = 14.0_dp / 106.0_dp / 12.0_dp * rates%aca / 1000.0_dp
+        !rates%ralkan = 18.0_dp / 106.0_dp / 12.0_dp * rates%aca / 1000.0_dp
+        !rates%ralkbn = 16.0_dp / 16.0_dp / 14.0_dp / 1000.0_dp / 1000.0_dp
+        !rates%ralkbp = 2.0_dp / 1.0_dp / 31.0_dp / 1000.0_dp / 1000.0_dp
+        !rates%ralkn = 2.0_dp / 14.0_dp / 1000.0_dp / 1000.0_dp
+        !rates%ralkden = 4.0_dp / (4.0_dp * 14.0_dp) / 1000.0_dp / 1000.0_dp
+        !rates%rondn = rates%roc * 5.0_dp * 12.0_dp / (4.0_dp * 14.0_dp) / 1000.0_dp
+        !rates%rcca = gc / mga / 12.0_dp / 1000.0_dp
+        !rates%rcco = 1.0_dp / 12.0_dp / rates%roc / 1000.0_dp
+        !rates%rccd = gc / gd / 12.0_dp / 1000.0_dp
+        !rates%rccc = 1.0_dp / 12.0_dp / 1000.0_dp
+        rates%ralkbn = 1.0_dp / 14.0067_dp / 1000.0_dp / 1000.0_dp
+        rates%ralkbp = 1.0_dp / 30.973762_dp / 1000.0_dp / 1000.0_dp !multiplied later by speciation of phosphate in sub derivs
+        rates%rondn = rates%roc * 5.0_dp * 12.0107_dp / (4.0_dp * 14.0067_dp) / 1000.0_dp
+        rates%rcca = gc / mga / 12.0107_dp / 1000.0_dp
+        rates%rcco = 1.0_dp / 12.0107_dp / rates%roc / 1000.0_dp
+        rates%rccd = gc / gd / 12.0107_dp / 1000.0_dp
+        rates%rccc = 1.0_dp / 12.0107_dp / 1000.0_dp
 
-        !gp 08-Feb-06
-        !If reach specific rates provided by input file are invalid, then use default general
+        !gp 08-feb-06
+        !if reach specific rates provided by input file are invalid, then use default general
         !rates provided by input file
-        DO i=1, nr
+        do i=1, nr
             !1.reaeration coefficient
             !leave the value as it is
             !unless it is equal/great than zero, it will be calculated by reaeration model
-            !2.Inorganic suspended solids settling velocity
-            IF (hydrau%reach(i)%vss <0) THEN
-                hydrau%reach(i)%vss = Rates%vss
-            END IF
-            !3.Slow CBOD Hydrolysis rate
-            IF (hydrau%reach(i)%khc <0) THEN
-                hydrau%reach(i)%khc = Rates%khc
-            END IF
-            !4.Slow CBOD oxidation rate
-            IF (hydrau%reach(i)%kdcs <0) THEN
-                hydrau%reach(i)%kdcs = Rates%kdcs
-            END IF
-            !5.Fast CBOD oxidation rate
-            IF (hydrau%reach(i)%kdc < 0) THEN
-                hydrau%reach(i)%kdc = Rates%kdc
-            END IF
-            !6. Organic N hydrolysis rate (khn)
-            IF (hydrau%reach(i)%khn < 0) THEN
-                hydrau%reach(i)%khn = Rates%khn
-            END IF
-            !7. Organic N Settling velocity (von)
-            IF (hydrau%reach(i)%von < 0) THEN
-                hydrau%reach(i)%von = Rates%von
-            END IF
-            !8. Ammonium Nitrification rate (kn)
-            IF (hydrau%reach(i)%kn < 0) THEN
-                hydrau%reach(i)%kn = Rates%kn
-            END IF
-            !9. Nitrate Denitrification rate (ki)
-            IF (hydrau%reach(i)%ki < 0) THEN
-                hydrau%reach(i)%ki = Rates%ki
-            END IF
-            !10. Nitrate Sed denitrification transfer coeff (vdi)
-            IF (hydrau%reach(i)%vdi < 0) THEN
-                hydrau%reach(i)%vdi = Rates%vdi
-            END IF
-            !11. Organic P Hydrolysis (khp)
-            IF (hydrau%reach(i)%khp < 0) THEN
-                hydrau%reach(i)%khp = Rates%khp
-            END IF
-            !12. Organic P Settling velocity (vop)
-            IF (hydrau%reach(i)%vop < 0) THEN
-                hydrau%reach(i)%vop = Rates%vop
-            END IF
-            !13. Inorganic P settling veloctiy (vip)
-            IF (hydrau%reach(i)%vip < 0) THEN
-                hydrau%reach(i)%vip = Rates%vip
-            END IF
-            !14. Phytoplankton Max growth rate (kga)
-            IF (hydrau%reach(i)%kga < 0) THEN
-                hydrau%reach(i)%kga = Rates%kga
-            END IF
-            !Phytoplankton respiration rate (krea)
-            IF (hydrau%reach(i)%krea < 0) THEN
-                hydrau%reach(i)%krea = Rates%krea
-            END IF
-            !Phytoplankton death rate (kdea)
-            IF (hydrau%reach(i)%kdea < 0) THEN
-                hydrau%reach(i)%kdea = Rates%kdea
-            END IF
-            !Phytoplankton N half-sat (ksn)
-            IF (hydrau%reach(i)%ksn < 0) THEN
-                hydrau%reach(i)%ksn = Rates%ksn
-            END IF
-            !Phytoplankton P half-sat (ksp)
-            IF (hydrau%reach(i)%ksp < 0) THEN
-                hydrau%reach(i)%ksp = Rates%ksp
-            END IF
-            !Phytoplankton light sat (Isat)
-            IF (hydrau%reach(i)%Isat < 0) THEN
-                hydrau%reach(i)%Isat = Rates%Isat
-            END IF
-            !Phytoplankton ammonia pref (khnx)
-            IF (hydrau%reach(i)%khnx < 0) THEN
-                hydrau%reach(i)%khnx = Rates%khnx
-            END IF
-            !Phytoplankton settling (va)
-            IF (hydrau%reach(i)%va < 0) THEN
-                hydrau%reach(i)%va = Rates%va
-            END IF
+            !2.inorganic suspended solids settling velocity
+            if (hydrau%reach(i)%vss <0) then
+                hydrau%reach(i)%vss = rates%vss
+            end if
+            !3.slow cbod hydrolysis rate
+            if (hydrau%reach(i)%khc <0) then
+                hydrau%reach(i)%khc = rates%khc
+            end if
+            !4.slow cbod oxidation rate
+            if (hydrau%reach(i)%kdcs <0) then
+                hydrau%reach(i)%kdcs = rates%kdcs
+            end if
+            !5.fast cbod oxidation rate
+            if (hydrau%reach(i)%kdc < 0) then
+                hydrau%reach(i)%kdc = rates%kdc
+            end if
+            !6. organic n hydrolysis rate (khn)
+            if (hydrau%reach(i)%khn < 0) then
+                hydrau%reach(i)%khn = rates%khn
+            end if
+            !7. organic n settling velocity (von)
+            if (hydrau%reach(i)%von < 0) then
+                hydrau%reach(i)%von = rates%von
+            end if
+            !8. ammonium nitrification rate (kn)
+            if (hydrau%reach(i)%kn < 0) then
+                hydrau%reach(i)%kn = rates%kn
+            end if
+            !9. nitrate denitrification rate (ki)
+            if (hydrau%reach(i)%ki < 0) then
+                hydrau%reach(i)%ki = rates%ki
+            end if
+            !10. nitrate sed denitrification transfer coeff (vdi)
+            if (hydrau%reach(i)%vdi < 0) then
+                hydrau%reach(i)%vdi = rates%vdi
+            end if
+            !11. organic p hydrolysis (khp)
+            if (hydrau%reach(i)%khp < 0) then
+                hydrau%reach(i)%khp = rates%khp
+            end if
+            !12. organic p settling velocity (vop)
+            if (hydrau%reach(i)%vop < 0) then
+                hydrau%reach(i)%vop = rates%vop
+            end if
+            !13. inorganic p settling veloctiy (vip)
+            if (hydrau%reach(i)%vip < 0) then
+                hydrau%reach(i)%vip = rates%vip
+            end if
+            !14. phytoplankton max growth rate (kga)
+            if (hydrau%reach(i)%kga < 0) then
+                hydrau%reach(i)%kga = rates%kga
+            end if
+            !phytoplankton respiration rate (krea)
+            if (hydrau%reach(i)%krea < 0) then
+                hydrau%reach(i)%krea = rates%krea
+            end if
+            !phytoplankton death rate (kdea)
+            if (hydrau%reach(i)%kdea < 0) then
+                hydrau%reach(i)%kdea = rates%kdea
+            end if
+            !phytoplankton n half-sat (ksn)
+            if (hydrau%reach(i)%ksn < 0) then
+                hydrau%reach(i)%ksn = rates%ksn
+            end if
+            !phytoplankton p half-sat (ksp)
+            if (hydrau%reach(i)%ksp < 0) then
+                hydrau%reach(i)%ksp = rates%ksp
+            end if
+            !phytoplankton light sat (isat)
+            if (hydrau%reach(i)%isat < 0) then
+                hydrau%reach(i)%isat = rates%isat
+            end if
+            !phytoplankton ammonia pref (khnx)
+            if (hydrau%reach(i)%khnx < 0) then
+                hydrau%reach(i)%khnx = rates%khnx
+            end if
+            !phytoplankton settling (va)
+            if (hydrau%reach(i)%va < 0) then
+                hydrau%reach(i)%va = rates%va
+            end if
 
-            !Bottom plant initial biomass (botalg0)
+            !bottom plant initial biomass (botalg0)
             !leave the value as it is
-            !Bottom plant Max growth rate (kgaF)
-            IF (hydrau%reach(i)%kgaF < 0) THEN
-                hydrau%reach(i)%kgaF = Rates%kgaF
+            !bottom plant max growth rate (kgaf)
+            if (hydrau%reach(i)%kgaf < 0) then
+                hydrau%reach(i)%kgaf = rates%kgaf
 
-                !gp 03-Apr-08 already in gD basis
-                !ELSE
-                ! !convert to mgA basis
-                ! If (Rates%typeF == "Zero-order") hydrau%reach(i)%kgaF = hydrau%reach(i)%kgaF * gD / mgA
+                !gp 03-apr-08 already in gd basis
+                !else
+                ! !convert to mga basis
+                ! if (rates%typef == "zero-order") hydrau%reach(i)%kgaf = hydrau%reach(i)%kgaf * gd / mga
 
-            END IF
+            end if
 
-            !Bottom plant first order carrying capacity (abmax)
-            IF (hydrau%reach(i)%abmax < 0) THEN
-                hydrau%reach(i)%abmax = Rates%abmax
+            !bottom plant first order carrying capacity (abmax)
+            if (hydrau%reach(i)%abmax < 0) then
+                hydrau%reach(i)%abmax = rates%abmax
 
-                !gp 03-Apr-08 already in gD basis
-                !ELSE
-                ! hydrau%reach(i)%abmax = hydrau%reach(i)%abmax * gD / mgA !convert to mgA basis
+                !gp 03-apr-08 already in gd basis
+                !else
+                ! hydrau%reach(i)%abmax = hydrau%reach(i)%abmax * gd / mga !convert to mga basis
 
-            END IF
+            end if
 
-            !Bottom plant respiration rate (kreaF)
+            !bottom plant respiration rate (kreaf)
 
-            !gp 03-Apr-08
-            !IF (hydrau%reach(i)%kreaF < 0) THEN
-            ! hydrau%reach(i)%kreaF = Rates%kreaF
-            !END IF
-            IF (hydrau%reach(i)%krea1F < 0) THEN
-                hydrau%reach(i)%krea1F = Rates%krea1F
-            END IF
-            IF (hydrau%reach(i)%krea2F < 0) THEN
-                hydrau%reach(i)%krea2F = Rates%krea2F
-            END IF
+            !gp 03-apr-08
+            !if (hydrau%reach(i)%kreaf < 0) then
+            ! hydrau%reach(i)%kreaf = rates%kreaf
+            !end if
+            if (hydrau%reach(i)%krea1f < 0) then
+                hydrau%reach(i)%krea1f = rates%krea1f
+            end if
+            if (hydrau%reach(i)%krea2f < 0) then
+                hydrau%reach(i)%krea2f = rates%krea2f
+            end if
 
-            !Bottom plant excretion rate (kexaF)
-            IF (hydrau%reach(i)%kexaF < 0) THEN
-                hydrau%reach(i)%kexaF = Rates%kexaF
-            END IF
-            !Bottom plant death rate (kdeaF)
-            IF (hydrau%reach(i)%kdeaF < 0) THEN
-                hydrau%reach(i)%kdeaF = Rates%kdeaF
-            END IF
-            !Bottom plant external N half-sat (ksnF)
-            IF (hydrau%reach(i)%ksnF < 0) THEN
-                hydrau%reach(i)%ksnF = Rates%ksnF
-            END IF
-            !Bottom plant external P half-sat (kspF)
-            IF (hydrau%reach(i)%kspF < 0) THEN
-                hydrau%reach(i)%kspF = Rates%kspF
-            END IF
-            !Bottom plant light sat (IsatF)
-            IF (hydrau%reach(i)%IsatF < 0) THEN
-                hydrau%reach(i)%IsatF = Rates%IsatF
-            END IF
-            !Bottom plant NH4 pref (khnxF)
-            IF (hydrau%reach(i)%khnxF < 0) THEN
-                hydrau%reach(i)%khnxF = Rates%khnxF
-            END IF
-            !Bottom plant subsistence quota for N (NINbmin)
-            IF (hydrau%reach(i)%NINbmin < 0) THEN
-                hydrau%reach(i)%NINbmin = Rates%NINbmin
+            !bottom plant excretion rate (kexaf)
+            if (hydrau%reach(i)%kexaf < 0) then
+                hydrau%reach(i)%kexaf = rates%kexaf
+            end if
+            !bottom plant death rate (kdeaf)
+            if (hydrau%reach(i)%kdeaf < 0) then
+                hydrau%reach(i)%kdeaf = rates%kdeaf
+            end if
+            !bottom plant external n half-sat (ksnf)
+            if (hydrau%reach(i)%ksnf < 0) then
+                hydrau%reach(i)%ksnf = rates%ksnf
+            end if
+            !bottom plant external p half-sat (kspf)
+            if (hydrau%reach(i)%kspf < 0) then
+                hydrau%reach(i)%kspf = rates%kspf
+            end if
+            !bottom plant light sat (isatf)
+            if (hydrau%reach(i)%isatf < 0) then
+                hydrau%reach(i)%isatf = rates%isatf
+            end if
+            !bottom plant nh4 pref (khnxf)
+            if (hydrau%reach(i)%khnxf < 0) then
+                hydrau%reach(i)%khnxf = rates%khnxf
+            end if
+            !bottom plant subsistence quota for n (ninbmin)
+            if (hydrau%reach(i)%ninbmin < 0) then
+                hydrau%reach(i)%ninbmin = rates%ninbmin
 
-                !gp 03-Apr-08 already in gD basis
-                !ELSE
-                ! hydrau%reach(i)%NINbmin = hydrau%reach(i)%NINbmin * mgA / gD !convert to mgA basis
+                !gp 03-apr-08 already in gd basis
+                !else
+                ! hydrau%reach(i)%ninbmin = hydrau%reach(i)%ninbmin * mga / gd !convert to mga basis
 
-            END IF
-            !Bottom plant subsistence quota for P (NIPbmin)
-            IF (hydrau%reach(i)%NIPbmin < 0) THEN
-                hydrau%reach(i)%NIPbmin = Rates%NIPbmin
+            end if
+            !bottom plant subsistence quota for p (nipbmin)
+            if (hydrau%reach(i)%nipbmin < 0) then
+                hydrau%reach(i)%nipbmin = rates%nipbmin
 
-                !gp 03-Apr-08 already in gD basis
-                !ELSE
-                ! hydrau%reach(i)%NIPbmin = hydrau%reach(i)%NIPbmin * mgA / gD !convert to mgA basis
+                !gp 03-apr-08 already in gd basis
+                !else
+                ! hydrau%reach(i)%nipbmin = hydrau%reach(i)%nipbmin * mga / gd !convert to mga basis
 
-            END IF
-            !Bottom plant max uptake of N (NINbupmax)
-            IF (hydrau%reach(i)%NINbupmax < 0) THEN
-                hydrau%reach(i)%NINbupmax = Rates%NINbupmax
+            end if
+            !bottom plant max uptake of n (ninbupmax)
+            if (hydrau%reach(i)%ninbupmax < 0) then
+                hydrau%reach(i)%ninbupmax = rates%ninbupmax
 
-                !gp 03-Apr-08 already in gD basis
-                !ELSE
-                ! hydrau%reach(i)%NINbupmax = hydrau%reach(i)%NINbupmax * mgA / gD !convert to mgA basis
+                !gp 03-apr-08 already in gd basis
+                !else
+                ! hydrau%reach(i)%ninbupmax = hydrau%reach(i)%ninbupmax * mga / gd !convert to mga basis
 
-            END IF
-            !Bottom plant max uptake of P (NIPbupmax)
-            IF (hydrau%reach(i)%NIPbupmax < 0) THEN
-                hydrau%reach(i)%NIPbupmax = Rates%NIPbupmax
+            end if
+            !bottom plant max uptake of p (nipbupmax)
+            if (hydrau%reach(i)%nipbupmax < 0) then
+                hydrau%reach(i)%nipbupmax = rates%nipbupmax
 
-                !gp 03-Apr-08 already in gD basis
-                !ELSE
-                ! hydrau%reach(i)%NIPbupmax = hydrau%reach(i)%NIPbupmax * mgA / gD !convert to mgA basis
+                !gp 03-apr-08 already in gd basis
+                !else
+                ! hydrau%reach(i)%nipbupmax = hydrau%reach(i)%nipbupmax * mga / gd !convert to mga basis
 
-            END IF
-            !Bottom plant internal N half-sat (KqN)
-            IF (hydrau%reach(i)%KqN < 0) THEN
-                hydrau%reach(i)%KqN = Rates%KqN
+            end if
+            !bottom plant internal n half-sat (kqn)
+            if (hydrau%reach(i)%kqn < 0) then
+                hydrau%reach(i)%kqn = rates%kqn
 
-                !gp 03-Apr-08 already in gD basis
-                !ELSE
-                ! hydrau%reach(i)%KqN = hydrau%reach(i)%KqN * mgA / gD !convert to mgA basis
+                !gp 03-apr-08 already in gd basis
+                !else
+                ! hydrau%reach(i)%kqn = hydrau%reach(i)%kqn * mga / gd !convert to mga basis
 
-            END IF
-            !Bottom plant internal P half-sat (KqP)
-            IF (hydrau%reach(i)%KqP < 0) THEN
-                hydrau%reach(i)%KqP = Rates%KqP
+            end if
+            !bottom plant internal p half-sat (kqp)
+            if (hydrau%reach(i)%kqp < 0) then
+                hydrau%reach(i)%kqp = rates%kqp
 
-                !gp 03-Apr-08 already in gD basis
-                !ELSE
-                ! hydrau%reach(i)%KqP = hydrau%reach(i)%KqP * mgA / gD !convert to mgA basis
+                !gp 03-apr-08 already in gd basis
+                !else
+                ! hydrau%reach(i)%kqp = hydrau%reach(i)%kqp * mga / gd !convert to mga basis
 
-            END IF
-            !Bottom plant fraction of N uptake from water column (NUpWCfrac)
-            IF (hydrau%reach(i)%NUpWCfrac < 0) THEN
-                hydrau%reach(i)%NUpWCfrac = Rates%NUpWCfrac
-            END IF
-            !Bottom plant fraction of P uptake from water column (PUpWCfrac)
-            IF (hydrau%reach(i)%PUpWCfrac < 0) THEN
-                hydrau%reach(i)%PUpWCfrac = Rates%PUpWCfrac
-            END IF
-            !17. Detritus(POM) dissolution rate (kdt)
-            IF (hydrau%reach(i)%kdt < 0) THEN
-                hydrau%reach(i)%kdt = Rates%kdt
-            END IF
-            !18. Detritus(POM) Settling velocity (vdt)
-            IF (hydrau%reach(i)%vdt < 0) THEN
-                hydrau%reach(i)%vdt = Rates%vdt
-            END IF
-            !Pathogen dieoff rate (kpath)
-            IF (hydrau%reach(i)%kpath < 0) THEN
-                hydrau%reach(i)%kpath = Rates%kpath
-            END IF
-            !Pathogen settling rate (vpath)
-            IF (hydrau%reach(i)%vpath < 0) THEN
-                hydrau%reach(i)%vpath = Rates%vpath
-            END IF
-            !Pathogen light alpha (apath)
-            IF (hydrau%reach(i)%apath < 0) THEN
-                hydrau%reach(i)%apath = Rates%apath
-            END IF
-            !Hyporheic heterotroph max growth rate (kgaH)
-            IF (hydrau%reach(i)%kgaH < 0) THEN
-                hydrau%reach(i)%kgaH = Rates%kgaH
-            END IF
-            !Hyporheic heterotroph half-sat for CBOD (kscH)
-            IF (hydrau%reach(i)%kscH < 0) THEN
-                hydrau%reach(i)%kscH = Rates%kscH
-            END IF
-            !Hyporheic heterotroph O2 inhibition parameter (kinhcH)
-            IF (hydrau%reach(i)%kinhcH < 0) THEN
-                hydrau%reach(i)%kinhcH = Rates%kinhcH
-            END IF
-            !Hyporheic heterotroph respiration rate (kreaH)
-            IF (hydrau%reach(i)%kreaH < 0) THEN
-                hydrau%reach(i)%kreaH = Rates%kreaH
-            END IF
-            !Hyporheic heterotroph death rate (kdeaH)
-            IF (hydrau%reach(i)%kdeaH < 0) THEN
-                hydrau%reach(i)%kdeaH = Rates%kdeaH
-            END IF
-            !Hyporheic heterotroph N half-sat (ksnH)
-            IF (hydrau%reach(i)%ksnH < 0) THEN
-                hydrau%reach(i)%ksnH = Rates%ksnH
-            END IF
-            !Hyporheic heterotroph P half-sat (kspH)
-            IF (hydrau%reach(i)%kspH < 0) THEN
-                hydrau%reach(i)%kspH = Rates%kspH
-            END IF
-            !Hyporheic heterotroph NH4 preference (khnxH)
-            IF (hydrau%reach(i)%khnxH < 0) THEN
-                hydrau%reach(i)%khnxH = Rates%khnxH
-            END IF
-            !Hyporheic heterotroph first-order carrying capacity (ahmax)
-            IF (hydrau%reach(i)%ahmax < 0) THEN
-                hydrau%reach(i)%ahmax = Rates%ahmax
-            END IF
-            !Generic constituent first-order loss rate constant (kgen)
-            IF (hydrau%reach(i)%kgen < 0) THEN
-                hydrau%reach(i)%kgen = Rates%kgen
-            END IF
-            !Generic constituent settling rate (vgen)
-            IF (hydrau%reach(i)%vgen < 0) THEN
-                hydrau%reach(i)%vgen = Rates%vgen
-            END IF
-        END DO
+            end if
+            !bottom plant fraction of n uptake from water column (nupwcfrac)
+            if (hydrau%reach(i)%nupwcfrac < 0) then
+                hydrau%reach(i)%nupwcfrac = rates%nupwcfrac
+            end if
+            !bottom plant fraction of p uptake from water column (pupwcfrac)
+            if (hydrau%reach(i)%pupwcfrac < 0) then
+                hydrau%reach(i)%pupwcfrac = rates%pupwcfrac
+            end if
+            !17. detritus(pom) dissolution rate (kdt)
+            if (hydrau%reach(i)%kdt < 0) then
+                hydrau%reach(i)%kdt = rates%kdt
+            end if
+            !18. detritus(pom) settling velocity (vdt)
+            if (hydrau%reach(i)%vdt < 0) then
+                hydrau%reach(i)%vdt = rates%vdt
+            end if
+            !pathogen dieoff rate (kpath)
+            if (hydrau%reach(i)%kpath < 0) then
+                hydrau%reach(i)%kpath = rates%kpath
+            end if
+            !pathogen settling rate (vpath)
+            if (hydrau%reach(i)%vpath < 0) then
+                hydrau%reach(i)%vpath = rates%vpath
+            end if
+            !pathogen light alpha (apath)
+            if (hydrau%reach(i)%apath < 0) then
+                hydrau%reach(i)%apath = rates%apath
+            end if
+            !hyporheic heterotroph max growth rate (kgah)
+            if (hydrau%reach(i)%kgah < 0) then
+                hydrau%reach(i)%kgah = rates%kgah
+            end if
+            !hyporheic heterotroph half-sat for cbod (ksch)
+            if (hydrau%reach(i)%ksch < 0) then
+                hydrau%reach(i)%ksch = rates%ksch
+            end if
+            !hyporheic heterotroph o2 inhibition parameter (kinhch)
+            if (hydrau%reach(i)%kinhch < 0) then
+                hydrau%reach(i)%kinhch = rates%kinhch
+            end if
+            !hyporheic heterotroph respiration rate (kreah)
+            if (hydrau%reach(i)%kreah < 0) then
+                hydrau%reach(i)%kreah = rates%kreah
+            end if
+            !hyporheic heterotroph death rate (kdeah)
+            if (hydrau%reach(i)%kdeah < 0) then
+                hydrau%reach(i)%kdeah = rates%kdeah
+            end if
+            !hyporheic heterotroph n half-sat (ksnh)
+            if (hydrau%reach(i)%ksnh < 0) then
+                hydrau%reach(i)%ksnh = rates%ksnh
+            end if
+            !hyporheic heterotroph p half-sat (ksph)
+            if (hydrau%reach(i)%ksph < 0) then
+                hydrau%reach(i)%ksph = rates%ksph
+            end if
+            !hyporheic heterotroph nh4 preference (khnxh)
+            if (hydrau%reach(i)%khnxh < 0) then
+                hydrau%reach(i)%khnxh = rates%khnxh
+            end if
+            !hyporheic heterotroph first-order carrying capacity (ahmax)
+            if (hydrau%reach(i)%ahmax < 0) then
+                hydrau%reach(i)%ahmax = rates%ahmax
+            end if
+            !generic constituent first-order loss rate constant (kgen)
+            if (hydrau%reach(i)%kgen < 0) then
+                hydrau%reach(i)%kgen = rates%kgen
+            end if
+            !generic constituent settling rate (vgen)
+            if (hydrau%reach(i)%vgen < 0) then
+                hydrau%reach(i)%vgen = rates%vgen
+            end if
+        end do
 
-    END FUNCTION
+    end function
 
-    !gp 03-Apr-08
-    !SUBROUTINE TempAdjust(Rates, hydrau, siteMeteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
-    ! kreaFT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
-    ! kreaT, vdiT, kacT, &
-    ! kgenT) !gp 30-Nov-04 add kgenT for generic constituent
-    SUBROUTINE TempAdjust(Rates, hydrau, siteMeteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
-        krea1FT, krea2FT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
-        kreaT, vdiT, kacT, &
-        kgenT)
-        USE Class_Hydraulics
-        USE m_meteorology
+    !gp 03-apr-08
+    !subroutine tempadjust(rates, hydrau, sitemeteo, nr, te, khct, kdcst, kdct, kgaft, kdeaft, &
+    ! kreaft, kexaft, khnt, khpt, knt, kdtt, kpatht, kit, kat, kgat, kdeat, &
+    ! kreat, vdit, kact, &
+    ! kgent) !gp 30-nov-04 add kgent for generic constituent
+    subroutine tempadjust(rates, hydrau, sitemeteo, nr, te, khct, kdcst, kdct, kgaft, kdeaft, &
+        krea1ft, krea2ft, kexaft, khnt, khpt, knt, kdtt, kpatht, kit, kat, kgat, kdeat, &
+        kreat, vdit, kact, &
+        kgent)
+        use class_hydraulics
+        use m_meteorology
 
-        INTEGER(I4B), INTENT(IN) :: nr
-        TYPE(Rates_type) Rates
-        TYPE(RiverHydraulics_type) hydrau
-        TYPE(t_meteorology) siteMeteo
+        integer(i4b), intent(in) :: nr
+        type(rates_type) rates
+        type(riverhydraulics_type) hydrau
+        type(t_meteorology) sitemeteo
 
-        REAL(DP), DIMENSION(0:,:), INTENT(IN) :: Te
+        real(dp), dimension(0:,:), intent(in) :: te
 
-        !gp 03-Apr-08
-        !REAL(DP), DIMENSION(:), INTENT(OUT) :: khcT, kdcsT, kdcT, kgaFT, kdeaFT, kreaFT, kexaFT
-        REAL(DP), DIMENSION(:), INTENT(OUT) :: khcT, kdcsT, kdcT, kgaFT, kdeaFT, krea1FT, krea2FT, kexaFT
+        !gp 03-apr-08
+        !real(dp), dimension(:), intent(out) :: khct, kdcst, kdct, kgaft, kdeaft, kreaft, kexaft
+        real(dp), dimension(:), intent(out) :: khct, kdcst, kdct, kgaft, kdeaft, krea1ft, krea2ft, kexaft
 
-        REAL(DP), DIMENSION(:), INTENT(OUT) :: khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT
-        REAL(DP), DIMENSION(:), INTENT(OUT) :: kdeaT, kreaT, vdiT, kacT
+        real(dp), dimension(:), intent(out) :: khnt, khpt, knt, kdtt, kpatht, kit, kat, kgat
+        real(dp), dimension(:), intent(out) :: kdeat, kreat, vdit, kact
 
-        !gp 30-Nov-04
-        REAL(DP), DIMENSION(:), INTENT(OUT) :: kgenT !gp 30-Nov-04
+        !gp 30-nov-04
+        real(dp), dimension(:), intent(out) :: kgent !gp 30-nov-04
 
-        INTEGER(I4B) i
-        REAL(DP) kawind, Uw10
-! REAL(DP), DIMENSION(nr) :: ka
+        integer(i4b) i
+        real(dp) kawind, uw10
+! real(dp), dimension(nr) :: ka
 
-        DO i = 1, nr
+        do i = 1, nr
 
-            !gp 08-Feb-06
-            !khcT(i) = Rates%khc * Rates%tkhc ** (Te(i, 1) - 20.0_dp)
-            !kdcsT(i) = Rates%kdcs * Rates%tkdcs **(Te(i,1) - 20.0_dp)
-            !kdcT(i) = Rates%kdc * Rates%tkdc ** (Te(i, 1) - 20.0_dp)
-            !khnT(i) = Rates%khn * Rates%tkhn ** (Te(i, 1) - 20.0_dp)
-            !khpT(i) = Rates%khp * Rates%tkhp ** (Te(i, 1) - 20.0_dp)
-            !knT(i) = Rates%kn * Rates%tkn ** (Te(i, 1) - 20.0_dp)
-            !kiT(i) = Rates%ki * Rates%tki ** (Te(i, 1) - 20.0_dp)
-            !vdiT(i) = Rates%vdi * Rates%tvdi ** (Te(i, 1) - 20.0_dp)
+            !gp 08-feb-06
+            !khct(i) = rates%khc * rates%tkhc ** (te(i, 1) - 20.0_dp)
+            !kdcst(i) = rates%kdcs * rates%tkdcs **(te(i,1) - 20.0_dp)
+            !kdct(i) = rates%kdc * rates%tkdc ** (te(i, 1) - 20.0_dp)
+            !khnt(i) = rates%khn * rates%tkhn ** (te(i, 1) - 20.0_dp)
+            !khpt(i) = rates%khp * rates%tkhp ** (te(i, 1) - 20.0_dp)
+            !knt(i) = rates%kn * rates%tkn ** (te(i, 1) - 20.0_dp)
+            !kit(i) = rates%ki * rates%tki ** (te(i, 1) - 20.0_dp)
+            !vdit(i) = rates%vdi * rates%tvdi ** (te(i, 1) - 20.0_dp)
             !
             !!use interpolated wind speed to adjust reaeration for selected methods
-            !If (hydrau%reach(i)%kaf == "Specified") Then
+            !if (hydrau%reach(i)%kaf == "specified") then
             ! hydrau%reach(i)%ka = hydrau%reach(i)%kau
-            !Else
-            ! Uw10 = (10.0_dp / 7.0_dp) ** 0.15_dp * siteMeteo%Uw(i)
-            ! Select Case (Rates%kawindmethod)
-            ! Case ("Banks-Herrera") !Chapra (1997) eqn 20.46
-            ! kawind = 0.728_dp * Uw10 ** 0.5_dp - 0.317_dp * Uw10 + 0.0372_dp * Uw10 ** 2
-            ! Case ("Wanninkhof") !Chapra (1997) eqn 20.47
-            ! kawind = 0.0986_dp * Uw10 ** 1.64_dp
-            ! Case DEFAULT
+            !else
+            ! uw10 = (10.0_dp / 7.0_dp) ** 0.15_dp * sitemeteo%uw(i)
+            ! select case (rates%kawindmethod)
+            ! case ("banks-herrera") !chapra (1997) eqn 20.46
+            ! kawind = 0.728_dp * uw10 ** 0.5_dp - 0.317_dp * uw10 + 0.0372_dp * uw10 ** 2
+            ! case ("wanninkhof") !chapra (1997) eqn 20.47
+            ! kawind = 0.0986_dp * uw10 ** 1.64_dp
+            ! case default
             ! kawind = 0
-            ! End Select
+            ! end select
             ! hydrau%reach(i)%ka = hydrau%reach(i)%kau + kawind / hydrau%reach(i)%depth
-            !End If
-            !kaT(i) = hydrau%reach(i)%ka * Rates%tka ** (Te(i, 1) - 20.0_dp)
-            !kacT(i) = (32.0_dp / 44.0_dp) ** 0.25_dp * kaT(i)
+            !end if
+            !kat(i) = hydrau%reach(i)%ka * rates%tka ** (te(i, 1) - 20.0_dp)
+            !kact(i) = (32.0_dp / 44.0_dp) ** 0.25_dp * kat(i)
 ! !channel(i)%elev = (channel(i)%elev1 + channel(i)%elev2) / 2
-            !hydrau%reach(i)%os = oxsat(Te(i, 1), hydrau%reach(i)%elev)
-            !kgaT(i) = Rates%kga * Rates%tkga ** (Te(i, 1) - 20.0_dp)
-            !kdeaT(i) = Rates%kdea * Rates%tkdea ** (Te(i, 1) - 20.0_dp)
-            !kreaT(i) = Rates%krea * Rates%tkrea ** (Te(i, 1) - 20.0_dp)
-            !kgaFT(i) = Rates%kgaF * Rates%tkgaF ** (Te(i, 1) - 20.0_dp)
-            !kdeaFT(i) = Rates%kdeaF * Rates%tkdeaF ** (Te(i, 1) - 20.0_dp)
-            !kreaFT(i) = Rates%kreaF * Rates%tkreaF ** (Te(i, 1) - 20.0_dp)
-            !kexaFT(i) = Rates%kexaF * Rates%tkexaF ** (Te(i, 1) - 20.0_dp)
-            !kdtT(i) = Rates%kdt * Rates%tkdt ** (Te(i, 1) - 20.0_dp)
-            !kpathT(i) = Rates%kpath * Rates%tkpath ** (Te(i, 1) - 20.0_dp)
+            !hydrau%reach(i)%os = oxsat(te(i, 1), hydrau%reach(i)%elev)
+            !kgat(i) = rates%kga * rates%tkga ** (te(i, 1) - 20.0_dp)
+            !kdeat(i) = rates%kdea * rates%tkdea ** (te(i, 1) - 20.0_dp)
+            !kreat(i) = rates%krea * rates%tkrea ** (te(i, 1) - 20.0_dp)
+            !kgaft(i) = rates%kgaf * rates%tkgaf ** (te(i, 1) - 20.0_dp)
+            !kdeaft(i) = rates%kdeaf * rates%tkdeaf ** (te(i, 1) - 20.0_dp)
+            !kreaft(i) = rates%kreaf * rates%tkreaf ** (te(i, 1) - 20.0_dp)
+            !kexaft(i) = rates%kexaf * rates%tkexaf ** (te(i, 1) - 20.0_dp)
+            !kdtt(i) = rates%kdt * rates%tkdt ** (te(i, 1) - 20.0_dp)
+            !kpatht(i) = rates%kpath * rates%tkpath ** (te(i, 1) - 20.0_dp)
             !
-            !!GP 30-nOV-04
-            !kgenT(i) = Rates%kgen * Rates%tkgen ** (Te(i, 1) - 20.0_dp)
-            khcT(i) = hydrau%reach(i)%khc * Rates%tkhc ** (Te(i, 1) - 20.0_dp)
-            kdcsT(i) = hydrau%reach(i)%kdcs * Rates%tkdcs **(Te(i,1) - 20.0_dp)
-            kdcT(i) = hydrau%reach(i)%kdc * Rates%tkdc ** (Te(i, 1) - 20.0_dp)
-            khnT(i) = hydrau%reach(i)%khn * Rates%tkhn ** (Te(i, 1) - 20.0_dp)
-            khpT(i) = hydrau%reach(i)%khp * Rates%tkhp ** (Te(i, 1) - 20.0_dp)
-            knT(i) = hydrau%reach(i)%kn * Rates%tkn ** (Te(i, 1) - 20.0_dp)
-            kiT(i) = hydrau%reach(i)%ki * Rates%tki ** (Te(i, 1) - 20.0_dp)
-            vdiT(i) = hydrau%reach(i)%vdi * Rates%tvdi ** (Te(i, 1) - 20.0_dp)
+            !!gp 30-nov-04
+            !kgent(i) = rates%kgen * rates%tkgen ** (te(i, 1) - 20.0_dp)
+            khct(i) = hydrau%reach(i)%khc * rates%tkhc ** (te(i, 1) - 20.0_dp)
+            kdcst(i) = hydrau%reach(i)%kdcs * rates%tkdcs **(te(i,1) - 20.0_dp)
+            kdct(i) = hydrau%reach(i)%kdc * rates%tkdc ** (te(i, 1) - 20.0_dp)
+            khnt(i) = hydrau%reach(i)%khn * rates%tkhn ** (te(i, 1) - 20.0_dp)
+            khpt(i) = hydrau%reach(i)%khp * rates%tkhp ** (te(i, 1) - 20.0_dp)
+            knt(i) = hydrau%reach(i)%kn * rates%tkn ** (te(i, 1) - 20.0_dp)
+            kit(i) = hydrau%reach(i)%ki * rates%tki ** (te(i, 1) - 20.0_dp)
+            vdit(i) = hydrau%reach(i)%vdi * rates%tvdi ** (te(i, 1) - 20.0_dp)
             !use interpolated wind speed to adjust reaeration for selected methods
-            If (hydrau%reach(i)%kaf == "Specified") Then
+            if (hydrau%reach(i)%kaf == "Specified") then
                 hydrau%reach(i)%ka = hydrau%reach(i)%kau
-            Else
-                Uw10 = (10.0_dp / 7.0_dp) ** 0.15_dp * siteMeteo%Uw(i)
-                Select Case (Rates%kawindmethod)
-                  Case ("Banks-Herrera") !Chapra (1997) eqn 20.46
-                    kawind = 0.728_dp * Uw10 ** 0.5_dp - 0.317_dp * Uw10 + 0.0372_dp * Uw10 ** 2
-                  Case ("Wanninkhof") !Chapra (1997) eqn 20.47
-                    kawind = 0.0986_dp * Uw10 ** 1.64_dp
-                  Case DEFAULT
+            else
+                uw10 = (10.0_dp / 7.0_dp) ** 0.15_dp * sitemeteo%uw(i)
+                select case (rates%kawindmethod)
+                  case ("Banks-Herrera") !chapra (1997) eqn 20.46
+                    kawind = 0.728_dp * uw10 ** 0.5_dp - 0.317_dp * uw10 + 0.0372_dp * uw10 ** 2
+                  case ("Wanninkhof") !chapra (1997) eqn 20.47
+                    kawind = 0.0986_dp * uw10 ** 1.64_dp
+                  case default
                     kawind = 0
-                End Select
+                end select
                 hydrau%reach(i)%ka = hydrau%reach(i)%kau + kawind / hydrau%reach(i)%depth
-            End If
-            kaT(i) = hydrau%reach(i)%ka * Rates%tka ** (Te(i, 1) - 20.0_dp)
-            kacT(i) = (32.0_dp / 44.0_dp) ** 0.25_dp * kaT(i)
-            hydrau%reach(i)%os = oxsat(Te(i, 1), hydrau%reach(i)%elev)
-            kgaT(i) = hydrau%reach(i)%kga * Rates%tkga ** (Te(i, 1) - 20.0_dp)
-            kdeaT(i) = hydrau%reach(i)%kdea * Rates%tkdea ** (Te(i, 1) - 20.0_dp)
-            kreaT(i) = hydrau%reach(i)%krea * Rates%tkrea ** (Te(i, 1) - 20.0_dp)
-            kgaFT(i) = hydrau%reach(i)%kgaF * Rates%tkgaF ** (Te(i, 1) - 20.0_dp)
-            kdeaFT(i) = hydrau%reach(i)%kdeaF * Rates%tkdeaF ** (Te(i, 1) - 20.0_dp)
+            end if
+            kat(i) = hydrau%reach(i)%ka * rates%tka ** (te(i, 1) - 20.0_dp)
+            kact(i) = (32.0_dp / 44.0_dp) ** 0.25_dp * kat(i)
+            hydrau%reach(i)%os = oxsat(te(i, 1), hydrau%reach(i)%elev)
+            kgat(i) = hydrau%reach(i)%kga * rates%tkga ** (te(i, 1) - 20.0_dp)
+            kdeat(i) = hydrau%reach(i)%kdea * rates%tkdea ** (te(i, 1) - 20.0_dp)
+            kreat(i) = hydrau%reach(i)%krea * rates%tkrea ** (te(i, 1) - 20.0_dp)
+            kgaft(i) = hydrau%reach(i)%kgaf * rates%tkgaf ** (te(i, 1) - 20.0_dp)
+            kdeaft(i) = hydrau%reach(i)%kdeaf * rates%tkdeaf ** (te(i, 1) - 20.0_dp)
 
-            !gp 03-Apr-08
-            !kreaFT(i) = hydrau%reach(i)%kreaF * Rates%tkreaF ** (Te(i, 1) - 20.0_dp)
-            krea1FT(i) = hydrau%reach(i)%krea1F * Rates%tkreaF ** (Te(i, 1) - 20.0_dp)
-            krea2FT(i) = hydrau%reach(i)%krea2F !no temp adj of photo resp because growth rate is temp adjusted
+            !gp 03-apr-08
+            !kreaft(i) = hydrau%reach(i)%kreaf * rates%tkreaf ** (te(i, 1) - 20.0_dp)
+            krea1ft(i) = hydrau%reach(i)%krea1f * rates%tkreaf ** (te(i, 1) - 20.0_dp)
+            krea2ft(i) = hydrau%reach(i)%krea2f !no temp adj of photo resp because growth rate is temp adjusted
 
-            kexaFT(i) = hydrau%reach(i)%kexaF * Rates%tkexaF ** (Te(i, 1) - 20.0_dp)
-            kdtT(i) = hydrau%reach(i)%kdt * Rates%tkdt ** (Te(i, 1) - 20.0_dp)
-            kpathT(i) = hydrau%reach(i)%kpath * Rates%tkpath ** (Te(i, 1) - 20.0_dp)
-            kgenT(i) = hydrau%reach(i)%kgen * Rates%tkgen ** (Te(i, 1) - 20.0_dp)
+            kexaft(i) = hydrau%reach(i)%kexaf * rates%tkexaf ** (te(i, 1) - 20.0_dp)
+            kdtt(i) = hydrau%reach(i)%kdt * rates%tkdt ** (te(i, 1) - 20.0_dp)
+            kpatht(i) = hydrau%reach(i)%kpath * rates%tkpath ** (te(i, 1) - 20.0_dp)
+            kgent(i) = hydrau%reach(i)%kgen * rates%tkgen ** (te(i, 1) - 20.0_dp)
 
-        END DO
-    END SUBROUTINE TempAdjust
+        end do
+    end subroutine tempadjust
 
-    PURE FUNCTION oxsat(Temp, elev)
+    pure function oxsat(temp, elev)
 
-        REAL(DP) oxsat
-        REAL(DP), INTENT(IN) :: Temp, elev
-        REAL(DP) Taa, lnosf
+        real(dp) oxsat
+        real(dp), intent(in) :: temp, elev
+        real(dp) taa, lnosf
 
-        Taa = Temp + 273.15_dp
-        lnosf = -139.34411_dp + 157570.1_dp / Taa - 66423080.0_dp / Taa ** 2 &
-            + 12438000000.0_dp / Taa ** 3 - 862194900000.0_dp / Taa ** 4
-        oxsat = Exp(lnosf) * (1 - 0.0001148_dp * elev)
+        taa = temp + 273.15_dp
+        lnosf = -139.34411_dp + 157570.1_dp / taa - 66423080.0_dp / taa ** 2 &
+            + 12438000000.0_dp / taa ** 3 - 862194900000.0_dp / taa ** 4
+        oxsat = exp(lnosf) * (1 - 0.0001148_dp * elev)
 
-    END FUNCTION oxsat
+    end function oxsat
 
-    SUBROUTINE SetOxygenInhibEnhance(Rates, O2, fcarb, fnitr, fdenitr, frespp, frespb)
+    subroutine setoxygeninhibenhance(rates, o2, fcarb, fnitr, fdenitr, frespp, frespb)
 
-        REAL(DP), INTENT(OUT) :: fcarb, fnitr, fdenitr, frespp, frespb
-        TYPE(Rates_type), INTENT(IN) :: Rates
-        REAL(DP), INTENT(IN) :: O2
+        real(dp), intent(out) :: fcarb, fnitr, fdenitr, frespp, frespb
+        type(rates_type), intent(in) :: rates
+        real(dp), intent(in) :: o2
 
-        Select Case (Rates%IkoxC)
-          Case (1)
-            fcarb = O2 / (Rates%Ksocf + O2)
-          Case (2)
-            fcarb = 1.0_dp - Exp(-Rates%Ksocf * O2)
-          Case (3)
-            fcarb = O2 ** 2 / (Rates%Ksocf + O2 ** 2)
-        End Select
+        select case (rates%ikoxc)
+          case (1)
+            fcarb = o2 / (rates%ksocf + o2)
+          case (2)
+            fcarb = 1.0_dp - exp(-rates%ksocf * o2)
+          case (3)
+            fcarb = o2 ** 2 / (rates%ksocf + o2 ** 2)
+        end select
 
-        Select Case (Rates%IkoxN)
-          Case (1)
-            fnitr = O2 / (Rates%Ksona + O2)
-          Case (2)
-            fnitr = 1.0_dp - Exp(-Rates%Ksona * O2)
-          Case (3)
-            fnitr = O2 ** 2 / (Rates%Ksona + O2 ** 2)
-        End Select
+        select case (rates%ikoxn)
+          case (1)
+            fnitr = o2 / (rates%ksona + o2)
+          case (2)
+            fnitr = 1.0_dp - exp(-rates%ksona * o2)
+          case (3)
+            fnitr = o2 ** 2 / (rates%ksona + o2 ** 2)
+        end select
 
-        Select Case (Rates%IkoxDN)
-          Case (1)
-            fdenitr = 1.0_dp - O2 / (Rates%Ksodn + O2)
-          Case (2)
-            fdenitr = Exp(-Rates%Ksodn * O2)
-          Case (3)
-            fdenitr = 1.0_dp - O2 ** 2 / (Rates%Ksodn + O2 ** 2)
-        End Select
+        select case (rates%ikoxdn)
+          case (1)
+            fdenitr = 1.0_dp - o2 / (rates%ksodn + o2)
+          case (2)
+            fdenitr = exp(-rates%ksodn * o2)
+          case (3)
+            fdenitr = 1.0_dp - o2 ** 2 / (rates%ksodn + o2 ** 2)
+        end select
 
-        Select Case (Rates%IkoxP)
-          Case (1)
-            frespp = O2 / (Rates%Ksop + O2)
-          Case (2)
-            frespp = 1.0_dp - Exp(-Rates%Ksop * O2)
-          Case (3)
-            frespp = O2 ** 2 / (Rates%Ksop + O2 ** 2)
-        End Select
+        select case (rates%ikoxp)
+          case (1)
+            frespp = o2 / (rates%ksop + o2)
+          case (2)
+            frespp = 1.0_dp - exp(-rates%ksop * o2)
+          case (3)
+            frespp = o2 ** 2 / (rates%ksop + o2 ** 2)
+        end select
 
-        Select Case (Rates%IkoxB)
-          Case (1)
-            frespb = O2 / (Rates%Ksob + O2)
-          Case (2)
-            frespb = 1.0_dp - Exp(-Rates%Ksob * O2)
-          Case (3)
-            frespb = O2 ** 2 / (Rates%Ksob + O2 ** 2)
-        End Select
+        select case (rates%ikoxb)
+          case (1)
+            frespb = o2 / (rates%ksob + o2)
+          case (2)
+            frespb = 1.0_dp - exp(-rates%ksob * o2)
+          case (3)
+            frespb = o2 ** 2 / (rates%ksob + o2 ** 2)
+        end select
 
-    END SUBROUTINE SetOxygenInhibEnhance
+    end subroutine setoxygeninhibenhance
 
-    PURE FUNCTION Ikox(xdum)
-        CHARACTER(LEN=30), INTENT(IN) :: xdum
-        INTEGER(I4B) Ikox
+    pure function ikox(xdum)
+        character(len=30), intent(in) :: xdum
+        integer(i4b) ikox
 
-        SELECT CASE (xdum)
-          CASE ("Half saturation")
-            Ikox = 1 !"mgO2/L"
-          CASE ("2nd order")
-            Ikox = 3 !"mgO2/L"
+        select case (xdum)
+          case ("Half saturation")
+            ikox = 1 !"mgO2/L"
+          case ("2nd order")
+            ikox = 3 !"mgO2/L"
           CASE DEFAULT !"Exponential"
-            Ikox = 2 !"L/mgO2" End
+            ikox = 2 !"L/mgO2" End
         END SELECT
     END FUNCTION
 END MODULE Class_Rates
