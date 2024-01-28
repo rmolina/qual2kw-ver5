@@ -4,7 +4,7 @@ contains
     SUBROUTINE ReadInputfile(system, hydrau, siteMeteo, HW, DB, stochRate, topo, siteSolar)
         USE nrtype
         USE Class_SystemParams    !, ONLY: SystemParams, SystemParams_
-        USE Class_RiverTopo
+        USE Class_RiverTopo, only: rivertopo_type
         USE Class_Hydraulics
         USE m_meteorology, only: t_meteorology
 
@@ -514,7 +514,7 @@ contains
         !	rhoCpSed = cal/(cm^3 deg C)
 
         !gp 17-Nov-04 Topo= RiverTopo_(nRch, rlab2, rname, xrdn)
-        Topo= RiverTopo_(nRch, rlab2, rname, xrdn, geoMethod)		!gp 17-Nov-04
+        Topo= rivertopo_type(nRch, rlab2, rname, xrdn, geoMethod)		!gp 17-Nov-04
 
         !gp 07-Feb-06
         !hydrau= hydraulics_(nRch, xrdn, elev1, elev2, latd, latm, lats, &

@@ -6,7 +6,7 @@ module class_rivertopo
     use m_reach
     implicit none
     private
-    public :: rivertopo_type, rivertopo_
+    public :: rivertopo_type
 
 !	private															!unless declared public
 !	public :: ne, nr, nhw, river_
@@ -23,6 +23,10 @@ module class_rivertopo
         character(len=30) geomethod		!gp 17-nov-04 depth or width for col t and u of 'reach' sheet
 
     end type rivertopo_type
+
+    interface rivertopo_type
+        procedure :: rivertopo_
+    end interface rivertopo_type
 
 !	type(rivertopo_type) topo
     !steady state data types
