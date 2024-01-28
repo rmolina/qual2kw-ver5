@@ -1,141 +1,141 @@
 ! classrivertopo.f90
 ! data structure for reach and elements
-MODULE Class_RiverTopo
-    USE nrtype
-!	USE Class_Element
-    USE m_reach
-    IMPLICIT NONE
+module class_rivertopo
+    use nrtype
+!	use class_element
+    use m_reach
+    implicit none
 
-!	PRIVATE															!unless declared public
-!	PUBLIC :: ne, nr, nHw, River_
+!	private															!unless declared public
+!	public :: ne, nr, nhw, river_
 
     !/*module variables */
-    TYPE RiverTopo_type
-        INTEGER(I4B) nr									!number of reaches
-!		INTEGER(I4B) ne									!number of elements
-        INTEGER(I4B) :: nHw =1					!Hardwired to 1 for mainstem only
-!		TYPE(Element_type), POINTER :: elems(:) !element array, containing topology information
-        TYPE(t_reach), DIMENSION(:),  POINTER :: reach !reaches array,
+    type rivertopo_type
+        integer(i4b) nr									!number of reaches
+!		integer(i4b) ne									!number of elements
+        integer(i4b) :: nhw =1					!hardwired to 1 for mainstem only
+!		type(element_type), pointer :: elems(:) !element array, containing topology information
+        type(t_reach), dimension(:),  pointer :: reach !reaches array,
 
-        !gp 17-Nov-04
-        CHARACTER(LEN=30) geoMethod		!gp 17-Nov-04 Depth or Width for col T and U of 'Reach' sheet
+        !gp 17-nov-04
+        character(len=30) geomethod		!gp 17-nov-04 depth or width for col t and u of 'reach' sheet
 
-    END TYPE RiverTopo_type
+    end type rivertopo_type
 
-!	TYPE(RiverTopo_type) Topo
+!	type(rivertopo_type) topo
     !steady state data types
 
-CONTAINS
+contains
     !/* public functions */
 
-    !PURE FUNCTION ne()
-    !	INTEGER(I4B) ne
-    !	ne = Topo%ne
-    !END FUNCTION ne
+    !pure function ne()
+    !	integer(i4b) ne
+    !	ne = topo%ne
+    !end function ne
 
-    !PURE FUNCTION nr()
-    !	INTEGER(I4B) nr
-    !	nr = Topo%nr
-    !END FUNCTION nr
+    !pure function nr()
+    !	integer(i4b) nr
+    !	nr = topo%nr
+    !end function nr
 
-    !PURE FUNCTION nHw()
-    !	INTEGER(I4B) nHw
-    !	nHw= Topo%nHw
-    !END FUNCTION nHw
+    !pure function nhw()
+    !	integer(i4b) nhw
+    !	nhw= topo%nhw
+    !end function nhw
 
     !data structure constructor
-    !gp 17-Nov-04 FUNCTION RiverTopo_(nRch, rlab2, rname, xrdn) RESULT(Topo)
-    FUNCTION RiverTopo_(nRch, rlab2, rname, xrdn, geoMethod) RESULT(Topo)		!gp 17-Nov-04
+    !gp 17-nov-04 function rivertopo_(nrch, rlab2, rname, xrdn) result(topo)
+    function rivertopo_(nrch, rlab2, rname, xrdn, geomethod) result(topo)		!gp 17-nov-04
 
-        TYPE(RiverTopo_type) Topo
-        INTEGER(I4B), INTENT(IN) :: nRch
-        REAL(DP), INTENT(IN) :: xrdn(0:)
-        CHARACTER(LEN=30), INTENT(IN) :: rlab2(0:), rname(0:)
-        INTEGER(I4B) i, j, nElem, status
+        type(rivertopo_type) topo
+        integer(i4b), intent(in) :: nrch
+        real(dp), intent(in) :: xrdn(0:)
+        character(len=30), intent(in) :: rlab2(0:), rname(0:)
+        integer(i4b) i, j, nelem, status
 
-        !gp 17-Nov-04
-        CHARACTER(LEN=30), INTENT(IN) :: geoMethod		!gp 17-Nov-04 Depth or Width for col T and U of 'Reach' sheet
+        !gp 17-nov-04
+        character(len=30), intent(in) :: geomethod		!gp 17-nov-04 depth or width for col t and u of 'reach' sheet
 
         !
-        !CALL AllocateReachArray(Topo, nRch)
-        Topo%nr = nRch
+        !call allocatereacharray(topo, nrch)
+        topo%nr = nrch
 
-        !gp 17-Nov-04
-        Topo%geoMethod = geoMethod		!gp 17-Nov-04 Depth or Width for col T and U of 'Reach' sheet
+        !gp 17-nov-04
+        topo%geomethod = geomethod		!gp 17-nov-04 depth or width for col t and u of 'reach' sheet
 
-        ALLOCATE (Topo%reach(0:Topo%nr), STAT=status)
-        IF (status==1) THEN
-            STOP 'Class_River:AllocateReachArray failed. Insufficient Memory!'
-        END IF
+        allocate (topo%reach(0:topo%nr), stat=status)
+        if (status==1) then
+            stop 'Class_River:AllocateReachArray failed. Insufficient Memory!'
+        end if
 
-        DO i=0, nRch
-            Topo%reach(i)%rlab  = rlab2(i)
-            Topo%reach(i)%rname = rname(i)
-            Topo%reach(i)%xrdn = xrdn(i)
-            IF (i==0) THEN
-                Topo%reach(i)%xpm=xrdn(i)
-            ELSE
-                Topo%reach(i)%xpm = (xrdn(i-1)+xrdn(i))/2
-            END IF
-            !		Topo%reach(i)%xup	 = xrdn (i-1)
-            !		Topo%reach(i)%xdown = xrdn (i)
-            !		Topo%reach(i)%elems = 1											!// hardwire to 1 for test
-            !		Topo%reach(i)%elemLen = (xrdn(i)-xrdn(i-1))/Topo%reach(i)%elems
-            !		nElem = nElem + Topo%reach(i)%elems					!calculate total elements
-        END DO
-        !	CALL AllocateElementArray(nElem)
-    END FUNCTION RiverTopo_
+        do i=0, nrch
+            topo%reach(i)%rlab  = rlab2(i)
+            topo%reach(i)%rname = rname(i)
+            topo%reach(i)%xrdn = xrdn(i)
+            if (i==0) then
+                topo%reach(i)%xpm=xrdn(i)
+            else
+                topo%reach(i)%xpm = (xrdn(i-1)+xrdn(i))/2
+            end if
+            !		topo%reach(i)%xup	 = xrdn (i-1)
+            !		topo%reach(i)%xdown = xrdn (i)
+            !		topo%reach(i)%elems = 1											!// hardwire to 1 for test
+            !		topo%reach(i)%elemlen = (xrdn(i)-xrdn(i-1))/topo%reach(i)%elems
+            !		nelem = nelem + topo%reach(i)%elems					!calculate total elements
+        end do
+        !	call allocateelementarray(nelem)
+    end function rivertopo_
 
-    SUBROUTINE AllocateReachArray(Topo, nRch)
+    subroutine allocatereacharray(topo, nrch)
 
-        TYPE(RiverTopo_type) Topo
-        INTEGER(I4B), INTENT(IN) :: nRch
-        INTEGER(I4B) status
-        IF (.NOT. ASSOCIATED(Topo%reach)) THEN
-            IF (nRch>0)THEN
-                Topo%nr = nRch
-                ALLOCATE (Topo%reach(0:Topo%nr), STAT=status)
-                IF (status==1) THEN
-                    STOP 'Class_River:AllocateReachArray failed. Insufficient Memory!'
-                END IF
+        type(rivertopo_type) topo
+        integer(i4b), intent(in) :: nrch
+        integer(i4b) status
+        if (.not. associated(topo%reach)) then
+            if (nrch>0)then
+                topo%nr = nrch
+                allocate (topo%reach(0:topo%nr), stat=status)
+                if (status==1) then
+                    stop 'Class_River:AllocateReachArray failed. Insufficient Memory!'
+                end if
 
-            ELSE
-                PRINT *, 'ERROR:element and reach number must be great than 0'
-                STOP 'Class_River:AllocateReachArray failed'
-            END IF
-        ELSE
-            PRINT *, 'Warning: River array can only allocate once. Allocation failed!'
-        END IF
+            else
+                print *, 'ERROR:element and reach number must be great than 0'
+                stop 'Class_River:AllocateReachArray failed'
+            end if
+        else
+            print *, 'Warning: River array can only allocate once. Allocation failed!'
+        end if
 
-    END SUBROUTINE AllocateReachArray
+    end subroutine allocatereacharray
 
-!	SUBROUTINE AllocateElementArray(nElem)
-!		INTEGER(I4B), INTENT(IN) :: nElem
-!		INTEGER(I4B) status
+!	subroutine allocateelementarray(nelem)
+!		integer(i4b), intent(in) :: nelem
+!		integer(i4b) status
 
-!		IF (.NOT. ASSOCIATED(Topo%elems)) THEN
-!			IF (nElem>0)THEN
-!				Topo%ne = nElem
-!				ALLOCATE (Topo%elems (0:Topo%ne), STAT=status)
-!				IF (status==1) THEN
-!					STOP 'Class_River:AllocateReachArray failed. Insufficient Memory!'
-!				END IF
-!			ELSE
-!				PRINT *, 'ERROR:element and reach number must be great than 0'
-!				STOP 'Class_River:AllocateElementArray failed'
-!			END IF
-!		ELSE
-!			PRINT *, 'Warning: Topo array can only allocate once. Allocation failed!'
-!		END IF
+!		if (.not. associated(topo%elems)) then
+!			if (nelem>0)then
+!				topo%ne = nelem
+!				allocate (topo%elems (0:topo%ne), stat=status)
+!				if (status==1) then
+!					stop 'class_river:allocatereacharray failed. insufficient memory!'
+!				end if
+!			else
+!				print *, 'error:element and reach number must be great than 0'
+!				stop 'class_river:allocateelementarray failed'
+!			end if
+!		else
+!			print *, 'warning: topo array can only allocate once. allocation failed!'
+!		end if
 
-!	END SUBROUTINE AllocateElementArray
+!	end subroutine allocateelementarray
 
     !dynamic data types
 
-    SUBROUTINE BuildElemTopology()
+    subroutine buildelemtopology()
 
 
 
-    END SUBROUTINE
+    end subroutine
 
-END MODULE Class_RiverTopo
+end module class_rivertopo
