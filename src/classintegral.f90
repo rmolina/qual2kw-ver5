@@ -7,7 +7,7 @@ MODULE Class_Integration
     USE Class_IntegrationData
     USE Class_Output
     USE Class_Headwater
-    USE Class_downstream
+    USE m_downstream
     use class_hydraulics, only: riverhydraulics_type
     use m_tempadjust, only: temp_adjust 
     use m_oxygen, only: oxygen_inhibition_and_enhancement
@@ -29,7 +29,7 @@ CONTAINS
         TYPE(meteorology_t) Meteo
         TYPE(solar_type) Solar					!solar radiation
         TYPE(Headwater_type) HW					!headwater
-        TYPE(Downstream_type) DB				!downstream boundary
+        TYPE(downstream_t) DB				!downstream boundary
         TYPE(RiverHydraulics_type) hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(Outdata_type), INTENT(OUT) :: pr			!print out data structure
         INTEGER(I4B), INTENT(IN) :: nr				!number of reach
@@ -928,7 +928,7 @@ CONTAINS
         TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar							!solar radiation
         TYPE(Headwater_type) HW							!headwater
-        TYPE(Downstream_type) DB						!downstream boundary
+        TYPE(downstream_t) DB						!downstream boundary
         TYPE(RiverHydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         REAL(DP), DIMENSION(:), POINTER :: INb, IPb
@@ -3016,7 +3016,7 @@ CONTAINS
         TYPE(solar_type) Solar							!solar radiation
 !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type) HW							!headwater
-        TYPE(Downstream_type) DB						!downstream boundary
+        TYPE(downstream_t) DB						!downstream boundary
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: begin
@@ -3115,7 +3115,7 @@ CONTAINS
         TYPE(meteorology_t) :: Meteo
         TYPE(solar_type) Solar						!solar radiation
         TYPE(Headwater_type), INTENT(IN) :: HW				!headwater
-        TYPE(Downstream_type), INTENT(IN) :: DB				!downstream boundary
+        TYPE(downstream_t), INTENT(IN) :: DB				!downstream boundary
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau		!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: intg
@@ -3243,7 +3243,7 @@ CONTAINS
         TYPE(solar_type) Solar							!solar radiation
         !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type), INTENT(IN) :: HW					!headwater
-        TYPE(Downstream_type), INTENT(IN) :: DB					!downstream boundary
+        TYPE(downstream_t), INTENT(IN) :: DB					!downstream boundary
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(IN) :: intg
@@ -3489,7 +3489,7 @@ CONTAINS
         TYPE(solar_type) Solar							!solar radiation
         !TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
         TYPE(Headwater_type), INTENT(IN) :: HW					!headwater
-        TYPE(Downstream_type), INTENT(IN) :: DB					!downstream boundary
+        TYPE(downstream_t), INTENT(IN) :: DB					!downstream boundary
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: intg
