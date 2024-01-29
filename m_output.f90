@@ -1,4 +1,4 @@
-module class_output
+module m_output
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use class_hydraulics
     use class_integrationdata
@@ -8,10 +8,11 @@ module class_output
     use m_rates
     use m_rivertopo
     use nrtype
-
     implicit none
+    private
+    public :: outdata_t, output
 
-    type outdata_type
+    type outdata_t
         !gp 24-oct-04 integer(i32) nj
         integer(i32) nj !gp need long integer for nj
         real(r64), dimension(:), pointer :: tdy
@@ -75,17 +76,21 @@ module class_output
         !gp 25-jun-09
         real(r64), dimension(:), pointer :: av_botalgphoto, av_botalgresp, av_botalgdeath, av_botalgnetgrowth
 
-    end type
+    end type outdata_t
+
+    interface outdata_t
+        procedure :: outdata_ctor
+    end interface outdata_t
 
 contains
 
 !gp 17-nov-04 function outdata_(nr) result(pr)
-    function outdata_(nr, sys) result(pr) !gp 17-nov-04 pass sys to minimize size of dynamic diel arrays
+    function outdata_ctor(nr, sys) result(pr) !gp 17-nov-04 pass sys to minimize size of dynamic diel arrays
 
         !gp 17-nov-04
 
         integer(i32), intent(in) :: nr
-        type(outdata_type) pr
+        type(outdata_t) pr
 
         !gp 05-jul-05 integer(i32) i,status(0:60) !gp 11-jan-05
         !gp 25-jun-09 integer(i32) i,status(0:93) !gp 05-jul-05
@@ -298,17 +303,17 @@ contains
 
         end do
 
-    end function outdata_
+    end function outdata_ctor
 
     subroutine output(pr, nr, topo, hydrau, rates, system)
 
-        type(outdata_type), intent(in) :: pr
+        type(outdata_t), intent(in) :: pr
         type(t_rivertopo) topo
         type(riverhydraulics_type), intent(in) :: hydrau
         type(rates_t) rates
         type(systemparams) system
-
         integer(i32), intent(in) :: nr
+
         !gp integer(i32) i, j, nrp
         integer(i32) i, j, nrp, k !gp
         real(r64) toc, tkn, tss, tp, tn, bottomalgae, dosat, nh3
@@ -921,7 +926,7 @@ contains
 
     subroutine hyporheic_pore_water(pr, topo, system, rates, nr)
 
-        type(outdata_type), intent(in) :: pr
+        type(outdata_t), intent(in) :: pr
         type(t_rivertopo), intent(in) :: topo
         type(systemparams), intent(in) :: system
         type(rates_t), intent(in) :: rates

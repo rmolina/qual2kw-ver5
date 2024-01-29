@@ -5,7 +5,7 @@ MODULE Class_Integration
     USE Class_Phsolve
     USE m_rates
     USE Class_IntegrationData
-    USE Class_Output
+    USE m_output
     USE m_upstream_boundary
     USE m_downstream_boundary
     use class_hydraulics, only: riverhydraulics_type
@@ -31,7 +31,7 @@ CONTAINS
         TYPE(upstream_boundary_t) HW					!headwater
         TYPE(downstream_boundary_t) DB				!downstream boundary
         TYPE(RiverHydraulics_type) hydrau			!channel dimensions, hydraulics, physical characters
-        TYPE(Outdata_type), INTENT(OUT) :: pr			!print out data structure
+        TYPE(outdata_t), INTENT(OUT) :: pr			!print out data structure
         INTEGER(I4B), INTENT(IN) :: nr				!number of reach
         REAL(DP)	t
         !Heat related values
@@ -446,7 +446,7 @@ CONTAINS
 
         TYPE(rates_t), INTENT(IN) :: Rates
         TYPE(Integral_type), INTENT(IN) :: intg
-        TYPE(outdata_type), INTENT(OUT) :: pr
+        TYPE(outdata_t), INTENT(OUT) :: pr
 
         INTEGER(I4B) i, j, k
         !gp 27-Oct-04 REAL(DP) :: pHss(0:nr), Kamm, pH
@@ -674,7 +674,7 @@ CONTAINS
     SUBROUTINE Save_a_step(nr, intg, pr, dt, IMethpH, showDielResults, Rates)
 
         USE Class_Phsolve, ONLY: ChemRates, ModFP2, phsolNewton, pHsolBisect
-        USE Class_Output, ONLY: Outdata_type
+        USE m_output, ONLY: outdata_t
 
         INTEGER(I4B), INTENT(IN) :: nr
         REAL(DP), INTENT(IN) :: dt
@@ -686,7 +686,7 @@ CONTAINS
         CHARACTER(LEN=30), INTENT(IN) :: showDielResults		!Yes or No (only used in Excel VBA)
 
         TYPE(Integral_type), INTENT(IN) :: intg
-        TYPE(Outdata_type), INTENT(INOUT) :: pr
+        TYPE(outdata_t), INTENT(INOUT) :: pr
         INTEGER(I4B) i, j, k
         REAL(DP) Kamm, NH3, pH, TotP, TotN
         REAL(DP) K1, K2, KW, Kh, CO2sat
@@ -3000,7 +3000,7 @@ CONTAINS
         USE Class_SourceIn
         USE Class_Phsolve
         USE m_rates
-        USE Class_output
+        USE m_output
         IMPLICIT NONE
 
         !constants
@@ -3021,7 +3021,7 @@ CONTAINS
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: begin
         TYPE(rates_t), INTENT(IN) :: Rates
-        TYPE(Outdata_type), INTENT(OUT) :: pr	  !output data
+        TYPE(outdata_t), INTENT(OUT) :: pr	  !output data
         REAL(DP), INTENT(IN) :: t1, t2, dt1
         LOGICAL(4), INTENT(IN) :: saveSteps
         !local variables

@@ -50,7 +50,7 @@ program Q2KMain
 !	USE Class_RiverTopo
     USE Class_ReadFile
     USE Class_Integration
-!	USE Class_Output
+	USE m_output, only: outdata_t, Output
 
 
 !gp 04-Feb-05
@@ -73,7 +73,7 @@ program Q2KMain
     TYPE(solar_type) :: Solar		!solar radiation
     TYPE(SystemParams) sys			!declare the system parameter variables
     TYPE(t_rivertopo) Topo		!river topology
-    TYPE(Outdata_type) prOut
+    TYPE(outdata_t) prOut
     INTEGER(I4B) i, j, k
     INTEGER(I4B) begintime, endtime
 
@@ -133,7 +133,7 @@ program Q2KMain
 
     !do simulation
     !gp 17-Nov-04 prOut= Outdata_(topo%nr)
-    prOut= Outdata_(topo%nr, sys)		!gp 17-Nov-04 pass sys to allocate dynamic diel arrays
+    prOut= outdata_t(topo%nr, sys)		!gp 17-Nov-04 pass sys to allocate dynamic diel arrays
 
 !	outfile= 'C:\research\qual2k\input\BC092187v1_2Fortran.out'
 !	outfile= 'C:\research\qual2k\input\SRdummyFortran.out'
