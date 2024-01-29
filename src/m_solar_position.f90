@@ -1231,7 +1231,7 @@ contains
 
     subroutine solarposition(lat, lon, year, month, day, &
         hours, minutes, seconds, timezone, dlstime, &
-        solarazimuth, solarelevation, earthradvec)
+        solarazimuth0, solarelevation0, earthradvec)
 
         !***********************************************************************/
         !* name: solarposition
@@ -1260,7 +1260,7 @@ contains
         integer(i32) hours, minutes
         real(r64) timezone, dlstime
 
-        real(r64) seconds, solarazimuth, solarelevation, earthradvec
+        real(r64) seconds, solarazimuth0, solarelevation0, earthradvec
         real(r64) longitude, latitude
         real(r64) zone, daysavings
         real(r64) hh, mm, ss, timenow
@@ -1409,8 +1409,8 @@ contains
         solarzen = zenith - refractioncorrection
 
         ! if (solarzen < 108.0) then
-        solarazimuth = azimuth
-        solarelevation = 90.0 - solarzen
+        solarazimuth0 = azimuth
+        solarelevation0 = 90.0 - solarzen
         ! if (solarzen < 90.0) then
         ! coszen = cos(degtorad(solarzen))
         ! else
