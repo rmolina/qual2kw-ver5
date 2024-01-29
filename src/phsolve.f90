@@ -1,418 +1,414 @@
-! phsol.f90
-!	PH solver
-! FUNCTIONS/SUBROUTINES exported from phsol.dll:
-!	phsoldll      - subroutine
-!
-MODULE Class_Phsolve
-    USE nrtype
-    IMPLICIT NONE
-    PRIVATE f
+module class_phsolve
+    use nrtype
+    implicit none
+    private
+    public :: ct, phsolnewton, phsolbisect, phsolbrent, chemrates, modfp2
 
-CONTAINS
+contains
 
-!gp 23-Nov-09
+!gp 23-nov-09
 !!#####################################################################
 !!12/15/07
-!SUBROUTINE pHSolver(IMethpH, pH, cT, Te, Alk, Cond)
-!CHARACTER(*), INTENT(IN) :: IMethpH       ! pH solve method
-!REAL(DP), INTENT(OUT) :: pH
-!REAL(DP), INTENT(IN) :: cT, Te, Alk, Cond
+!subroutine phsolver(imethph, ph, ct, te, alk, cond)
+!character(*), intent(in) :: imethph       ! ph solve method
+!real(dp), intent(out) :: ph
+!real(dp), intent(in) :: ct, te, alk, cond
 !
-!IF (IMethpH == "Newton-Raphson") THEN
-!    CALL phsolNewton(pH, cT, Te, ALK, COND)
-!ELSEIF (IMethpH == "Bisection") THEN     !09/23/07
-!    CALL pHsolBisect(pH, cT, Te, ALK, COND)
-!ELSE   !Brent method
-!    CALL pHsolFzerotx(pH, cT, Te, ALK, COND)
-!END IF
+!if (imethph == "newton-raphson") then
+!    call phsolnewton(ph, ct, te, alk, cond)
+!elseif (imethph == "bisection") then     !09/23/07
+!    call phsolbisect(ph, ct, te, alk, cond)
+!else   !brent method
+!    call phsolfzerotx(ph, ct, te, alk, cond)
+!end if
 !
-!END SUBROUTINE
+!end subroutine
 !!#####################################################################
 
-!09/23/07 new pH solver, Brent method, used as default method
+!09/23/07 new ph solver, brent method, used as default method
 
-!GP 23-Nov-09
-!SUBROUTINE pHsolFzerotx(xr, cT, Te, Alk, Cond)
-    SUBROUTINE pHsolBrent(xr, cT, Te, Alk, Cond)
+!gp 23-nov-09
+!subroutine phsolfzerotx(xr, ct, te, alk, cond)
+    subroutine phsolbrent(xr, ct, te, alk, cond)
 
-!FZEROTX  Textbook version of FZERO.
-!   x = fzerotx(F,[a,b]) tries to find a zero of F(x) between a and b.
-!   F(a) and F(b) must have opposite signs.  fzerotx returns one
-!   end point of a small subinterval of [a,b] where F changes sign.
+!fzerotx  textbook version of fzero.
+!   x = fzerotx(f,[a,b]) tries to find a zero of f(x) between a and b.
+!   f(a) and f(b) must have opposite signs.  fzerotx returns one
+!   end point of a small subinterval of [a,b] where f changes sign.
 
-!In&Out varaibles
-        REAL(DP), INTENT(OUT) :: xr
-        REAL(DP), INTENT(IN) :: cT, Te, Alk, Cond
+!in&out varaibles
+        real(dp), intent(out) :: xr
+        real(dp), intent(in) :: ct, te, alk, cond
 
-!Local variables
-        REAL(DP) a, b, c, d, e
-        REAL(DP) fa, fb, fc
-        REAL(DP) p, q, r, s
-        REAL(DP) m, tol
-        REAL(DP) Alke
-        REAL(DP), PARAMETER::  eps2 = 2.22044604925031E-16
+!local variables
+        real(dp) a, b, c, d, e
+        real(dp) fa, fb, fc
+        real(dp) p, q, r, s
+        real(dp) m, tol
+        real(dp) alke
+        real(dp), parameter::  eps2 = 2.22044604925031e-16
 
-! Initialize
+! initialize
         a = 0.0
         b = 14.0
 
-!gp 03-Dec-09
-!Alke = Alk / 50000.0
-        Alke = Alk / 50043.45_DP
+!gp 03-dec-09
+!alke = alk / 50000.0
+        alke = alk / 50043.45_dp
 
-        fa = f(a, cT, Te, Alke, Cond)
-        fb = f(b, cT, Te, Alke, Cond)
-        IF (fa * fb >=0) THEN      !If (Sgn(fa) == Sgn(fb)) Then
-            !MsgBox "Function must change sign on the interval"
-            !End
+        fa = f(a, ct, te, alke, cond)
+        fb = f(b, ct, te, alke, cond)
+        if (fa * fb >=0) then      !if (sgn(fa) == sgn(fb)) then
+            !msgbox "function must change sign on the interval"
+            !end
 
-            !gp 23-Nov-09
-            !WRITE(LOG_FILE,*) "Error: Bad pH guesses. Try a smaller calculation step!"
-            !CALL ABORT("Bad pH guesses. Try a smaller calculation step!")
-            STOP "Bad pH guesses. Try a smaller calculation step!"
+            !gp 23-nov-09
+            !write(log_file,*) "error: bad ph guesses. try a smaller calculation step!"
+            !call abort("bad ph guesses. try a smaller calculation step!")
+            stop "Bad pH guesses. Try a smaller calculation step!"
 
-        End If
+        end if
         c = a
         fc = fa
         d = b - c
         e = d
 
-! Main loop, exit from middle of the loop
-        DO While (fb /= 0)
-            ! The three current points, a, b, and c, satisfy:
+! main loop, exit from middle of the loop
+        do while (fb /= 0)
+            ! the three current points, a, b, and c, satisfy:
             !    f(x) changes sign between a and b.
             !    abs(f(b)) <= abs(f(a)).
             !    c = previous b, so c might = a.
-            ! The next point is chosen from
-            !    Bisection point, (a+b)/2.
-            !    Secant point determined by b and c.
-            !    Inverse quadratic interpolation point determined
+            ! the next point is chosen from
+            !    bisection point, (a+b)/2.
+            !    secant point determined by b and c.
+            !    inverse quadratic interpolation point determined
             !    by a, b, and c if they are distinct.
-            IF (fa * fb >=0) THEN      !If (Sgn(fa) == Sgn(fb)) Then
+            if (fa * fb >=0) then      !if (sgn(fa) == sgn(fb)) then
                 a = c;  fa = fc
                 d = b - c;  e = d
-            End If
-            If (Abs(fa) < Abs(fb)) Then
+            end if
+            if (abs(fa) < abs(fb)) then
                 c = b;    b = a;    a = c
                 fc = fb;  fb = fa;  fa = fc
-            End If
-            ! Convergence test and possible exit
+            end if
+            ! convergence test and possible exit
             m = 0.5 * (a - b)
-            tol = 2.0 * eps2 * Max(Abs(b), 1.0)
-            If (Abs(m) <= tol .OR. fb == 0.0) Then
-                Exit
-            End If
+            tol = 2.0 * eps2 * max(abs(b), 1.0)
+            if (abs(m) <= tol .or. fb == 0.0) then
+                exit
+            end if
 
-            ! Choose bisection or interpolation
-            If (Abs(e) < tol .OR. Abs(fc) <= Abs(fb)) Then
-                ! Bisection
+            ! choose bisection or interpolation
+            if (abs(e) < tol .or. abs(fc) <= abs(fb)) then
+                ! bisection
                 d = m
                 e = m
-            Else
-                ! Interpolation
+            else
+                ! interpolation
                 s = fb / fc
-                If (a == c) Then
-                    ! Linear interpolation (secant)
+                if (a == c) then
+                    ! linear interpolation (secant)
                     p = 2.0 * m * s
                     q = 1.0 - s
-                Else
-                    ! Inverse quadratic interpolation
+                else
+                    ! inverse quadratic interpolation
                     q = fc / fa
                     r = fb / fa
                     p = s * (2.0 * m * q * (q - r) - (b - c) * (r - 1.0))
                     q = (q - 1.0) * (r - 1.0) * (s - 1.0)
-                End If
-                If (p > 0) Then
+                end if
+                if (p > 0) then
                     q = -q
-                Else
+                else
                     p = -p
-                End If
-                !Is interpolated point acceptable?
-                If (2.0 * p < 3.0 * m * q - Abs(tol * q) .AND. p < Abs(0.5 * e * q)) Then
+                end if
+                !is interpolated point acceptable?
+                if (2.0 * p < 3.0 * m * q - abs(tol * q) .and. p < abs(0.5 * e * q)) then
                     e = d
                     d = p / q
-                Else
+                else
                     d = m
                     e = m
-                End If
-            End If
-            ! Next point
+                end if
+            end if
+            ! next point
             c = b
             fc = fb
-            If (Abs(d) > tol) Then
+            if (abs(d) > tol) then
                 b = b + d
-            Else
-                b= b - sign(tol, b-a)  !b = b - Sgn(b - a) * tol
-            End If
-            fb = f(b, cT, Te, Alke, Cond)
-        END DO
+            else
+                b= b - sign(tol, b-a)  !b = b - sgn(b - a) * tol
+            end if
+            fb = f(b, ct, te, alke, cond)
+        end do
 
         xr = b
 
-    END SUBROUTINE
+    end subroutine
 
 !#####################################################################
 
-    SUBROUTINE phsolBisect(xr, cT, Te, Alk, Cond)
-        REAL(DP), INTENT(INOUT) :: xr
-        REAL(DP) cT, Te, Alk, Cond
-        REAL(DP) Alke
-        REAL(DP) test, fl, fr
-        REAL(DP) xlo, xup, fu
-        INTEGER(I4B) i
+    subroutine phsolbisect(xr, ct, te, alk, cond)
+        real(dp), intent(inout) :: xr
+        real(dp) ct, te, alk, cond
+        real(dp) alke
+        real(dp) test, fl, fr
+        real(dp) xlo, xup, fu
+        integer(i4b) i
 
-        !gp 03-Dec-09
-        !Alke = Alk / 50000.0_DP
-        Alke = Alk / 50043.45_DP
+        !gp 03-dec-09
+        !alke = alk / 50000.0_dp
+        alke = alk / 50043.45_dp
 
-        xlo = 3.0_DP
-        xup = 13.0_DP
-        fl = f(xlo, cT, Te, Alke, Cond)
-        fu = f(xup, cT, Te, Alke, Cond)
-        IF (fl * fu >= 0) THEN
-            !MsgBox "Bad pH guesses" & Chr(13) & "Try a smaller calculation step"
-            STOP "Bad pH guesses. Try a smaller calculation step!"
-        END IF
-        DO i = 1, 13
-            xr = (xlo + xup) / 2.0_DP
-            fr = f(xr, cT, Te, Alke, Cond)
+        xlo = 3.0_dp
+        xup = 13.0_dp
+        fl = f(xlo, ct, te, alke, cond)
+        fu = f(xup, ct, te, alke, cond)
+        if (fl * fu >= 0) then
+            !msgbox "bad ph guesses" & chr(13) & "try a smaller calculation step"
+            stop "Bad pH guesses. Try a smaller calculation step!"
+        end if
+        do i = 1, 13
+            xr = (xlo + xup) / 2.0_dp
+            fr = f(xr, ct, te, alke, cond)
             test = fl * fr
-            IF (test < 0) THEN
+            if (test < 0) then
                 xup = xr
-            ELSEIF (test > 0) THEN
+            elseif (test > 0) then
                 xlo = xr
                 fl = fr
-            Else
-                EXIT
-                !MsgBox "exact"
-            END IF
-        END DO
+            else
+                exit
+                !msgbox "exact"
+            end if
+        end do
 
-    END SUBROUTINE phsolBisect
+    end subroutine phsolbisect
 
-    PURE FUNCTION f(pH, cT, Te, Alk, Cond)
-        REAL(DP) f
+    pure function f(ph, ct, te, alk, cond)
+        real(dp) f
 
-        REAL(DP), INTENT(IN) :: pH, cT, Te, Alk, Cond
-        REAL(DP) K1, K2, KW
-        REAL(DP) alp0, alp1, alp2, hh
-        REAL(DP) Ta, mu, lam1, lam2
+        real(dp), intent(in) :: ph, ct, te, alk, cond
+        real(dp) k1, k2, kw
+        real(dp) alp0, alp1, alp2, hh
+        real(dp) ta, mu, lam1, lam2
 
-        hh = 10.0_dp ** -pH
-        Ta = Te + 273.15_DP
-        mu = 0.000016_DP * Cond
-        lam1 = 10.0_DP ** (-0.5_DP * 1 * SQRT(mu))
-        lam2 = 10.0_DP ** (-0.5_DP * 2 ** 2 * SQRT(mu))
-        K1 = -356.3094_DP - 0.06091964_DP * Ta + 21834.37_DP / Ta + 126.8339_DP * LOG(Ta) / LOG(10.0_DP)
-        K1 = K1 - 1684915.0_DP / Ta ** 2
-        K1 = 10.0_DP ** K1 / lam1 / lam1
-        K2 = -107.8871_DP - 0.03252849_DP * Ta + 5151.79_DP / Ta + 38.92561_DP * LOG(Ta) / LOG(10.0_DP)
-        K2 = K2 - 563713.9_DP / Ta ** 2
-        K2 = 10.0_DP ** K2 / lam2
-        KW = 10.0_DP ** (6.0875_DP - 0.01706_DP * Ta - 4470.99_DP / Ta) / lam1 / lam1
-        alp0 = hh ** 2 / (hh ** 2 + K1 * hh + K1 * K2)
-        alp1 = K1 * hh / (hh ** 2 + K1 * hh + K1 * K2)
-        alp2 = K1 * K2 / (hh ** 2 + K1 * hh + K1 * K2)
-        f = (alp1 + 2.0_DP * alp2) * cT + KW / 10.0_DP ** (-pH) - 10.0_DP ** (-pH) - Alk
+        hh = 10.0_dp ** -ph
+        ta = te + 273.15_dp
+        mu = 0.000016_dp * cond
+        lam1 = 10.0_dp ** (-0.5_dp * 1 * sqrt(mu))
+        lam2 = 10.0_dp ** (-0.5_dp * 2 ** 2 * sqrt(mu))
+        k1 = -356.3094_dp - 0.06091964_dp * ta + 21834.37_dp / ta + 126.8339_dp * log(ta) / log(10.0_dp)
+        k1 = k1 - 1684915.0_dp / ta ** 2
+        k1 = 10.0_dp ** k1 / lam1 / lam1
+        k2 = -107.8871_dp - 0.03252849_dp * ta + 5151.79_dp / ta + 38.92561_dp * log(ta) / log(10.0_dp)
+        k2 = k2 - 563713.9_dp / ta ** 2
+        k2 = 10.0_dp ** k2 / lam2
+        kw = 10.0_dp ** (6.0875_dp - 0.01706_dp * ta - 4470.99_dp / ta) / lam1 / lam1
+        alp0 = hh ** 2 / (hh ** 2 + k1 * hh + k1 * k2)
+        alp1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
+        alp2 = k1 * k2 / (hh ** 2 + k1 * hh + k1 * k2)
+        f = (alp1 + 2.0_dp * alp2) * ct + kw / 10.0_dp ** (-ph) - 10.0_dp ** (-ph) - alk
 
-    END FUNCTION
+    end function
 
 !#####################################################################
 
-    SUBROUTINE phsolNewton(xr, cT, Te, Alk, Cond)
+    subroutine phsolnewton(xr, ct, te, alk, cond)
 
-        ! Variables
+        ! variables
 
-        REAL(DP), INTENT(INOUT) :: xr
-        REAL(DP) cT, Te, Alk, Cond
+        real(dp), intent(inout) :: xr
+        real(dp) ct, te, alk, cond
 
-        REAL(DP) Alke,lam1,lam2
-        INTEGER(I4B) iter
-        REAL(DP) K1, K2, KW
-        REAL(DP) Ta																				!absolute temperature
-        REAL(DP) hh, mu, xnew, ea
+        real(dp) alke,lam1,lam2
+        integer(i4b) iter
+        real(dp) k1, k2, kw
+        real(dp) ta																				!absolute temperature
+        real(dp) hh, mu, xnew, ea
 
-        !gp 03-Dec-09
-        !Alke = Alk / 50000.0_DP
-        Alke = Alk / 50043.45_DP
+        !gp 03-dec-09
+        !alke = alk / 50000.0_dp
+        alke = alk / 50043.45_dp
 
-        Ta = Te + 273.15_DP
-        xr = 7.0_DP
-        mu = 0.000016_DP * Cond
-        lam1 = 10.0_DP ** (-0.5_DP * 1.0_DP * SQRT(mu))
-        lam2 = 10.0_DP ** (-0.5_DP * 2.0_DP ** 2.0_DP * SQRT(mu))
-        K1 = 10.0_dp ** (-356.3094_DP - 0.06091964_DP * Ta + 21834.37_DP / Ta + 126.8339_DP * &
-            LOG(Ta) / LOG(10.0_dp) - 1684915.0_dp / Ta ** 2.0_DP) / lam1 / lam1
-        K2 = 10.0_DP ** (-107.8871_dp - 0.03252849_dp * Ta + 5151.79_DP / Ta + 38.92561_DP * &
-            LOG(Ta) / LOG(10.0_dp) - 563713.9_DP / Ta ** 2.0) / lam2
-        KW = 10.0_DP ** (6.0875_dp - 0.01706_dp * Ta - 4470.99_DP / Ta) / lam1 / lam1
+        ta = te + 273.15_dp
+        xr = 7.0_dp
+        mu = 0.000016_dp * cond
+        lam1 = 10.0_dp ** (-0.5_dp * 1.0_dp * sqrt(mu))
+        lam2 = 10.0_dp ** (-0.5_dp * 2.0_dp ** 2.0_dp * sqrt(mu))
+        k1 = 10.0_dp ** (-356.3094_dp - 0.06091964_dp * ta + 21834.37_dp / ta + 126.8339_dp * &
+            log(ta) / log(10.0_dp) - 1684915.0_dp / ta ** 2.0_dp) / lam1 / lam1
+        k2 = 10.0_dp ** (-107.8871_dp - 0.03252849_dp * ta + 5151.79_dp / ta + 38.92561_dp * &
+            log(ta) / log(10.0_dp) - 563713.9_dp / ta ** 2.0) / lam2
+        kw = 10.0_dp ** (6.0875_dp - 0.01706_dp * ta - 4470.99_dp / ta) / lam1 / lam1
 
         iter = 0
-        Do
+        do
             iter = iter + 1
-            hh = 10.0_DP ** (-xr)
-            xnew = xr - ((K1 * hh + 2.0_DP * K1 * K2) / (hh * hh + K1 * hh + K1 * K2) * &
-                cT + KW / hh - hh - Alke) / &
-                (e * (K1 * hh * cT * (hh * hh + 4.0_DP * K2 * hh + K1 * K2) / &
-                (hh * hh + K1 * hh + K1 * K2) ** 2 + KW / hh + hh))
-            IF (xnew /= 0) THEN
-                ea = Abs((xr - xnew) / xnew)
-            END IF
+            hh = 10.0_dp ** (-xr)
+            xnew = xr - ((k1 * hh + 2.0_dp * k1 * k2) / (hh * hh + k1 * hh + k1 * k2) * &
+                ct + kw / hh - hh - alke) / &
+                (e * (k1 * hh * ct * (hh * hh + 4.0_dp * k2 * hh + k1 * k2) / &
+                (hh * hh + k1 * hh + k1 * k2) ** 2 + kw / hh + hh))
+            if (xnew /= 0) then
+                ea = abs((xr - xnew) / xnew)
+            end if
             xr = xnew
-            IF ((ea < es) .Or. (iter >= imax)) THEN
-                EXIT
-            END IF
-        END DO
-    END SUBROUTINE phsolNewton
+            if ((ea < es) .or. (iter >= imax)) then
+                exit
+            end if
+        end do
+    end subroutine phsolnewton
 
 !#####################################################################
 
-    PURE FUNCTION FNH3(pH, Te)
-        ! Calculate fraction NH3
-        REAL(DP) FNH3
-        REAL(DP), INTENT(IN) :: pH, Te
+    pure function fnh3(ph, te)
+        ! calculate fraction nh3
+        real(dp) fnh3
+        real(dp), intent(in) :: ph, te
 
-        FNH3 = 1.0_DP / (1.0_DP + 10.0_DP ** (-pH) /  &
-            (10.0_DP ** ( 0.09018_DP + 2729.92_DP / (Te + 273.15_DP))))
+        fnh3 = 1.0_dp / (1.0_dp + 10.0_dp ** (-ph) /  &
+            (10.0_dp ** ( 0.09018_dp + 2729.92_dp / (te + 273.15_dp))))
 
-    END FUNCTION FNH3
+    end function fnh3
 
-    !oxygen satuation concentration function
-    !temp- temperature
-    !	elev- elevation
-    PURE FUNCTION oxsat(temp, elev)
-        REAL(DP) oxsat
-        REAL(DP), INTENT(IN) :: temp, elev
-        REAL(DP) taa, lnosf
+    ! !oxygen satuation concentration function
+    ! !temp- temperature
+    ! !	elev- elevation
+    ! pure function oxsat(temp, elev)
+    !     real(dp) oxsat
+    !     real(dp), intent(in) :: temp, elev
+    !     real(dp) taa, lnosf
 
-        Taa = Temp + 273.15_DP
-        lnosf = -139.34411_DP + 157570.1_DP / Taa - 66423080.0_DP / (Taa * Taa)
-        lnosf= lnosf + 12438.0e6_DP / (Taa * Taa * Taa) - 8621949.0e5_DP / (Taa * Taa * Taa * Taa)
-        oxsat = Exp(lnosf) * (1.0_DP - 0.0001148_DP * elev)
-    END FUNCTION
+    !     taa = temp + 273.15_dp
+    !     lnosf = -139.34411_dp + 157570.1_dp / taa - 66423080.0_dp / (taa * taa)
+    !     lnosf= lnosf + 12438.0e6_dp / (taa * taa * taa) - 8621949.0e5_dp / (taa * taa * taa * taa)
+    !     oxsat = exp(lnosf) * (1.0_dp - 0.0001148_dp * elev)
+    ! end function
 
-    !CACULATE k FOR TMEPERATURE Te
-    SUBROUTINE ChemRates(Te, K1, K2, KW, Kh, Cond)
+    !caculate k for tmeperature te
+    subroutine chemrates(te, k1, k2, kw, kh, cond)
 
-        REAL(DP), INTENT(IN) :: Te, Cond
-        REAL(DP), INTENT(OUT) :: K1, K2, KW, Kh
-        REAL(DP) Ta, mu, lam1, lam2
+        real(dp), intent(in) :: te, cond
+        real(dp), intent(out) :: k1, k2, kw, kh
+        real(dp) ta, mu, lam1, lam2
 
-        Ta = Te + 273.15_DP
-        mu = 0.000016_DP * Cond
-        lam1 = 10.0_DP ** (-0.5_DP * 1.0_DP * SQRT(mu))
-        lam2 = 10.0_DP ** (-0.5_DP * 2.0_DP ** 2 * SQRT(mu))
-        K1 = -356.3094_DP - 0.06091964_DP * Ta + 21834.37_DP / Ta + 126.8339_DP * LOG(Ta) / LOG(10.0_DP)
-        K1 = K1 - 1684915.0_DP / Ta ** 2
-        K1 = 10.0_DP ** K1 / lam1 / lam1
-        K2 = -107.8871_DP - 0.03252849_DP * Ta + 5151.79_DP / Ta + 38.92561_DP * LOG(Ta) / LOG(10.0_DP)
-        K2 = K2 - 563713.9_dp / Ta ** 2
-        K2 = 10.0_DP ** K2 / lam2
-        KW = 10.0_DP ** (6.0875_DP - 0.01706_DP * Ta - 4470.99_DP / Ta) / lam1 / lam1
-        Kh = 10.0_dp ** -(-2385.73_dp / Ta - 0.0152642_dp * Ta + 14.0184_dp)
+        ta = te + 273.15_dp
+        mu = 0.000016_dp * cond
+        lam1 = 10.0_dp ** (-0.5_dp * 1.0_dp * sqrt(mu))
+        lam2 = 10.0_dp ** (-0.5_dp * 2.0_dp ** 2 * sqrt(mu))
+        k1 = -356.3094_dp - 0.06091964_dp * ta + 21834.37_dp / ta + 126.8339_dp * log(ta) / log(10.0_dp)
+        k1 = k1 - 1684915.0_dp / ta ** 2
+        k1 = 10.0_dp ** k1 / lam1 / lam1
+        k2 = -107.8871_dp - 0.03252849_dp * ta + 5151.79_dp / ta + 38.92561_dp * log(ta) / log(10.0_dp)
+        k2 = k2 - 563713.9_dp / ta ** 2
+        k2 = 10.0_dp ** k2 / lam2
+        kw = 10.0_dp ** (6.0875_dp - 0.01706_dp * ta - 4470.99_dp / ta) / lam1 / lam1
+        kh = 10.0_dp ** -(-2385.73_dp / ta - 0.0152642_dp * ta + 14.0184_dp)
 
-    END SUBROUTINE
-
-
-    FUNCTION cT(pH, Alk, Te, Cond)
-
-        REAL(DP) cT
-        REAL(DP), INTENT(IN) :: pH, Alk, Te, Cond
-        REAL(DP) K1, K2, KW, Kh
-        REAL(DP) hh, OH, Alke, f1, f2
-
-        Call ChemRates(Te, K1, K2, KW, Kh, Cond)
-        hh = 10.0_DP ** -pH
-        OH = KW / hh
-
-        !gp 03-Dec-09
-        !Alke = Alk / 50000.0_DP
-        Alke = Alk / 50043.45_DP
-
-        f1 = K1 * hh / (hh ** 2 + K1 * hh + K1 * K2)
-        f2 = K1 * K2 / (hh ** 2 + K1 * hh + K1 * K2)
-        cT = (Alke - OH + hh) / (f1 + 2 * f2)
-
-    END FUNCTION
+    end subroutine
 
 
-    SUBROUTINE ModFP2(xlo1, xup1, xr, cO2, Te, Alk, Cond)
+    function ct(ph, alk, te, cond)
 
-        REAL(DP), INTENT(IN) :: xlo1, xup1
-        REAL(DP) xlo, xup, xr, cO2, Te, Alk, Cond
+        real(dp) ct
+        real(dp), intent(in) :: ph, alk, te, cond
+        real(dp) k1, k2, kw, kh
+        real(dp) hh, oh, alke, f1, f2
 
-        ! Given a function (f) and an initial bracket (xlo, xup),
+        call chemrates(te, k1, k2, kw, kh, cond)
+        hh = 10.0_dp ** -ph
+        oh = kw / hh
+
+        !gp 03-dec-09
+        !alke = alk / 50000.0_dp
+        alke = alk / 50043.45_dp
+
+        f1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
+        f2 = k1 * k2 / (hh ** 2 + k1 * hh + k1 * k2)
+        ct = (alke - oh + hh) / (f1 + 2 * f2)
+
+    end function
+
+
+    subroutine modfp2(xlo1, xup1, xr, co2, te, alk, cond)
+
+        real(dp), intent(in) :: xlo1, xup1
+        real(dp) xlo, xup, xr, co2, te, alk, cond
+
+        ! given a function (f) and an initial bracket (xlo, xup),
         ! finds the root (xr) to within a tolerance (tol)
         ! or until a maximum number of iterations (imax) is exceeded.
-        ! Returns the root along with the actual iterations (iter) and tolerance (tola).
-        ! If maximum iterations exceeded, displays error message and terminates.
+        ! returns the root along with the actual iterations (iter) and tolerance (tola).
+        ! if maximum iterations exceeded, displays error message and terminates.
 
-        INTEGER(I4B) il, iu, iter, imax
-        REAL(DP) xrold, fl, fu, fr
-        REAL(DP) Alke, tola, tol
+        integer(i4b) il, iu, iter, imax
+        real(dp) xrold, fl, fu, fr
+        real(dp) alke, tola, tol
 
 
         iter = 0
 
-        !gp 03-Dec-09
-        !Alke = Alk / 50000.0_DP
-        Alke = Alk / 50043.45_DP
+        !gp 03-dec-09
+        !alke = alk / 50000.0_dp
+        alke = alk / 50043.45_dp
 
         imax = 100
-        tol = 0.0000001_DP
-        tola = 100.0_DP
+        tol = 0.0000001_dp
+        tola = 100.0_dp
         xlo=xlo1; xup =xup1
 
-        fl = f2(xlo, cO2, Te, Alke, Cond)
-        fu = f2(xup, cO2, Te, Alke, Cond)
-        xr = (xlo + xup) / 2.0_DP
+        fl = f2(xlo, co2, te, alke, cond)
+        fu = f2(xup, co2, te, alke, cond)
+        xr = (xlo + xup) / 2.0_dp
 
-        DO
-            If (iter > imax) Then
-                !	MsgBox "maximum iterations exceeded"
-                STOP 'maximum iterations exceeded'
-            End If
-            If (tola < tol) EXIT
+        do
+            if (iter > imax) then
+                !	msgbox "maximum iterations exceeded"
+                stop 'maximum iterations exceeded'
+            end if
+            if (tola < tol) exit
             xrold = xr
             xr = xup - fu * (xlo - xup) / (fl - fu)
-            fr = f2(xr, cO2, Te, Alke, Cond)
+            fr = f2(xr, co2, te, alke, cond)
             iter = iter + 1
-            If (xr /= 0) Then
-                tola = Abs(xr - xrold)
-            End If
-            If (fl * fr < 0) Then
+            if (xr /= 0) then
+                tola = abs(xr - xrold)
+            end if
+            if (fl * fr < 0) then
                 xup = xr
-                fu = f2(xup, cO2, Te, Alke, Cond)
+                fu = f2(xup, co2, te, alke, cond)
                 iu = 0
                 il = il + 1
-                If (il >= 1) fl = fl / 2.0_DP
-            ElseIf (fl * fr > 0) Then
+                if (il >= 1) fl = fl / 2.0_dp
+            elseif (fl * fr > 0) then
                 xlo = xr
-                fl = f2(xlo, cO2, Te, Alke, Cond)
+                fl = f2(xlo, co2, te, alke, cond)
                 il = 0
                 iu = iu + 1
-                If (iu >= 1) fu = fu / 2.0_DP
-            Else
+                if (iu >= 1) fu = fu / 2.0_dp
+            else
                 tola = 0.0
-            End If
-        END DO
+            end if
+        end do
 
-    End SUBROUTINE
+    end subroutine
 
-    FUNCTION f2(pH, cO2, Te, Alk, Cond)
+    function f2(ph, co2, te, alk, cond)
 
-        REAL(DP) f2
-        REAL(DP) pH, cO2, Te, Alk, Cond
-        REAL(DP) K1, K2, KW, Kh
-        REAL(DP) alp0, alp1, alp2, hh
+        real(dp) f2
+        real(dp) ph, co2, te, alk, cond
+        real(dp) k1, k2, kw, kh
+        real(dp) alp0, alp1, alp2, hh
 
-        hh = 10.0_DP ** -pH
-        Call ChemRates(Te, K1, K2, KW, Kh, Cond)
-        alp0 = hh ** 2 / (hh ** 2 + K1 * hh + K1 * K2)
-        alp1 = K1 * hh / (hh ** 2 + K1 * hh + K1 * K2)
-        alp2 = K1 * K2 / (hh ** 2 + K1 * hh + K1 * K2)
-        f2 = (alp1 + 2.0_DP * alp2) * cO2 / alp0 + KW / hh - hh - Alk
+        hh = 10.0_dp ** -ph
+        call chemrates(te, k1, k2, kw, kh, cond)
+        alp0 = hh ** 2 / (hh ** 2 + k1 * hh + k1 * k2)
+        alp1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
+        alp2 = k1 * k2 / (hh ** 2 + k1 * hh + k1 * k2)
+        f2 = (alp1 + 2.0_dp * alp2) * co2 / alp0 + kw / hh - hh - alk
 
-    End FUNCTION
+    end function
 
-END MODULE Class_Phsolve
+end module class_phsolve

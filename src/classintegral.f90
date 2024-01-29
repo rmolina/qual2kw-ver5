@@ -10,7 +10,7 @@ MODULE Class_Integration
     USE m_downstream_boundary
     use class_hydraulics, only: riverhydraulics_type
     use m_tempadjust, only: temp_adjust 
-    use m_oxygen, only: oxygen_inhibition_and_enhancement
+    use m_oxygen, only: oxygen_inhibition_and_enhancement, oxygen_saturation
 
     IMPLICIT NONE
 
@@ -271,7 +271,7 @@ CONTAINS
                                     intg%c(i, 10, j)
                                 TN = intg%c(i, 11, j) * Rates%ana + intg%c(i, 6, j) + &
                                     intg%c(i, 7, j) + intg%c(i, 8, j)
-                                DOSat = oxsat(intg%Te(i, j), hydrau%reach(i)%elev)
+                                DOSat = oxygen_saturation(intg%Te(i, j), hydrau%reach(i)%elev)
 
                                 !gp 23-Nov-09
                                 !IF (sys%IMethpH == "Newton-Raphson") THEN
@@ -346,7 +346,7 @@ CONTAINS
                                     intg%c(i, 10, j)
                                 TN = intg%c(i, 11, j) * Rates%ana + intg%c(i, 6, j) + &
                                     intg%c(i, 7, j) + intg%c(i, 8, j)
-                                DOSat = oxsat(intg%Te(i, j), hydrau%reach(i)%elev)
+                                DOSat = oxygen_saturation(intg%Te(i, j), hydrau%reach(i)%elev)
 
                                 !gp 23-Nov-09
                                 !IF (sys%IMethpH == "Newton-Raphson") THEN
@@ -1183,10 +1183,10 @@ CONTAINS
 
 
             !gp 02-Nov-04 os(0) = oxsat(Te(0, 1), hydrau%reach(0)%elev)
-            os(0, 1) = oxsat(Te(0, 1), hydrau%reach(0)%elev)
+            os(0, 1) = oxygen_saturation(Te(0, 1), hydrau%reach(0)%elev)
             SELECT CASE (sys%simHyporheicWQ)
               CASE ('Level 1', 'Level 2')		!gp 15-Nov-04
-                os(0, 2) = oxsat(Te(0, 2), hydrau%reach(0)%elev)
+                os(0, 2) = oxygen_saturation(Te(0, 2), hydrau%reach(0)%elev)
               CASE DEFAULT
                 os(0, 2) = 0										!not used in calculation
             END SELECT												!gp 02-Nov-04 end new block
@@ -1213,7 +1213,7 @@ CONTAINS
 
             DO i=1 ,nr
                 !gp 27-Oct-04 os(i)=oxsat(Te(i,1), hydrau%reach(i)%elev)
-                os(i, 1)=oxsat(Te(i, 1), hydrau%reach(i)%elev)		!gp 27-Oct-04
+                os(i, 1)=oxygen_saturation(Te(i, 1), hydrau%reach(i)%elev)		!gp 27-Oct-04
             END DO
 
             !'
@@ -1802,7 +1802,7 @@ CONTAINS
                 ! --- (3) Dissolved Oxygen (gO2/day) ---
                 !
 
-                OxReaer = kaT(i) * hydrau%reach(i)%vol * (oxsat(Te(i, 1), hydrau%reach(i)%elev) - c(i, 3, 1))
+                OxReaer = kaT(i) * hydrau%reach(i)%vol * (oxygen_saturation(Te(i, 1), hydrau%reach(i)%elev) - c(i, 3, 1))
                 dc(i, 3, 1) = dc(i, 3, 1) + OxReaer
                 dc(i, 3, 1) = dc(i, 3, 1) - CBODsOxid - CBODfOxid
                 dc(i, 3, 1) = dc(i, 3, 1) - Rates%ron * NH4Nitrif
@@ -1993,7 +1993,7 @@ CONTAINS
                     khpT(i) = hydrau%reach(i)%khp * Rates%tkhp ** (Te(i, 2) - 20)
                     knT(i) = hydrau%reach(i)%kn * Rates%tkn ** (Te(i, 2) - 20)
                     kiT(i) = hydrau%reach(i)%ki * Rates%tki ** (Te(i, 2) - 20)
-                    os(i, 2)=oxsat(Te(i, 2), hydrau%reach(i)%elev)
+                    os(i, 2)=oxygen_saturation(Te(i, 2), hydrau%reach(i)%elev)
                     kdeaT(i) = hydrau%reach(i)%kdea * Rates%tkdea ** (Te(i, 2) - 20)
                     kreaT(i) = hydrau%reach(i)%krea * Rates%tkrea ** (Te(i, 2) - 20)
                     kdtT(i) = hydrau%reach(i)%kdt * Rates%tkdt ** (Te(i, 2) - 20)
@@ -2328,7 +2328,7 @@ CONTAINS
                     khpT(i) = hydrau%reach(i)%khp * Rates%tkhp ** (Te(i, 2) - 20)
                     knT(i) = hydrau%reach(i)%kn * Rates%tkn ** (Te(i, 2) - 20)
                     kiT(i) = hydrau%reach(i)%ki * Rates%tki ** (Te(i, 2) - 20)
-                    os(i, 2)=oxsat(Te(i, 2), hydrau%reach(i)%elev)
+                    os(i, 2)=oxygen_saturation(Te(i, 2), hydrau%reach(i)%elev)
                     kdeaT(i) = hydrau%reach(i)%kdea * Rates%tkdea ** (Te(i, 2) - 20)
                     kreaT(i) = hydrau%reach(i)%krea * Rates%tkrea ** (Te(i, 2) - 20)
                     kdtT(i) = hydrau%reach(i)%kdt * Rates%tkdt ** (Te(i, 2) - 20)

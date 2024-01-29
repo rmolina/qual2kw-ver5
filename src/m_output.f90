@@ -8,6 +8,8 @@ module m_output
     use m_rates
     use m_rivertopo
     use nrtype
+    use m_oxygen, only: oxygen_saturation
+
     implicit none
     private
     public :: outdata_t, output
@@ -722,7 +724,7 @@ contains
                         pr%cpr(nrp, 10, i, j)
                     tn = pr%cpr(nrp, 11, i, j) * rates%ana + pr%cpr(nrp, 6, i, j) + &
                         pr%cpr(nrp, 7, i, j) + pr%cpr(nrp, 8, i, j)
-                    dosat = oxsat(pr%tepr(nrp, i, j), hydrau%reach(nrp)%elev)
+                    dosat = oxygen_saturation(pr%tepr(nrp, i, j), hydrau%reach(nrp)%elev)
                     nh3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%phpr(nrp, i, j))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
                         (pr%tepr(nrp, i, j) + 273.15_r64))) * pr%cpr(nrp, 7, i, j)
 
@@ -778,7 +780,7 @@ contains
                             pr%cpr(nrp, 7, i, j) + pr%cpr(nrp, 8, i, j)
                         nh3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%phpr(nrp, i, j))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
                             (pr%tepr(nrp, i, j) + 273.15_r64))) * pr%cpr(nrp, 7, i, j)
-                        dosat = oxsat(pr%tepr(nrp, i, j), hydrau%reach(nrp)%elev)
+                        dosat = oxygen_saturation(pr%tepr(nrp, i, j), hydrau%reach(nrp)%elev)
                         write(8, '(41F13.4)') pr%tdy(i)*24, pr%tepr(nrp, i, j), &
                             (pr%cpr(nrp, k, i, j), k=1, nv-2), pr%phpr(nrp, i, j), &
                             tss, tp, tn , dosat, nh3, &
