@@ -1,5 +1,6 @@
 module class_phsolve
-    use nrtype
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use nrtype, only: e, es, imax
     implicit none
     private
     public :: ct, ph_solver, chemrates, modfp2
@@ -11,8 +12,8 @@ contains
     !!12/15/07
     !subroutine phsolver(imethph, ph, ct, te, alk, cond)
     !character(*), intent(in) :: imethph ! ph solve method
-    !real(dp), intent(out) :: ph
-    !real(dp), intent(in) :: ct, te, alk, cond
+    !real(r64), intent(out) :: ph
+    !real(r64), intent(in) :: ct, te, alk, cond
     !
     !if (imethph == "newton-raphson") then
     ! call phsolnewton(ph, ct, te, alk, cond)
@@ -37,16 +38,16 @@ contains
         ! end point of a small subinterval of [a,b] where f changes sign.
 
         !in&out varaibles
-        real(dp), intent(out) :: xr
-        real(dp), intent(in) :: ct, te, alk, cond
+        real(r64), intent(out) :: xr
+        real(r64), intent(in) :: ct, te, alk, cond
 
         !local variables
-        real(dp) a, b, c, d, e
-        real(dp) fa, fb, fc
-        real(dp) p, q, r, s
-        real(dp) m, tol
-        real(dp) alke
-        real(dp), parameter:: eps2 = 2.22044604925031e-16
+        real(r64) a, b, c, d, e
+        real(r64) fa, fb, fc
+        real(r64) p, q, r, s
+        real(r64) m, tol
+        real(r64) alke
+        real(r64), parameter:: eps2 = 2.22044604925031e-16
 
         ! initialize
         a = 0.0
@@ -54,7 +55,7 @@ contains
 
         !gp 03-dec-09
         !alke = alk / 50000.0
-        alke = alk / 50043.45_dp
+        alke = alk / 50043.45_r64
 
         fa = f(a, ct, te, alke, cond)
         fb = f(b, ct, te, alke, cond)
@@ -150,19 +151,19 @@ contains
 !#####################################################################
 
     subroutine phsolbisect(xr, ct, te, alk, cond)
-        real(dp), intent(inout) :: xr
-        real(dp) ct, te, alk, cond
-        real(dp) alke
-        real(dp) test, fl, fr
-        real(dp) xlo, xup, fu
-        integer(i4b) i
+        real(r64), intent(inout) :: xr
+        real(r64) ct, te, alk, cond
+        real(r64) alke
+        real(r64) test, fl, fr
+        real(r64) xlo, xup, fu
+        integer(i32) i
 
         !gp 03-dec-09
-        !alke = alk / 50000.0_dp
-        alke = alk / 50043.45_dp
+        !alke = alk / 50000.0_r64
+        alke = alk / 50043.45_r64
 
-        xlo = 3.0_dp
-        xup = 13.0_dp
+        xlo = 3.0_r64
+        xup = 13.0_r64
         fl = f(xlo, ct, te, alke, cond)
         fu = f(xup, ct, te, alke, cond)
         if (fl * fu >= 0) then
@@ -170,7 +171,7 @@ contains
             stop "Bad pH guesses. Try a smaller calculation step!"
         end if
         do i = 1, 13
-            xr = (xlo + xup) / 2.0_dp
+            xr = (xlo + xup) / 2.0_r64
             fr = f(xr, ct, te, alke, cond)
             test = fl * fr
             if (test < 0) then
@@ -187,29 +188,29 @@ contains
     end subroutine phsolbisect
 
     pure function f(ph, ct, te, alk, cond)
-        real(dp) f
+        real(r64) f
 
-        real(dp), intent(in) :: ph, ct, te, alk, cond
-        real(dp) k1, k2, kw
-        real(dp) alp0, alp1, alp2, hh
-        real(dp) ta, mu, lam1, lam2
+        real(r64), intent(in) :: ph, ct, te, alk, cond
+        real(r64) k1, k2, kw
+        real(r64) alp0, alp1, alp2, hh
+        real(r64) ta, mu, lam1, lam2
 
-        hh = 10.0_dp ** (-ph)
-        ta = te + 273.15_dp
-        mu = 0.000016_dp * cond
-        lam1 = 10.0_dp ** (-0.5_dp * 1 * sqrt(mu))
-        lam2 = 10.0_dp ** (-0.5_dp * 2 ** 2 * sqrt(mu))
-        k1 = -356.3094_dp - 0.06091964_dp * ta + 21834.37_dp / ta + 126.8339_dp * log(ta) / log(10.0_dp)
-        k1 = k1 - 1684915.0_dp / ta ** 2
-        k1 = 10.0_dp ** k1 / lam1 / lam1
-        k2 = -107.8871_dp - 0.03252849_dp * ta + 5151.79_dp / ta + 38.92561_dp * log(ta) / log(10.0_dp)
-        k2 = k2 - 563713.9_dp / ta ** 2
-        k2 = 10.0_dp ** k2 / lam2
-        kw = 10.0_dp ** (6.0875_dp - 0.01706_dp * ta - 4470.99_dp / ta) / lam1 / lam1
+        hh = 10.0_r64 ** (-ph)
+        ta = te + 273.15_r64
+        mu = 0.000016_r64 * cond
+        lam1 = 10.0_r64 ** (-0.5_r64 * 1 * sqrt(mu))
+        lam2 = 10.0_r64 ** (-0.5_r64 * 2 ** 2 * sqrt(mu))
+        k1 = -356.3094_r64 - 0.06091964_r64 * ta + 21834.37_r64 / ta + 126.8339_r64 * log(ta) / log(10.0_r64)
+        k1 = k1 - 1684915.0_r64 / ta ** 2
+        k1 = 10.0_r64 ** k1 / lam1 / lam1
+        k2 = -107.8871_r64 - 0.03252849_r64 * ta + 5151.79_r64 / ta + 38.92561_r64 * log(ta) / log(10.0_r64)
+        k2 = k2 - 563713.9_r64 / ta ** 2
+        k2 = 10.0_r64 ** k2 / lam2
+        kw = 10.0_r64 ** (6.0875_r64 - 0.01706_r64 * ta - 4470.99_r64 / ta) / lam1 / lam1
         alp0 = hh ** 2 / (hh ** 2 + k1 * hh + k1 * k2)
         alp1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
         alp2 = k1 * k2 / (hh ** 2 + k1 * hh + k1 * k2)
-        f = (alp1 + 2.0_dp * alp2) * ct + kw / 10.0_dp ** (-ph) - 10.0_dp ** (-ph) - alk
+        f = (alp1 + 2.0_r64 * alp2) * ct + kw / 10.0_r64 ** (-ph) - 10.0_r64 ** (-ph) - alk
 
     end function
 
@@ -219,37 +220,37 @@ contains
 
         ! variables
 
-        real(dp), intent(inout) :: xr
-        real(dp) ct, te, alk, cond
+        real(r64), intent(inout) :: xr
+        real(r64) ct, te, alk, cond
 
-        real(dp) alke,lam1,lam2
-        integer(i4b) iter
-        real(dp) k1, k2, kw
-        real(dp) ta !absolute temperature
-        real(dp) hh, mu, xnew, ea
+        real(r64) alke,lam1,lam2
+        integer(i32) iter
+        real(r64) k1, k2, kw
+        real(r64) ta !absolute temperature
+        real(r64) hh, mu, xnew, ea
 
         !gp 03-dec-09
-        !alke = alk / 50000.0_dp
-        alke = alk / 50043.45_dp
+        !alke = alk / 50000.0_r64
+        alke = alk / 50043.45_r64
 
-        ta = te + 273.15_dp
-        xr = 7.0_dp
-        mu = 0.000016_dp * cond
-        lam1 = 10.0_dp ** (-0.5_dp * 1.0_dp * sqrt(mu))
-        lam2 = 10.0_dp ** (-0.5_dp * 2.0_dp ** 2.0_dp * sqrt(mu))
-        k1 = 10.0_dp ** (-356.3094_dp - 0.06091964_dp * ta + 21834.37_dp / ta + 126.8339_dp * &
-            log(ta) / log(10.0_dp) - 1684915.0_dp / ta ** 2.0_dp) / lam1 / lam1
-        k2 = 10.0_dp ** (-107.8871_dp - 0.03252849_dp * ta + 5151.79_dp / ta + 38.92561_dp * &
-            log(ta) / log(10.0_dp) - 563713.9_dp / ta ** 2.0) / lam2
-        kw = 10.0_dp ** (6.0875_dp - 0.01706_dp * ta - 4470.99_dp / ta) / lam1 / lam1
+        ta = te + 273.15_r64
+        xr = 7.0_r64
+        mu = 0.000016_r64 * cond
+        lam1 = 10.0_r64 ** (-0.5_r64 * 1.0_r64 * sqrt(mu))
+        lam2 = 10.0_r64 ** (-0.5_r64 * 2.0_r64 ** 2.0_r64 * sqrt(mu))
+        k1 = 10.0_r64 ** (-356.3094_r64 - 0.06091964_r64 * ta + 21834.37_r64 / ta + 126.8339_r64 * &
+            log(ta) / log(10.0_r64) - 1684915.0_r64 / ta ** 2.0_r64) / lam1 / lam1
+        k2 = 10.0_r64 ** (-107.8871_r64 - 0.03252849_r64 * ta + 5151.79_r64 / ta + 38.92561_r64 * &
+            log(ta) / log(10.0_r64) - 563713.9_r64 / ta ** 2.0) / lam2
+        kw = 10.0_r64 ** (6.0875_r64 - 0.01706_r64 * ta - 4470.99_r64 / ta) / lam1 / lam1
 
         iter = 0
         do
             iter = iter + 1
-            hh = 10.0_dp ** (-xr)
-            xnew = xr - ((k1 * hh + 2.0_dp * k1 * k2) / (hh * hh + k1 * hh + k1 * k2) * &
+            hh = 10.0_r64 ** (-xr)
+            xnew = xr - ((k1 * hh + 2.0_r64 * k1 * k2) / (hh * hh + k1 * hh + k1 * k2) * &
                 ct + kw / hh - hh - alke) / &
-                (e * (k1 * hh * ct * (hh * hh + 4.0_dp * k2 * hh + k1 * k2) / &
+                (e * (k1 * hh * ct * (hh * hh + 4.0_r64 * k2 * hh + k1 * k2) / &
                 (hh * hh + k1 * hh + k1 * k2) ** 2 + kw / hh + hh))
             if (xnew /= 0) then
                 ea = abs((xr - xnew) / xnew)
@@ -264,8 +265,8 @@ contains
 !#####################################################################
 
     subroutine ph_solver(imethph_0, xr_0, ct_0, te_0, alk_0, cond_0)
-        real(dp), intent(inout) :: xr_0
-        real(dp), intent(in) :: ct_0, te_0, alk_0, cond_0
+        real(r64), intent(inout) :: xr_0
+        real(r64), intent(in) :: ct_0, te_0, alk_0, cond_0
         character(len=30), intent(in) :: imethph_0 ! integration method
 
         select case (imethph_0)
@@ -282,51 +283,51 @@ contains
 
     pure function fnh3(ph, te)
         ! calculate fraction nh3
-        real(dp) fnh3
-        real(dp), intent(in) :: ph, te
+        real(r64) fnh3
+        real(r64), intent(in) :: ph, te
 
-        fnh3 = 1.0_dp / (1.0_dp + 10.0_dp ** (-ph) / &
-            (10.0_dp ** ( 0.09018_dp + 2729.92_dp / (te + 273.15_dp))))
+        fnh3 = 1.0_r64 / (1.0_r64 + 10.0_r64 ** (-ph) / &
+            (10.0_r64 ** ( 0.09018_r64 + 2729.92_r64 / (te + 273.15_r64))))
 
     end function fnh3
 
     !caculate k for tmeperature te
     subroutine chemrates(te, k1, k2, kw, kh, cond)
 
-        real(dp), intent(in) :: te, cond
-        real(dp), intent(out) :: k1, k2, kw, kh
-        real(dp) ta, mu, lam1, lam2
+        real(r64), intent(in) :: te, cond
+        real(r64), intent(out) :: k1, k2, kw, kh
+        real(r64) ta, mu, lam1, lam2
 
-        ta = te + 273.15_dp
-        mu = 0.000016_dp * cond
-        lam1 = 10.0_dp ** (-0.5_dp * 1.0_dp * sqrt(mu))
-        lam2 = 10.0_dp ** (-0.5_dp * 2.0_dp ** 2 * sqrt(mu))
-        k1 = -356.3094_dp - 0.06091964_dp * ta + 21834.37_dp / ta + 126.8339_dp * log(ta) / log(10.0_dp)
-        k1 = k1 - 1684915.0_dp / ta ** 2
-        k1 = 10.0_dp ** k1 / lam1 / lam1
-        k2 = -107.8871_dp - 0.03252849_dp * ta + 5151.79_dp / ta + 38.92561_dp * log(ta) / log(10.0_dp)
-        k2 = k2 - 563713.9_dp / ta ** 2
-        k2 = 10.0_dp ** k2 / lam2
-        kw = 10.0_dp ** (6.0875_dp - 0.01706_dp * ta - 4470.99_dp / ta) / lam1 / lam1
-        kh = 10.0_dp ** -(-2385.73_dp / ta - 0.0152642_dp * ta + 14.0184_dp)
+        ta = te + 273.15_r64
+        mu = 0.000016_r64 * cond
+        lam1 = 10.0_r64 ** (-0.5_r64 * 1.0_r64 * sqrt(mu))
+        lam2 = 10.0_r64 ** (-0.5_r64 * 2.0_r64 ** 2 * sqrt(mu))
+        k1 = -356.3094_r64 - 0.06091964_r64 * ta + 21834.37_r64 / ta + 126.8339_r64 * log(ta) / log(10.0_r64)
+        k1 = k1 - 1684915.0_r64 / ta ** 2
+        k1 = 10.0_r64 ** k1 / lam1 / lam1
+        k2 = -107.8871_r64 - 0.03252849_r64 * ta + 5151.79_r64 / ta + 38.92561_r64 * log(ta) / log(10.0_r64)
+        k2 = k2 - 563713.9_r64 / ta ** 2
+        k2 = 10.0_r64 ** k2 / lam2
+        kw = 10.0_r64 ** (6.0875_r64 - 0.01706_r64 * ta - 4470.99_r64 / ta) / lam1 / lam1
+        kh = 10.0_r64 ** -(-2385.73_r64 / ta - 0.0152642_r64 * ta + 14.0184_r64)
 
     end subroutine chemrates
 
 
     function ct(ph, alk, te, cond)
 
-        real(dp) ct
-        real(dp), intent(in) :: ph, alk, te, cond
-        real(dp) k1, k2, kw, kh
-        real(dp) hh, oh, alke, f1, f2
+        real(r64) ct
+        real(r64), intent(in) :: ph, alk, te, cond
+        real(r64) k1, k2, kw, kh
+        real(r64) hh, oh, alke, f1, f2
 
         call chemrates(te, k1, k2, kw, kh, cond)
-        hh = 10.0_dp ** -ph
+        hh = 10.0_r64 ** -ph
         oh = kw / hh
 
         !gp 03-dec-09
-        !alke = alk / 50000.0_dp
-        alke = alk / 50043.45_dp
+        !alke = alk / 50000.0_r64
+        alke = alk / 50043.45_r64
 
         f1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
         f2 = k1 * k2 / (hh ** 2 + k1 * hh + k1 * k2)
@@ -337,8 +338,8 @@ contains
 
     subroutine modfp2(xlo1, xup1, xr, co2, te, alk, cond)
 
-        real(dp), intent(in) :: xlo1, xup1
-        real(dp) xlo, xup, xr, co2, te, alk, cond
+        real(r64), intent(in) :: xlo1, xup1
+        real(r64) xlo, xup, xr, co2, te, alk, cond
 
         ! given a function (f) and an initial bracket (xlo, xup),
         ! finds the root (xr) to within a tolerance (tol)
@@ -346,25 +347,25 @@ contains
         ! returns the root along with the actual iterations (iter) and tolerance (tola).
         ! if maximum iterations exceeded, displays error message and terminates.
 
-        integer(i4b) il, iu, iter, imax
-        real(dp) xrold, fl, fu, fr
-        real(dp) alke, tola, tol
+        integer(i32) il, iu, iter, imax
+        real(r64) xrold, fl, fu, fr
+        real(r64) alke, tola, tol
 
 
         iter = 0
 
         !gp 03-dec-09
-        !alke = alk / 50000.0_dp
-        alke = alk / 50043.45_dp
+        !alke = alk / 50000.0_r64
+        alke = alk / 50043.45_r64
 
         imax = 100
-        tol = 0.0000001_dp
-        tola = 100.0_dp
+        tol = 0.0000001_r64
+        tola = 100.0_r64
         xlo=xlo1; xup =xup1
 
         fl = f2(xlo, co2, te, alke, cond)
         fu = f2(xup, co2, te, alke, cond)
-        xr = (xlo + xup) / 2.0_dp
+        xr = (xlo + xup) / 2.0_r64
 
         do
             if (iter > imax) then
@@ -384,13 +385,13 @@ contains
                 fu = f2(xup, co2, te, alke, cond)
                 iu = 0
                 il = il + 1
-                if (il >= 1) fl = fl / 2.0_dp
+                if (il >= 1) fl = fl / 2.0_r64
             elseif (fl * fr > 0) then
                 xlo = xr
                 fl = f2(xlo, co2, te, alke, cond)
                 il = 0
                 iu = iu + 1
-                if (iu >= 1) fu = fu / 2.0_dp
+                if (iu >= 1) fu = fu / 2.0_r64
             else
                 tola = 0.0
             end if
@@ -400,17 +401,17 @@ contains
 
     function f2(ph, co2, te, alk, cond)
 
-        real(dp) f2
-        real(dp) ph, co2, te, alk, cond
-        real(dp) k1, k2, kw, kh
-        real(dp) alp0, alp1, alp2, hh
+        real(r64) f2
+        real(r64) ph, co2, te, alk, cond
+        real(r64) k1, k2, kw, kh
+        real(r64) alp0, alp1, alp2, hh
 
-        hh = 10.0_dp ** -ph
+        hh = 10.0_r64 ** -ph
         call chemrates(te, k1, k2, kw, kh, cond)
         alp0 = hh ** 2 / (hh ** 2 + k1 * hh + k1 * k2)
         alp1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
         alp2 = k1 * k2 / (hh ** 2 + k1 * hh + k1 * k2)
-        f2 = (alp1 + 2.0_dp * alp2) * co2 / alp0 + kw / hh - hh - alk
+        f2 = (alp1 + 2.0_r64 * alp2) * co2 / alp0 + kw / hh - hh - alk
 
     end function
 
