@@ -448,7 +448,7 @@ CONTAINS
 !SUBROUTINE Save_init_step(nr, intg, pr, dt, IMethpH, Rates)
     SUBROUTINE Save_init_step(nr, intg, pr, dt, IMethpH, showDielResults, Rates)
 
-! USE Class_Output, ONLY: outdata_type
+        ! USE Class_Output, ONLY: outdata_type
 
         INTEGER(i32), INTENT(IN) :: nr
 
@@ -467,18 +467,18 @@ CONTAINS
         REAL(r64) :: pHss(0:nr, 0:nl), Kamm, pH !gp add dim for nl
 
 
-! !gp debug
-! OPEN (unit=9, FILE='debug.out', status='REPLACE', ACTION='WRITE')
-! WRITE(9,*) 'Program is now just before TYPE(RiverHydraulics_type) hydrau'
-! CLOSE (9)
+        ! !gp debug
+        ! OPEN (unit=9, FILE='debug.out', status='REPLACE', ACTION='WRITE')
+        ! WRITE(9,*) 'Program is now just before TYPE(RiverHydraulics_type) hydrau'
+        ! CLOSE (9)
 
         !gp 29-Oct-04
         TYPE(RiverHydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
 
-! !gp debug
-! OPEN (unit=9, FILE='debug.out', status='REPLACE', ACTION='WRITE')
-! WRITE(9,'(A64)') 'Program is now just after TYPE(RiverHydraulics_type) hydrau'
-! CLOSE (9)
+        ! !gp debug
+        ! OPEN (unit=9, FILE='debug.out', status='REPLACE', ACTION='WRITE')
+        ! WRITE(9,'(A64)') 'Program is now just after TYPE(RiverHydraulics_type) hydrau'
+        ! CLOSE (9)
 
         pr%tdy(0)=0
         DO i = 0, nr !nr public

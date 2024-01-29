@@ -1,7 +1,7 @@
 module m_derivs
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use class_hydraulics, only: riverhydraulics_type
-    use class_integrationdata, only: integral_type, integration_, &
+    use class_integrationdata, only: &
         saveheatfluxtribs, saveheatfluxadvecdisp, saveheatfluxjsnt, saveheatfluxlongat, saveheatfluxback, &
         saveheatfluxconv, saveheatfluxevap, saveheatfluxjsed, saveheatfluxjhyporheic, &
         os, phitsave, savedofluxheadwater, saveco2fluxheadwater, savedofluxtribs, savedofluxadvecdisp, &
