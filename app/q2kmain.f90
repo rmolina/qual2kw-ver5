@@ -40,7 +40,7 @@ program q2kmain
     ! variables
 
     use nrtype
-    use class_systemparams
+    use m_system_params
     use m_hydraulics
     use m_meteorology
     use m_upstream_boundary
@@ -71,7 +71,7 @@ program q2kmain
     type(downstream_boundary_t) db !downstream boundary
     type(rates_t) rates !stoch, reaction, temperature and all other rate
     type(solar_type) :: solar !solar radiation
-    type(systemparams) sys !declare the system parameter variables
+    type(system_params_t) sys !declare the system parameter variables
     type(t_rivertopo) topo !river topology
     type(outdata_t) prout
     integer(i4b) begintime, endtime
