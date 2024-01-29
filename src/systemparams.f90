@@ -1,191 +1,191 @@
-MODULE Class_SystemParams
-    USE nrtype
-    USE m_date, only: date_t
-    IMPLICIT NONE
+module class_systemparams
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use nrtype, only: lgt
+    use m_date, only: date_t
+    implicit none
+    private
+    public :: systemparams, systemparams_
 
-! PRIVATE !/* All data and subroutines are private unless declare as public */
-! PUBLIC :: SystemParams_, NextTimeStep, steadystate
+    type systemparams
 
-    TYPE SystemParams
+        !gp 23-nov-09
+        !character(len=30) basinname, filename, path, title, timezone
+        character(len=30) basinname, filename, path, title
+        real(r64) timezone
 
-        !GP 23-Nov-09
-        !CHARACTER(LEN=30) BASINNAME, FILENAME, PATH, TITLE, timezone
-        CHARACTER(LEN=30) BASINNAME, FILENAME, PATH, TITLE
-        REAL(DP) timezone
+        real(r64) dtuser
+        type(date_t) today !11/16/04 current date
+        real(r64) :: dt, tday =0 !timestep, time of the day
+        logical(lgt) :: steadystate =.true. !identify the simulation type
+        type(date_t) lastday !11/16/04 last day of simulation, for dynamic
+        integer(i32) days !final time for steady state only
 
-        REAL(DP) dtuser
-        TYPE(date_t) today !11/16/04 current date
-        REAL(DP) :: dt, tday =0 !timestep, time of the day
-        LOGICAL(LGT) :: steadystate =.TRUE. !identify the simulation type
-        TYPE(date_t) LastDay !11/16/04 last day of simulation, for dynamic
-        INTEGER(I4B) days !final time for steady state only
+        !gp 29-oct-09
+        !integer(i32) np, nc !
+        integer(i32) np, nc !
 
-        !gp 29-Oct-09
-        !INTEGER(I4B) np, nc !
-        INTEGER(I4B) np, nc !
+        integer(i32) stepcount !count time steps
+        integer(i32) daycount !count day simulated
+        character(len=30) :: imeth = 'Euler' ! integration method
+        character(len=30) :: imethph = 'Newton-Raphson' !pH method
 
-        INTEGER(I4B) stepCount !count time steps
-        INTEGER(I4B) dayCount !count day simulated
-        CHARACTER(LEN=30) :: IMeth = 'Euler' ! integration method
-        CHARACTER(LEN=30) :: IMethpH = 'Newton-Raphson' !pH method
+        !gp 29-oct-04
+        character(len=30) :: simhyporheicwq !simulate hyporheic pore water quality
 
-        !gp 29-Oct-04
-        CHARACTER(LEN=30) :: simHyporheicWQ !simulate hyporheic pore water quality
+        !03-feb-05
+        character(len=30) :: showdielresults !yes or no (only used in excel vba)
+        character(len=30) :: statevariables !all or temperature (used to bypass wq derivs unless 'all' is selected)
 
-        !03-Feb-05
-        CHARACTER(LEN=30) :: showDielResults !Yes or No (only used in Excel VBA)
-        CHARACTER(LEN=30) :: stateVariables !All or Temperature (used to bypass WQ derivs unless 'All' is selected)
+        !gp 11-jan-06
+        character(len=30) :: calcsedflux !yes or no
 
-        !gp 11-Jan-06
-        CHARACTER(LEN=30) :: calcSedFlux !Yes or No
+        !gp 26-oct-07
+        character(len=30) :: simalk !yes or no
 
-        !gp 26-Oct-07
-        CHARACTER(LEN=30) :: simAlk !Yes or No
+        !gp 24-jun-96
+        character(len=30) :: writedynamic !yes or no
 
-        !gp 24-Jun-96
-        CHARACTER(LEN=30) :: writeDynamic !Yes or No
-
-    END TYPE SystemParams
+    end type systemparams
 
     !declare the system parameter variables
-! TYPE(SystemParams) system
+! type(systemparams) system
 
-CONTAINS
+contains
     !/* external functions */
 
-!sytemParams data type constructor
+!sytemparams data type constructor
 
-    !gp 24-Jun-09
-    !gp 28-Oct-04 FUNCTION SystemParams_(BASINNAME, FILENAME, PATH, TITLE, year, month, day, &
-    !gp timezone, dtuser, tf, IMeth, IMethpH) RESULT(system)
-    !FUNCTION SystemParams_(BASINNAME, FILENAME, PATH, TITLE, year, month, day, &
-    ! timezone, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, &
-    ! showDielResults, stateVariables, calcSedFlux, simAlk) RESULT(system) !gp 26-Oct-07
-    FUNCTION SystemParams_(BASINNAME, FILENAME, PATH, TITLE, year, month, day, &
-        timezone, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, &
-        showDielResults, stateVariables, calcSedFlux, simAlk, writeDynamic) RESULT(system)
-        IMPLICIT NONE
+    !gp 24-jun-09
+    !gp 28-oct-04 function systemparams_(basinname, filename, path, title, year, month, day, &
+    !gp timezone, dtuser, tf, imeth, imethph) result(system)
+    !function systemparams_(basinname, filename, path, title, year, month, day, &
+    ! timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
+    ! showdielresults, statevariables, calcsedflux, simalk) result(system) !gp 26-oct-07
+    function systemparams_(basinname, filename, path, title, year, month, day, &
+        timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
+        showdielresults, statevariables, calcsedflux, simalk, writedynamic) result(system)
+        implicit none
 
-        TYPE(SystemParams) system
+        type(systemparams) system
 
-        !GP 23-Nov-09
-        !CHARACTER(LEN=30), INTENT(IN) :: BASINNAME, FILENAME, PATH, TITLE, timezone
-        CHARACTER(LEN=30), INTENT(IN) :: BASINNAME, FILENAME, PATH, TITLE
-        REAL(DP), INTENT(IN) :: timezone
+        !gp 23-nov-09
+        !character(len=30), intent(in) :: basinname, filename, path, title, timezone
+        character(len=30), intent(in) :: basinname, filename, path, title
+        real(r64), intent(in) :: timezone
 
-        REAL(DP), INTENT(IN) :: year, month, day
-        REAL(DP), INTENT(IN) :: dtuser, tf
-        CHARACTER(LEN=30), INTENT(IN) :: IMethpH !pH method
-        CHARACTER(LEN=30), INTENT(IN) :: IMeth !integration method
-        CHARACTER(LEN=30), INTENT(IN) :: simHyporheicWQ !gp 28-Oct-04 Yes or No to simulate hyoprheic WQ
-        CHARACTER(LEN=30), INTENT(IN) :: showDielResults !gp 03-Feb-05 Yes or No (only used in Excel VBA)
-        CHARACTER(LEN=30), INTENT(IN) :: stateVariables !gp 03-Feb-05 All or Temperature
-        CHARACTER(LEN=30), INTENT(IN) :: calcSedFlux !gp 11-Jan-06 Yes or No
-        CHARACTER(LEN=30), INTENT(IN) :: simAlk !gp 26-Oct-07 Yes or No
+        real(r64), intent(in) :: year, month, day
+        real(r64), intent(in) :: dtuser, tf
+        character(len=30), intent(in) :: imethph !ph method
+        character(len=30), intent(in) :: imeth !integration method
+        character(len=30), intent(in) :: simhyporheicwq !gp 28-oct-04 yes or no to simulate hyoprheic wq
+        character(len=30), intent(in) :: showdielresults !gp 03-feb-05 yes or no (only used in excel vba)
+        character(len=30), intent(in) :: statevariables !gp 03-feb-05 all or temperature
+        character(len=30), intent(in) :: calcsedflux !gp 11-jan-06 yes or no
+        character(len=30), intent(in) :: simalk !gp 26-oct-07 yes or no
 
-        !gp 24-Jun-09
-        CHARACTER(LEN=30), INTENT(IN) :: writeDynamic !Yes or No
+        !gp 24-jun-09
+        character(len=30), intent(in) :: writedynamic !yes or no
 
-        REAL(DP) dtmax
+        real(r64) dtmax
 
-        system%BASINNAME=BASINNAME ; system%FILENAME=FILENAME; system%PATH=PATH
-        system%TITLE = TITLE;
+        system%basinname=basinname ; system%filename=filename; system%path=path
+        system%title = title;
         system%today = date_t(year,month,day); system%timezone=timezone
         system%dtuser = dtuser ; system%days = tf
 
         !time-step control
 
-        system%dt = 2.0 ** (Int(Log(system%dtuser) / Log(2.0)))
-        !//added by th, since int() implement differently in VB
-        IF (system%dt > system%dtuser) system%dt=system%dt/2.0
+        system%dt = 2.0 ** (int(log(system%dtuser) / log(2.0)))
+        !//added by th, since int() implement differently in vb
+        if (system%dt > system%dtuser) system%dt=system%dt/2.0
         !//end th
-        dtmax = 2.0 ** (Int(Log(4.0 / 24.0) / Log(2.0)))
-        If (system%dt > dtmax) system%dt = dtmax
+        dtmax = 2.0 ** (int(log(4.0 / 24.0) / log(2.0)))
+        if (system%dt > dtmax) system%dt = dtmax
 
         system%np = tf
-        system%nc = 1.0_dp /system%dt
+        system%nc = 1.0_r64 /system%dt
 
         !integration method
-        SELECT CASE (IMeth)
-          CASE ('Adaptive step') !Adaptive step method (
-            system%IMeth = IMeth
-          CASE ('Runge-Kutta')
-            system%IMeth = IMeth !Runge-Kutta 4th order
-          CASE DEFAULT
-            system%IMeth = 'Euler' !default: Euler method
-        END SELECT
+        select case (imeth)
+          case ('Adaptive step') !adaptive step method (
+            system%imeth = imeth
+          case ('Runge-Kutta')
+            system%imeth = imeth !runge-kutta 4th order
+          case default
+            system%imeth = 'Euler' !default: euler method
+        end select
 
-        !pH solver method
-        SELECT CASE (IMethpH)
-          CASE ('Bisection')
-            system%IMethpH = IMethpH
+        !ph solver method
+        select case (imethph)
+          case ('Bisection')
+            system%imethph = imethph
 
-            !gp 10-Dec-09
-            !CASE DEFAULT
-            ! system%IMethpH = 'Newton-Raphson'
-          CASE ('Newton-Raphson')
-            system%IMethpH = IMethpH
-          CASE DEFAULT
-            system%IMethpH = 'Brent'
+            !gp 10-dec-09
+            !case default
+            ! system%imethph = 'newton-raphson'
+          case ('Newton-Raphson')
+            system%imethph = imethph
+          case default
+            system%imethph = 'Brent'
 
-        END SELECT
+        end select
 
-        !gp 29-Oct-04
-        system%simHyporheicWQ = simHyporheicWQ
+        !gp 29-oct-04
+        system%simhyporheicwq = simhyporheicwq
 
-        !gp 03-Feb-05
-        system%showDielResults = showDielResults
-        system%stateVariables = stateVariables
+        !gp 03-feb-05
+        system%showdielresults = showdielresults
+        system%statevariables = statevariables
 
-        !gp 11-Jan-06
-        system%calcSedFlux = calcSedFlux
+        !gp 11-jan-06
+        system%calcsedflux = calcsedflux
 
-        !gp 26-Oct-07
-        system%simAlk = simAlk
+        !gp 26-oct-07
+        system%simalk = simalk
 
-        !gp 24-Jun-09
-        system%writeDynamic = writeDynamic
+        !gp 24-jun-09
+        system%writedynamic = writedynamic
 
 
 ! system%steadystate= steadystate
 ! system%dt = dt
 
-! system%tday =0 ; system%stepCount=0; system%dayCount = 0
+! system%tday =0 ; system%stepcount=0; system%daycount = 0
 
-! IF (steadystate .AND. PRESENT(days)) THEN
+! if (steadystate .and. present(days)) then
 ! system%days= days
-! ELSE IF (.NOT. steadystate .AND. PRESENT(LastDay)) THEN
-! system%LastDay= LastDay
-! ELSE
-        !PRINT *, !Warning: Wrong inputs
-! END IF
+! else if (.not. steadystate .and. present(lastday)) then
+! system%lastday= lastday
+! else
+        !print *, !warning: wrong inputs
+! end if
 
-    END FUNCTION SystemParams_
+    end function systemparams_
 
-    SUBROUTINE NextTimeStep(system)
-        IMPLICIT NONE
+    subroutine nexttimestep(system)
+        implicit none
 
-        TYPE(SystemParams) system
-! TYPE(SystemParams), INTENT(INOUT) :: system
+        type(systemparams) system
+! type(systemparams), intent(inout) :: system
         system%tday= system%tday + system%dt
-        system%stepCount= system%stepCount+1
+        system%stepcount= system%stepcount+1
 
 
-        IF (system%tday>=1.0) THEN !END of day
+        if (system%tday>=1.0) then !end of day
             system%tday= 0.0
-            system%dayCount=system%dayCount + 1
-            IF (.NOT.system%steadystate) THEN !steadystate simulation
+            system%daycount=system%daycount + 1
+            if (.not.system%steadystate) then !steadystate simulation
                 !dynamic simulation, the next day
 
-            END IF
-        END IF
-    END SUBROUTINE NextTimeStep
+            end if
+        end if
+    end subroutine nexttimestep
 
-    FUNCTION steadystate(system)
+    function steadystate(system)
 
-        TYPE(SystemParams) system
-        LOGICAL(2) steadystate
+        type(systemparams) system
+        logical(2) steadystate
         steadystate = system%steadystate
-    END FUNCTION
+    end function
 
-END MODULE Class_SystemParams
+end module class_systemparams
