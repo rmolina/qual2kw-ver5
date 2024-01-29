@@ -55,9 +55,9 @@ contains
         real(r64), intent(out):: dte(nr, nl), dc(nr, nv, nl), dinb(nr), dipb(nr) !gp
         real(r64), intent(in):: t !time
 
-        integer(i32) i,j, k
+        integer(i32) i, k
         real(r64) :: evap, back, flux
-        real(r64) eair, longat, conv
+        real(r64) longat, conv
         !temperature corrected rates
 
         !gp 03-apr-08
