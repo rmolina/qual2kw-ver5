@@ -9,8 +9,8 @@ module m_output
     use m_rivertopo, only: t_rivertopo
     use m_oxygen, only: oxygen_saturation
     implicit none
-    !private
-    !public :: outdata_t, output
+    private
+    public :: outdata_t, output
 
     type outdata_t
         !gp 24-oct-04 integer(i32) nj

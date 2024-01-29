@@ -4,6 +4,21 @@ MODULE Class_IntegrationData
 
     !gp 01-Nov-04
     IMPLICIT NONE
+    private
+
+    public :: integral_type, integration_, &
+        saveHeatFluxTribs, saveheatfluxadvecdisp, saveheatfluxjsnt, saveheatfluxlongat, saveheatfluxback, &
+        saveheatfluxconv, saveheatfluxevap, saveheatfluxjsed, saveheatfluxjhyporheic, &
+        os, phitsave, savedofluxheadwater, saveco2fluxheadwater, savedofluxtribs, savedofluxadvecdisp, &
+        saveco2fluxtribs, saveco2fluxadvecdisp, phinsave, phipsave, phicsave, philsave, phitotalsave , &
+        savebotalgphoto, savebotalgresp, savebotalgdeath, savebotalgnetgrowth, &
+        sodpr, jnh4pr, jno3pr, jch4pr, jsrppr, csodpr, &
+        diagfluxdo, diagfluxcbod, diagfluxnh4, diagfluxno3, diagfluxsrp, diagfluxic, savedofluxreaer, &
+        savedofluxcbodfast, savedofluxcbodslow, savedofluxnitrif,  savedofluxphytoresp, &
+        savedofluxphytophoto, savedofluxbotalgresp, savedofluxbotalgphoto, savedofluxsod, savedofluxcod, &
+        saveco2fluxreaer, saveco2fluxcbodfast, saveco2fluxcbodslow, saveco2fluxphytoresp, saveco2fluxphytophoto, &
+        saveco2fluxbotalgresp, saveco2fluxbotalgphoto, saveco2fluxsod, hypofluxdo, hypofluxcbod, hypofluxnh4, &
+        hypofluxno3, hypofluxsrp, hypofluxic
 
     TYPE Integral_type
 !		INTEGER(I4B) np, nc													!days, step in each day

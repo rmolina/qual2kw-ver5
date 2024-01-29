@@ -3,15 +3,27 @@
 MODULE Class_Integration
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use class_hydraulics, only: riverhydraulics_type
-    USE Class_IntegrationData, only: Integral_type, integration_
-    USE Class_LightHeat, only: lightheat    
+    USE Class_IntegrationData, only: Integral_type, integration_, &
+        saveHeatFluxTribs, saveheatfluxadvecdisp, saveheatfluxjsnt, saveheatfluxlongat, saveheatfluxback, &
+        saveheatfluxconv, saveheatfluxevap, saveheatfluxjsed, saveheatfluxjhyporheic, &
+        os, phitsave, savedofluxheadwater, saveco2fluxheadwater, savedofluxtribs, savedofluxadvecdisp, &
+        saveco2fluxtribs, saveco2fluxadvecdisp, phinsave, phipsave, phicsave, philsave, phitotalsave , &
+        savebotalgphoto, savebotalgresp, savebotalgdeath, savebotalgnetgrowth, &
+        sodpr, jnh4pr, jno3pr, jch4pr, jsrppr, csodpr, &
+        diagfluxdo, diagfluxcbod, diagfluxnh4, diagfluxno3, diagfluxsrp, diagfluxic, savedofluxreaer, &
+        savedofluxcbodfast, savedofluxcbodslow, savedofluxnitrif,  savedofluxphytoresp, &
+        savedofluxphytophoto, savedofluxbotalgresp, savedofluxbotalgphoto, savedofluxsod, savedofluxcod, &
+        saveco2fluxreaer, saveco2fluxcbodfast, saveco2fluxcbodslow, saveco2fluxphytoresp, saveco2fluxphytophoto, &
+        saveco2fluxbotalgresp, saveco2fluxbotalgphoto, saveco2fluxsod, hypofluxdo, hypofluxcbod, hypofluxnh4, &
+        hypofluxno3, hypofluxsrp, hypofluxic
+    USE Class_LightHeat, only: lightheat, heatbalance, lightextinction
     USE Class_Phsolve, ONLY: ChemRates, ModFP2, phsolNewton, pHsolBisect, phsolbrent, ct
     USE Class_SolarCalc, only: solar_type, solarcalc
     USE Class_SourceIn, only: load, sourcescalc
     USE Class_SystemParams, only: SystemParams
     USE m_downstream_boundary, only: downstream_boundary_t, instanteousdownstreamboundary
     USE m_meteorology, only: meteorology_t, instanteousmeteo
-    USE m_output, ONLY: outdata_t, saveheatfluxtribs
+    USE m_output, ONLY: outdata_t, output
     use m_oxygen, only: oxygen_inhibition_and_enhancement, oxygen_saturation
     USE m_rates, only: rates_t
     use m_tempadjust, only: temp_adjust
