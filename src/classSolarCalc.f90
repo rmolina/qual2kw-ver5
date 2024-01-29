@@ -5,7 +5,7 @@ MODULE Class_SolarCalc
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     USE m_constants
     use m_date, only: date_t
-    USE Class_SolarPosition, only: calcJD, degToRad, radToDeg, solarposition, sunrise, sunset
+    USE m_solar_position, only: calcJD, degToRad, radToDeg, solarposition, sunrise, sunset
     USE m_system_params
     USE m_RiverTopo
     IMPLICIT NONE

@@ -39,7 +39,7 @@ program q2kmain
 
     ! variables
 
-    use nrtype
+    use m_constants
     use m_system_params
     use m_hydraulics
     use m_meteorology
