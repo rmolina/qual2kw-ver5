@@ -1,5 +1,3 @@
-!classintegration
-
 module m_integration
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_derivs, only: derivs
@@ -465,7 +463,6 @@ contains
         ! close (9)
 
         !gp 29-oct-04
-        type(riverhydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
 
         ! !gp debug
         ! open (unit=9, file='debug.out', status='replace', action='write')
@@ -682,7 +679,6 @@ contains
         real(r64) :: phss(0:nr, nl) !gp
 
         !gp 29-oct-04
-        type(riverhydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
 
         do i = 0, nr
 
@@ -915,14 +911,11 @@ contains
         logical(4), intent(in) :: savesteps
         !local variables
         real(r64) t, dt !initial time
-        integer(i32) nstp, i, j
+        integer(i32) nstp
         real(r64) dtnext, dtdid
         type(integral_type) scal, now
-        real(r64), dimension(nr,nl) :: tenow
-        real(r64), dimension(nr) :: inbnow, ipbnow
         !gp 28-oct-04 real(r64) dte(nr, nl), dc(nr, nv), dinb(nr), dipb(nr)
         real(r64) dte(nr, nl), dc(nr, nv, nl), dinb(nr), dipb(nr) !gp
-        integer(i32) kmax, kout
 
         t=t1 !initial time
         dt=dt1
