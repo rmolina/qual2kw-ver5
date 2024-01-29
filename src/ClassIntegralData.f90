@@ -14,33 +14,33 @@ MODULE Class_IntegrationData
         savebotalgphoto, savebotalgresp, savebotalgdeath, savebotalgnetgrowth, &
         sodpr, jnh4pr, jno3pr, jch4pr, jsrppr, csodpr, &
         diagfluxdo, diagfluxcbod, diagfluxnh4, diagfluxno3, diagfluxsrp, diagfluxic, savedofluxreaer, &
-        savedofluxcbodfast, savedofluxcbodslow, savedofluxnitrif,  savedofluxphytoresp, &
+        savedofluxcbodfast, savedofluxcbodslow, savedofluxnitrif, savedofluxphytoresp, &
         savedofluxphytophoto, savedofluxbotalgresp, savedofluxbotalgphoto, savedofluxsod, savedofluxcod, &
         saveco2fluxreaer, saveco2fluxcbodfast, saveco2fluxcbodslow, saveco2fluxphytoresp, saveco2fluxphytophoto, &
         saveco2fluxbotalgresp, saveco2fluxbotalgphoto, saveco2fluxsod, hypofluxdo, hypofluxcbod, hypofluxnh4, &
         hypofluxno3, hypofluxsrp, hypofluxic
 
     TYPE Integral_type
-!		INTEGER(I4B) np, nc													!days, step in each day
+! INTEGER(I4B) np, nc !days, step in each day
         !dependent variables
         REAL(DP), DIMENSION(:), POINTER :: INb, IPb
         !gp 27-Oct-04 REAL(DP), DIMENSION(:,:), POINTER :: Te, c
-        REAL(DP), DIMENSION(:,:), POINTER :: Te		!gp
-        REAL(DP), DIMENSION(:,:,:), POINTER :: c	!gp add dimension for nl
-    END TYPE	Integral_type
+        REAL(DP), DIMENSION(:,:), POINTER :: Te !gp
+        REAL(DP), DIMENSION(:,:,:), POINTER :: c !gp add dimension for nl
+    END TYPE Integral_type
 
     !sediment nutrient flux
     REAL(DP), DIMENSION(:), POINTER :: SODpr, JNH4pr, JNO3pr, JCH4pr, JSRPpr
 
     !gp REAL(DP), DIMENSION(:), POINTER :: os
-    REAL(DP), DIMENSION(:,:), POINTER :: os		!gp
+    REAL(DP), DIMENSION(:,:), POINTER :: os !gp
 
     !gp 20-Oct-04 bottom algae limitation factors (fraction of maximum potential growth)
-    REAL(DP), DIMENSION(:), POINTER :: phitotalSave, phitSave, philSave, phinSave, phipSave, phicSave	!gp 20-Oct-04
+    REAL(DP), DIMENSION(:), POINTER :: phitotalSave, phitSave, philSave, phinSave, phipSave, phicSave !gp 20-Oct-04
 
     !gp 28-Oct-04 diagenesis and hyporheic sediment/water fluxes (positive is source to water from sediment)
-    REAL(DP), DIMENSION(:), POINTER :: DiagFluxDO, DiagFluxCBOD, DiagFluxNH4, DiagFluxNO3, DiagFluxSRP, DiagFluxIC	!gp 28-Oct-04
-    REAL(DP), DIMENSION(:), POINTER :: HypoFluxDO, HypoFluxCBOD, HypoFluxNH4, HypoFluxNO3, HypoFluxSRP, HypoFluxIC	!gp 28-Oct-04
+    REAL(DP), DIMENSION(:), POINTER :: DiagFluxDO, DiagFluxCBOD, DiagFluxNH4, DiagFluxNO3, DiagFluxSRP, DiagFluxIC !gp 28-Oct-04
+    REAL(DP), DIMENSION(:), POINTER :: HypoFluxDO, HypoFluxCBOD, HypoFluxNH4, HypoFluxNO3, HypoFluxSRP, HypoFluxIC !gp 28-Oct-04
 
     !gp 29-Oct-04
     REAL(DP), DIMENSION(:), POINTER :: CSODpr
@@ -67,16 +67,16 @@ CONTAINS
     !user-defined type 'Integral_type' constructor
     FUNCTION Integration_(nr) RESULT(integral)
 
-!		USE Class_RiverTopo
+! USE Class_RiverTopo
         TYPE(Integral_type) integral
         INTEGER(I4B), INTENT(IN) :: nr
 
-        !gp 05-Jul-05 INTEGER(I4B) i, status(29)	!gp 28-Oct-04
-        !gp 25-Jun-09 INTEGER(I4B) i, status(64)	!gp 05-Jul-05
-        INTEGER(I4B) i, status(68)	!gp 25-Jun-09
+        !gp 05-Jul-05 INTEGER(I4B) i, status(29) !gp 28-Oct-04
+        !gp 25-Jun-09 INTEGER(I4B) i, status(64) !gp 05-Jul-05
+        INTEGER(I4B) i, status(68) !gp 25-Jun-09
 
         !gp ALLOCATE(os(0:nr), STAT=status(1))
-        ALLOCATE(os(0:nr, nl), STAT=status(1))	!gp
+        ALLOCATE(os(0:nr, nl), STAT=status(1)) !gp
 
         ALLOCATE(integral%INb(0:nr), STAT=status(2))
         ALLOCATE(integral%IPb(0:nr), STAT=status(3))
@@ -97,7 +97,7 @@ CONTAINS
         ALLOCATE(philSave(0:nr), STAT=status(13))
         ALLOCATE(phinSave(0:nr), STAT=status(14))
         ALLOCATE(phipSave(0:nr), STAT=status(15))
-        ALLOCATE(phicSave(0:nr), STAT=status(16))	!gp end new block
+        ALLOCATE(phicSave(0:nr), STAT=status(16)) !gp end new block
 
         !gp 28-Oct-04 Diagenesis fluxes between sediment/water
         ALLOCATE(DiagFluxDO(0:nr), STAT=status(17))
@@ -105,7 +105,7 @@ CONTAINS
         ALLOCATE(DiagFluxNH4(0:nr), STAT=status(19))
         ALLOCATE(DiagFluxNO3(0:nr), STAT=status(20))
         ALLOCATE(DiagFluxSRP(0:nr), STAT=status(21))
-        ALLOCATE(DiagFluxIC(0:nr), STAT=status(22))	!gp end new block
+        ALLOCATE(DiagFluxIC(0:nr), STAT=status(22)) !gp end new block
 
         !gp 28-Oct-04 Hyporheic exchange fluxes between sediment/water
         ALLOCATE(HypoFluxDO(0:nr), STAT=status(23))
@@ -113,7 +113,7 @@ CONTAINS
         ALLOCATE(HypoFluxNH4(0:nr), STAT=status(25))
         ALLOCATE(HypoFluxNO3(0:nr), STAT=status(26))
         ALLOCATE(HypoFluxSRP(0:nr), STAT=status(27))
-        ALLOCATE(HypoFluxIC(0:nr), STAT=status(28))	!gp end new block
+        ALLOCATE(HypoFluxIC(0:nr), STAT=status(28)) !gp end new block
 
         !gp 29-Oct-04
         ALLOCATE(CSODpr(0:nr), STAT=status(29))
@@ -167,11 +167,11 @@ CONTAINS
 
         !initialize
         os=0;
-        integral%INb=0;	integral%IPb=0;		integral%c=0;		integral%Te=0
-        SODpr=0;	JNH4pr=0;	JNO3pr=0;	JCH4pr=0;	JSRPpr=0
+        integral%INb=0; integral%IPb=0; integral%c=0; integral%Te=0
+        SODpr=0; JNH4pr=0; JNO3pr=0; JCH4pr=0; JSRPpr=0
 
         !gp 20-Oct-04
-        phitotalSave=0; phitSave=0; philSave=0; phinSave=0; phipSave=0; phicSave=0	!gp end new block
+        phitotalSave=0; phitSave=0; philSave=0; phinSave=0; phipSave=0; phicSave=0 !gp end new block
 
         !gp 25-Jun-09
         saveBotAlgPhoto=0; saveBotAlgResp=0; saveBotAlgDeath=0; saveBotAlgNetGrowth=0
@@ -179,7 +179,7 @@ CONTAINS
 
         !28-Oct-04
         DiagFluxDO=0; DiagFluxCBOD=0; DiagFluxNH4=0; DiagFluxNO3=0; DiagFluxSRP=0; DiagFluxIC=0
-        HypoFluxDO=0; HypoFluxCBOD=0; HypoFluxNH4=0; HypoFluxNO3=0; HypoFluxSRP=0; HypoFluxIC=0	!gp end new block
+        HypoFluxDO=0; HypoFluxCBOD=0; HypoFluxNH4=0; HypoFluxNO3=0; HypoFluxSRP=0; HypoFluxIC=0 !gp end new block
 
         !gp 29-Oct-04
         CSODpr=0
