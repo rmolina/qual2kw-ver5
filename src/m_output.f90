@@ -1,6 +1,6 @@
 module m_output
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    use nrtype, only: nv, nl
+    use m_constants, only: nv, nl
     use m_hydraulics, only: riverhydraulics_type
     use class_phsolve, only: ph_solver
     use class_sourcein, only: load, npt, ndiff, sourcescalc

@@ -1,6 +1,6 @@
 module class_phsolve
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    use nrtype, only: e, es, imax
+    use m_constants, only: e, es, imax
     implicit none
     private
     public :: ct, ph_solver, chemrates, modfp2

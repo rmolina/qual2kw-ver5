@@ -1,7 +1,7 @@
 
 module m_downstream_boundary
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    use nrtype, only: LGT, nv
+    use m_constants, only: LGT, nv
     use m_water_quality, only: water_quality_t
     use class_phsolve, only: ct
     implicit none

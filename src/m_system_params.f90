@@ -1,6 +1,6 @@
 module m_system_params
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    use nrtype, only: lgt
+    use m_constants, only: lgt
     use m_date, only: date_t
     implicit none
     private

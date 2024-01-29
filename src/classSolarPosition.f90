@@ -1,7 +1,7 @@
 ! solarposition.f90
 !
 MODULE Class_SolarPosition
-    USE nrtype
+    USE m_constants
     IMPLICIT NONE
     PRIVATE !All private, unless declare public
     PUBLIC solarelevation, radToDeg, degToRad, sunrise, sunset, solarnoon, solarposition, calcJD
@@ -53,7 +53,7 @@ MODULE Class_SolarPosition
 CONTAINS
     PURE Function radToDeg(angleRad)
         use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
 
         !// Convert radian angle to degrees
@@ -65,7 +65,7 @@ CONTAINS
 
 
     PURE Function degToRad(angleDeg)
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) degToRad
         REAL(DP), INTENT(IN) :: angleDeg
@@ -90,7 +90,7 @@ CONTAINS
     !* added later.
     !***********************************************************************/
     PURE Function calcJD(year, month, day)
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcJD
         REAL(DP), INTENT(IN) :: year, month, day
@@ -125,7 +125,7 @@ CONTAINS
         !* Return value:
         !* the T value corresponding to the Julian Day
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
 
         REAL(DP) calcTimeJulianCent
@@ -148,7 +148,7 @@ CONTAINS
         !* Return value:
         !* the Julian Day corresponding to the t value
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcJDFromJulianCent
         REAL(DP), INTENT(IN) :: t
@@ -171,7 +171,7 @@ CONTAINS
         !* Return value:
         !* the Geometric Mean Longitude of the Sun in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcGeomMeanLongSun
         REAL(DP), INTENT(IN) :: t
@@ -227,7 +227,7 @@ CONTAINS
         !* Return value:
         !* the unitless eccentricity
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcEccentricityEarthOrbit
         REAL(DP), INTENT(IN) :: t
@@ -251,7 +251,7 @@ CONTAINS
         !* Return value:
         !* in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunEqOfCenter
         REAL(DP), INTENT(IN) :: t
@@ -284,7 +284,7 @@ CONTAINS
         !* Return value:
         !* sun!s true longitude in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunTrueLong
         REAL(DP), INTENT(IN) :: t
@@ -311,7 +311,7 @@ CONTAINS
         !* Return value:
         !* sun!s true anamoly in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunTrueAnomaly
         REAL(DP), INTENT(IN) :: t
@@ -338,7 +338,7 @@ CONTAINS
         !* Return value:
         !* sun radius vector in AUs
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunRadVector
         REAL(DP), INTENT(IN) :: t
@@ -364,7 +364,7 @@ CONTAINS
         !* Return value:
         !* sun!s apparent longitude in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunApparentLong
         REAL(DP), INTENT(IN) :: t
@@ -390,7 +390,7 @@ CONTAINS
         !* Return value:
         !* mean obliquity in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcMeanObliquityOfEcliptic
         REAL(DP), INTENT(IN) :: t
@@ -414,7 +414,7 @@ CONTAINS
         !* Return value:
         !* corrected obliquity in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcObliquityCorrection
         REAL(DP), INTENT(IN) :: t
@@ -440,7 +440,7 @@ CONTAINS
         !* Return value:
         !* sun!s right ascension in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunRtAscension
         REAL(DP), INTENT(IN) :: t
@@ -475,7 +475,7 @@ CONTAINS
         !* Return value:
         !* sun!s declination in degrees
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunDeclination
         REAL(DP), INTENT(IN) :: t
@@ -503,7 +503,7 @@ CONTAINS
         !* Return value:
         !* equation of time in minutes of time
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcEquationOfTime
         REAL(DP), INTENT(IN) :: t
@@ -547,7 +547,7 @@ CONTAINS
         !* Return value:
         !* hour angle of sunrise in radians
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcHourAngleSunrise
         REAL(DP), INTENT(IN) :: lat, SolarDec
@@ -580,7 +580,7 @@ CONTAINS
         !* Return value:
         !* hour angle of sunset in radians
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcHourAngleSunset
         REAL(DP), INTENT(IN) :: lat, SolarDec
@@ -614,7 +614,7 @@ CONTAINS
         !* Return value:
         !* time in minutes from zero Z
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunriseUTC
         REAL(DP), INTENT(IN) :: jd, Latitude, longitude
@@ -666,7 +666,7 @@ CONTAINS
         !* Return value:
         !* time in minutes from zero Z
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSolNoonUTC
         REAL(DP), INTENT(IN) :: t, longitude
@@ -696,7 +696,7 @@ CONTAINS
         !* Return value:
         !* time in minutes from zero Z
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) calcSunsetUTC
         REAL(DP), INTENT(IN) :: jd, Latitude, longitude
@@ -760,7 +760,7 @@ CONTAINS
         !* Return value:
         !* sunrise time in local time (days)
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) sunrise
         REAL(DP), INTENT(IN) :: lat, lon, year, month, day
@@ -815,7 +815,7 @@ CONTAINS
         !* Return value:
         !* time of solar noon in local time days
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) solarnoon
         REAL(DP), INTENT(IN) :: lat, lon, year, month, day
@@ -934,7 +934,7 @@ CONTAINS
         !* both values.
         !*
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) solarazimuth
         REAL(DP), INTENT(IN) ::lat, lon, year, month, day, &
@@ -1119,7 +1119,7 @@ CONTAINS
         !* both values.
         !*
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP) solarelevation
         REAL(DP), INTENT(IN) ::lat, lon, year, month, day, seconds
@@ -1310,7 +1310,7 @@ CONTAINS
         !* both values.
         !*
         !***********************************************************************/
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
 
         REAL(DP) lat, lon, year, month, day

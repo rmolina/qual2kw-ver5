@@ -1,6 +1,6 @@
 module m_readfile
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    use nrtype, only: lgt, hrsday, nv
+    use m_constants, only: lgt, hrsday, nv
     use m_system_params, only: system_params_t
     use m_rivertopo, only: t_rivertopo
     use m_hydraulics, only: riverhydraulics_type, hydraulics_, makehydraulics

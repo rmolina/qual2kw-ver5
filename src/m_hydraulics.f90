@@ -4,7 +4,7 @@
 
 module m_hydraulics
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    use nrtype, only: null_val, lgt, grav
+    use m_constants, only: null_val, lgt, grav
     implicit none
     private
     public :: riverhydraulics_type, hydraulics_, makehydraulics

@@ -1,6 +1,6 @@
 MODULE Class_IntegrationData
 
-    USE nrtype
+    USE m_constants
 
     !gp 01-Nov-04
     IMPLICIT NONE

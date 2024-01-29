@@ -1,6 +1,6 @@
 module m_water_quality
     use, intrinsic :: iso_fortran_env, only: r64 => real64
-    use nrtype, only: nv
+    use m_constants, only: nv
     implicit none
     private
     public :: water_quality_t

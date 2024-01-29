@@ -3,7 +3,7 @@
 
 MODULE Class_SolarCalc
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    USE nrtype
+    USE m_constants
     use m_date, only: date_t
     USE Class_SolarPosition, only: calcJD, degToRad, radToDeg, solarposition, sunrise, sunset
     USE m_system_params
@@ -294,7 +294,7 @@ CONTAINS
         !*output:
         !*Iclear = clear-sky solar radiation at input solar elevation (W/m^2)
         !**********************************************************************
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP), INTENT(IN) :: jd, year, dayfrac, el, nfac
         REAL(DP) Iclear
@@ -334,7 +334,7 @@ CONTAINS
         ! output variable
         !   rs      clear-sky solar radiation, W m-2
         !***************************************************************************
-        USE nrtype
+        USE m_constants
         IMPLICIT NONE
         REAL(DP), INTENT(IN) :: jd, year, dayfrac, el, atc, z
         REAL(DP) rs
@@ -364,7 +364,7 @@ CONTAINS
     End FUNCTION RyanStolzSolar
 
     PURE FUNCTION Ri(year,jd, dayfrac)
-        USE	nrtype
+        USE	m_constants
         IMPLICIT NONE
 
         REAL(DP), INTENT(IN) :: year, jd, dayfrac

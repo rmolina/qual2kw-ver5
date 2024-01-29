@@ -1,7 +1,7 @@
 ! classlightheat.f90
 ! general variables and functions for calculating light and heat
 MODULE Class_LightHeat
-    USE nrtype
+    USE m_constants
     IMPLICIT NONE
 
 !	PRIVATE

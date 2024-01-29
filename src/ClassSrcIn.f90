@@ -2,7 +2,7 @@
 
 module class_sourcein
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    use nrtype, only: nv, pii, cpw, rhow
+    use m_constants, only: nv, pii, cpw, rhow
     use m_rivertopo, only: t_rivertopo
     use class_phsolve, only: ct
     use m_water_quality, only: water_quality_t

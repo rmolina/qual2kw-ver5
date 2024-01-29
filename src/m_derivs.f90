@@ -26,7 +26,7 @@ module m_derivs
     use m_rates, only: rates_t
     use m_tempadjust, only: temp_adjust
     use m_upstream_boundary, only: upstream_boundary_t, instanteousheadwater
-    use nrtype, only: nv, nl, adam, bdam, cpw, rhow
+    use m_constants, only: nv, nl, adam, bdam, cpw, rhow
     use m_sedcalcnew, only: sedcalcnumnew
     implicit none
     private
