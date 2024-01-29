@@ -259,13 +259,10 @@ contains
         real(r64), intent(in) :: t
         integer(i32), intent(in) :: nr, flag
 ! type(rivertopo_type) topo !river topology
-        integer(i32) i, j, k, kk
-        real(r64) teptt(nr)
+        integer(i32) i, j, k
         real(r64) :: heat(nr)
         real(r64) :: loadi(nr, nv)
-        logical(2) cond1, cond2, cond3, cond4, cond5
         type(water_quality_t) :: ptt
-        real(r64) qd, lend
 
         heat = 0; loadi =0
 
