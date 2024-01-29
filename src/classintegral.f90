@@ -56,8 +56,7 @@ CONTAINS
         REAL(r64) dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr) !gp add dim to dc for nl
 
         !gp 24-Jun-09
-        INTEGER(i32) nrp
-        REAL(r64) TOC, TKN, TSS, TP, TN, BottomAlgae, DOSat, NH3
+        REAL(r64) TSS, TP, TN, DOSat, NH3
         INTEGER(i32) iskip, nskip
         nskip = sys%nc / 32 !for output of dynamic calculations every 45 minutes (32 times per day)
         iskip = 0 !initialize counter for skipping dynamic output
