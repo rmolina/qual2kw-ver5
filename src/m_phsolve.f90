@@ -363,8 +363,8 @@ contains
         tola = 100.0_r64
         xlo=xlo1; xup =xup1
 
-        fl = f2(xlo, co2, te, alke, cond)
-        fu = f2(xup, co2, te, alke, cond)
+        fl = f2_function(xlo, co2, te, alke, cond)
+        fu = f2_function(xup, co2, te, alke, cond)
         xr = (xlo + xup) / 2.0_r64
 
         do
@@ -375,20 +375,20 @@ contains
             if (tola < tol) exit
             xrold = xr
             xr = xup - fu * (xlo - xup) / (fl - fu)
-            fr = f2(xr, co2, te, alke, cond)
+            fr = f2_function(xr, co2, te, alke, cond)
             iter = iter + 1
             if (xr /= 0) then
                 tola = abs(xr - xrold)
             end if
             if (fl * fr < 0) then
                 xup = xr
-                fu = f2(xup, co2, te, alke, cond)
+                fu = f2_function(xup, co2, te, alke, cond)
                 iu = 0
                 il = il + 1
                 if (il >= 1) fl = fl / 2.0_r64
             elseif (fl * fr > 0) then
                 xlo = xr
-                fl = f2(xlo, co2, te, alke, cond)
+                fl = f2_function(xlo, co2, te, alke, cond)
                 il = 0
                 iu = iu + 1
                 if (iu >= 1) fu = fu / 2.0_r64
