@@ -1,15 +1,13 @@
 module m_output
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    use class_hydraulics
-    use class_integrationdata
-    use class_phsolve
-    use class_sourcein
-    use class_systemparams
-    use m_rates
-    use m_rivertopo
-    use nrtype
+    use nrtype, only: nv, nl
+    use class_hydraulics, only: riverhydraulics_type
+    use class_phsolve, only: phsolnewton, phsolbisect, phsolbrent
+    use class_sourcein, only: load, npt, ndiff, sourcescalc
+    use class_systemparams, only: SystemParams
+    use m_rates, only: rates_t
+    use m_rivertopo, only: t_rivertopo
     use m_oxygen, only: oxygen_saturation
-
     implicit none
     private
     public :: outdata_t, output
@@ -319,16 +317,15 @@ contains
         !gp integer(i32) i, j, nrp
         integer(i32) i, j, nrp, k !gp
         real(r64) toc, tkn, tss, tp, tn, bottomalgae, dosat, nh3
-        real(r64) kawind, ka
         integer(i32) ihour
-        real(r64) t, ph, cbodu, tdy
+        real(r64) t, ph, cbodu
         !gp output of hydraulics
         !sheets("hydraulics summary")
 
         call hydraulics_summary(topo, hydrau, rates, nr)
 
-!output of hourly summary of loads
-!sheets("source summary")
+        !output of hourly summary of loads
+        !sheets("source summary")
         write(8,*)
         write(8,*) '** Source summary **'
         !gp 30-Nov-04
