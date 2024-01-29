@@ -3,133 +3,133 @@
 !hydraulics data structure
 
 module class_hydraulics
-    use nrtype
-    use m_rivertopo !only reach number and element number used
-
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use nrtype, only: null_val, lgt, grav
     implicit none
-    private allocatehydrauarrays, depthmanning
-! public hydraulics_, makehydraulics, geometry_type, reach
-    type hydraulics_type
-        real(dp) :: b =0, bb=0, xl =0 !bottom width
-        real(dp) :: hweir =0, bweir =0 !weir height, width
-        real(dp) :: alp1=0, bet1=0, alp2=0, bet2 =0 !velocity, stage discharge coefficents
-        real(dp) :: ss1=0, ss2=0, s =0 !side and channel slopes
-        real(dp) :: nm=0, kaaa=0, ediff=0 !nm - manning's n
-        real(dp) :: asb =0, ast=0, asd=0
-        real(dp) :: frsed=0, frsod=0
-        real(dp) :: elev1=0, elev2=0 !elevation
-        real(dp) :: elev=0 !average elevation
-        real(dp) :: latr=0, lonr=0 !latitude, longitude radius
-        real(dp) :: sodspec=0, jch4spec=0, jnh4spec=0, jsrpspec=0
+    private
+    public :: riverhydraulics_type, hydraulics_, makehydraulics
 
-        real(dp) :: q=0, u=0, trav=0, qpt=0, qpta=0 !flow rate, velocity
-        real(dp) :: depth=0, ac=0, vol=0, drop=0
-        real(dp) :: kau =0, ka=0, os =0
+    type hydraulics_type
+        real(r64) :: b =0, bb=0, xl =0 !bottom width
+        real(r64) :: hweir =0, bweir =0 !weir height, width
+        real(r64) :: alp1=0, bet1=0, alp2=0, bet2 =0 !velocity, stage discharge coefficents
+        real(r64) :: ss1=0, ss2=0, s =0 !side and channel slopes
+        real(r64) :: nm=0, kaaa=0, ediff=0 !nm - manning's n
+        real(r64) :: asb =0, ast=0, asd=0
+        real(r64) :: frsed=0, frsod=0
+        real(r64) :: elev1=0, elev2=0 !elevation
+        real(r64) :: elev=0 !average elevation
+        real(r64) :: latr=0, lonr=0 !latitude, longitude radius
+        real(r64) :: sodspec=0, jch4spec=0, jnh4spec=0, jsrpspec=0
+
+        real(r64) :: q=0, u=0, trav=0, qpt=0, qpta=0 !flow rate, velocity
+        real(r64) :: depth=0, ac=0, vol=0, drop=0
+        real(r64) :: kau =0, ka=0, os =0
         character(len=20) :: kaf='Internal' !oxygen reaeration equation
-        real(dp) :: ep=0, epout=0
-        real(dp) :: qcmd=0, epcmd=0, qptcmd=0, qptacmd=0
+        real(r64) :: ep=0, epout=0
+        real(r64) :: qcmd=0, epcmd=0, qptcmd=0, qptacmd=0
 
         !gp 16-jul-08
-        !real(dp) :: sedthermcond=0, sedthermdiff=0, hsedcm=0, &
+        !real(r64) :: sedthermcond=0, sedthermdiff=0, hsedcm=0, &
         ! hypoexchfrac=0, porosity=0, rhocpsed=0, botalg0=0 !gp 11-jan-05
-        real(dp) :: sedthermcond=0, sedthermdiff=0, hsedcm=0, &
+        real(r64) :: sedthermcond=0, sedthermdiff=0, hsedcm=0, &
             hypoexchfrac=0, porosity=0, rhocpsed=0, botalg0=0, skop=0
 
-        real(dp) :: hypoporevol=0 !gp 03-nov-04
-        real(dp) :: ehyporheiccmd=0 !gp 15-nov-04
+        real(r64) :: hypoporevol=0 !gp 03-nov-04
+        real(r64) :: ehyporheiccmd=0 !gp 15-nov-04
 
         !gp 07-feb-06
         !since reach specific rates are not compulsory,
         !these values could be null_val
         !null_val means "no value"/ lack of value from users
-        !real(dp) :: kaaa= null_val
-        real(dp) :: vss = null_val !inorganic suspended solids settling vol
-        real(dp) :: khc = null_val !slow cbod hydrolysis rate
-        real(dp) :: kdcs = null_val !slow cbod oxidation rate
-        real(dp) :: kdc = null_val !fast cbod oxidation rate
-        real(dp) :: khn = null_val !organic n hydrolysis rate
-        real(dp) :: von = null_val !organic n settling velocity
-        real(dp) :: kn = null_val !ammonium nitrification rate
-        real(dp) :: ki = null_val !nitrate denitrification
-        real(dp) :: vdi = null_val !nitrate sed denitrification transfer coeff
-        real(dp) :: khp= null_val !organic p hydrolysis
-        real(dp) :: vop= null_val !organic p settling velocity
-        real(dp) :: vip= null_val !inorganic p settling velocity
-        real(dp) :: kga= null_val !phytoplankton max growth rate
-        real(dp) :: krea= null_val !phytoplankton respiration rate
-        real(dp) :: kdea= null_val !phytoplankton death rate
-        real(dp) :: ksn= null_val !phytoplankton n half-sat
-        real(dp) :: ksp= null_val !phytoplankton p half-sat
-        real(dp) :: isat= null_val !phytoplankton light sat
-        real(dp) :: khnx= null_val !phytoplankton ammonia preference
-        real(dp) :: va= null_val !phytoplankton settling velocity
-        !real(dp) :: botalg0= null_val !bottom plant initial bionass
-        real(dp) :: kgaf= null_val !bottom plant max growth rate
-        real(dp) :: abmax= null_val !bottom plant first-order carrying capacity
+        !real(r64) :: kaaa= null_val
+        real(r64) :: vss = null_val !inorganic suspended solids settling vol
+        real(r64) :: khc = null_val !slow cbod hydrolysis rate
+        real(r64) :: kdcs = null_val !slow cbod oxidation rate
+        real(r64) :: kdc = null_val !fast cbod oxidation rate
+        real(r64) :: khn = null_val !organic n hydrolysis rate
+        real(r64) :: von = null_val !organic n settling velocity
+        real(r64) :: kn = null_val !ammonium nitrification rate
+        real(r64) :: ki = null_val !nitrate denitrification
+        real(r64) :: vdi = null_val !nitrate sed denitrification transfer coeff
+        real(r64) :: khp= null_val !organic p hydrolysis
+        real(r64) :: vop= null_val !organic p settling velocity
+        real(r64) :: vip= null_val !inorganic p settling velocity
+        real(r64) :: kga= null_val !phytoplankton max growth rate
+        real(r64) :: krea= null_val !phytoplankton respiration rate
+        real(r64) :: kdea= null_val !phytoplankton death rate
+        real(r64) :: ksn= null_val !phytoplankton n half-sat
+        real(r64) :: ksp= null_val !phytoplankton p half-sat
+        real(r64) :: isat= null_val !phytoplankton light sat
+        real(r64) :: khnx= null_val !phytoplankton ammonia preference
+        real(r64) :: va= null_val !phytoplankton settling velocity
+        !real(r64) :: botalg0= null_val !bottom plant initial bionass
+        real(r64) :: kgaf= null_val !bottom plant max growth rate
+        real(r64) :: abmax= null_val !bottom plant first-order carrying capacity
 
         !gp 03-apr-08
-        !real(dp) :: kreaf= null_val !bottom plant respiration rate
-        real(dp) :: krea1f= null_val !bottom plant basal respiration rate
-        real(dp) :: krea2f= null_val !bottom plant photo respiration rate
+        !real(r64) :: kreaf= null_val !bottom plant respiration rate
+        real(r64) :: krea1f= null_val !bottom plant basal respiration rate
+        real(r64) :: krea2f= null_val !bottom plant photo respiration rate
 
-        real(dp) :: kexaf= null_val !bottom plant excretion rate
-        real(dp) :: kdeaf= null_val !bottom plant death rate
-        real(dp) :: ksnf= null_val !bottom plant external n half-sat
-        real(dp) :: kspf= null_val !bottom plant external p half-sat
-        real(dp) :: isatf= null_val !bottom plant light sat
-        real(dp) :: khnxf= null_val !bottom plant ammonia preference
-        real(dp) :: ninbmin= null_val !bottom plant subistence quota for n
-        real(dp) :: nipbmin= null_val !bottom plant subistence quota for p
-        real(dp) :: ninbupmax= null_val !bottom plant max uptake rate for n
-        real(dp) :: nipbupmax= null_val !bottom plant max uptake rate for p
-        real(dp) :: kqn= null_val !bottom plant internal n half-sat
-        real(dp) :: kqp= null_val !bottom plant internal p half-sat
-        real(dp) :: nupwcfrac= null_val !bottom plant n uptake fraction from water column
-        real(dp) :: pupwcfrac= null_val !bottom plant p uptake fraction from water column
-        real(dp) :: kdt= null_val !pom dissolution rate
-        real(dp) :: vdt= null_val !pom settling velocity
-        real(dp) :: kpath= null_val !pathogen dieoff rate
-        real(dp) :: vpath= null_val !pathogen settling velocity
-        real(dp) :: apath= null_val !pathogen light alpha
-        real(dp) :: kgah= null_val !hyporheic heterotrophs max growth rate
-        real(dp) :: ksch= null_val !hyporheic heterotrophs cbod half-sat
-        real(dp) :: kinhch= null_val !hyporheic heterotrophs o2 inhibition
-        real(dp) :: kreah= null_val !hyporheic heterotrophs respiration rate
-        real(dp) :: kdeah= null_val !hyporheic heterotrophs death rate
-        real(dp) :: ksnh= null_val !hyporheic heterotrophs n half-sat
-        real(dp) :: ksph= null_val !hyporheic heterotrophs p half-sat
-        real(dp) :: khnxh= null_val !hyporheic heterotrophs ammonia preference
-        real(dp) :: ahmax= null_val !hyporheic heterotrophs first-order carrying capacity
-        real(dp) :: kgen= null_val !generic constituent dissolution rate
-        real(dp) :: vgen= null_val !generic constituent settling velocity
+        real(r64) :: kexaf= null_val !bottom plant excretion rate
+        real(r64) :: kdeaf= null_val !bottom plant death rate
+        real(r64) :: ksnf= null_val !bottom plant external n half-sat
+        real(r64) :: kspf= null_val !bottom plant external p half-sat
+        real(r64) :: isatf= null_val !bottom plant light sat
+        real(r64) :: khnxf= null_val !bottom plant ammonia preference
+        real(r64) :: ninbmin= null_val !bottom plant subistence quota for n
+        real(r64) :: nipbmin= null_val !bottom plant subistence quota for p
+        real(r64) :: ninbupmax= null_val !bottom plant max uptake rate for n
+        real(r64) :: nipbupmax= null_val !bottom plant max uptake rate for p
+        real(r64) :: kqn= null_val !bottom plant internal n half-sat
+        real(r64) :: kqp= null_val !bottom plant internal p half-sat
+        real(r64) :: nupwcfrac= null_val !bottom plant n uptake fraction from water column
+        real(r64) :: pupwcfrac= null_val !bottom plant p uptake fraction from water column
+        real(r64) :: kdt= null_val !pom dissolution rate
+        real(r64) :: vdt= null_val !pom settling velocity
+        real(r64) :: kpath= null_val !pathogen dieoff rate
+        real(r64) :: vpath= null_val !pathogen settling velocity
+        real(r64) :: apath= null_val !pathogen light alpha
+        real(r64) :: kgah= null_val !hyporheic heterotrophs max growth rate
+        real(r64) :: ksch= null_val !hyporheic heterotrophs cbod half-sat
+        real(r64) :: kinhch= null_val !hyporheic heterotrophs o2 inhibition
+        real(r64) :: kreah= null_val !hyporheic heterotrophs respiration rate
+        real(r64) :: kdeah= null_val !hyporheic heterotrophs death rate
+        real(r64) :: ksnh= null_val !hyporheic heterotrophs n half-sat
+        real(r64) :: ksph= null_val !hyporheic heterotrophs p half-sat
+        real(r64) :: khnxh= null_val !hyporheic heterotrophs ammonia preference
+        real(r64) :: ahmax= null_val !hyporheic heterotrophs first-order carrying capacity
+        real(r64) :: kgen= null_val !generic constituent dissolution rate
+        real(r64) :: vgen= null_val !generic constituent settling velocity
 
         !gp 21-nov-06 initial conditions of state variables
-        real(dp) :: te_ini= null_val
-        real(dp) :: c01_ini= null_val
-        real(dp) :: c02_ini= null_val
-        real(dp) :: c03_ini= null_val
-        real(dp) :: c04_ini= null_val
-        real(dp) :: c05_ini= null_val
-        real(dp) :: c06_ini= null_val
-        real(dp) :: c07_ini= null_val
-        real(dp) :: c08_ini= null_val
-        real(dp) :: c09_ini= null_val
-        real(dp) :: c10_ini= null_val
-        real(dp) :: c11_ini= null_val
-        real(dp) :: c12_ini= null_val
-        real(dp) :: c13_ini= null_val
-        real(dp) :: c14_ini= null_val
-        real(dp) :: c15_ini= null_val
-        real(dp) :: ph_ini= null_val
-        real(dp) :: c17_ini= null_val
-        real(dp) :: ninb_ini= null_val
-        real(dp) :: nipb_ini= null_val
+        real(r64) :: te_ini= null_val
+        real(r64) :: c01_ini= null_val
+        real(r64) :: c02_ini= null_val
+        real(r64) :: c03_ini= null_val
+        real(r64) :: c04_ini= null_val
+        real(r64) :: c05_ini= null_val
+        real(r64) :: c06_ini= null_val
+        real(r64) :: c07_ini= null_val
+        real(r64) :: c08_ini= null_val
+        real(r64) :: c09_ini= null_val
+        real(r64) :: c10_ini= null_val
+        real(r64) :: c11_ini= null_val
+        real(r64) :: c12_ini= null_val
+        real(r64) :: c13_ini= null_val
+        real(r64) :: c14_ini= null_val
+        real(r64) :: c15_ini= null_val
+        real(r64) :: ph_ini= null_val
+        real(r64) :: c17_ini= null_val
+        real(r64) :: ninb_ini= null_val
+        real(r64) :: nipb_ini= null_val
 
     end type hydraulics_type
 
     type riverhydraulics_type
         type(hydraulics_type), dimension(:), pointer :: reach
-        integer(i4b) :: flag =1
+        integer(i32) :: flag =1
     end type riverhydraulics_type
 
 ! type(riverhydraulics_type) hydrau
@@ -273,11 +273,11 @@ contains
         ph_ini, c17_ini, ninb_ini, nipb_ini) result(hydrau)
 
         type(riverhydraulics_type) hydrau
-        integer(i4b), intent(in) :: nr
-        real(dp), intent(in) :: xrdn(0:), elev1(0:), elev2(0:), latd(0:), latm(0:)
+        integer(i32), intent(in) :: nr
+        real(r64), intent(in) :: xrdn(0:), elev1(0:), elev2(0:), latd(0:), latm(0:)
 
         !gp 07-feb-06
-        !real(dp), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
+        !real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
         ! ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
         ! alp2(0:), bet2(0:), ediff(0:), kaaa(0:), frsed(0:), &
         ! frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
@@ -286,7 +286,7 @@ contains
         ! hypoexchfrac(0:), porosity(0:), rhocpsed(0:), botalg0(0:) !gp 11-jan-05
 
         !gp 21-nov-06
-        !real(dp), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
+        !real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
         ! ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
         ! alp2(0:), bet2(0:), ediff(0:), frsed(0:), &
         ! frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
@@ -314,7 +314,7 @@ contains
         ! kgen(0:), vgen(0:)
 
         !gp 03-apr-08
-        !real(dp), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
+        !real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
         ! ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
         ! alp2(0:), bet2(0:), ediff(0:), frsed(0:), &
         ! frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
@@ -348,7 +348,7 @@ contains
         ! ph_ini(0:), c17_ini(0:), ninb_ini(0:), nipb_ini(0:)
 
         !gp 16-jul-08
-        !real(dp), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
+        !real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
         ! ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
         ! alp2(0:), bet2(0:), ediff(0:), frsed(0:), &
         ! frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
@@ -380,7 +380,7 @@ contains
         ! c10_ini(0:), c11_ini(0:), c12_ini(0:), &
         ! c13_ini(0:), c14_ini(0:), c15_ini(0:), &
         ! ph_ini(0:), c17_ini(0:), ninb_ini(0:), nipb_ini(0:)
-        real(dp), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
+        real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
             ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
             alp2(0:), bet2(0:), ediff(0:), frsed(0:), &
             frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
@@ -413,11 +413,11 @@ contains
             c13_ini(0:), c14_ini(0:), c15_ini(0:), &
             ph_ini(0:), c17_ini(0:), ninb_ini(0:), nipb_ini(0:)
 
-        integer(i4b) i, j
+        integer(i32) i, j
 
         call allocatehydrauarrays(nr, hydrau)
 
-        hydrau%reach(0)%q=q(0)* 86400.0_dp
+        hydrau%reach(0)%q=q(0)* 86400.0_r64
 
         hydrau%reach(0)%nm= nm(0)
 
@@ -429,7 +429,7 @@ contains
 
         do i=0, nr
             !hydrau%reach(i)%q=q(i)* 86400.0
-            if (i>0) hydrau%reach(i)%xl = abs(xrdn(i)-xrdn(i-1))*1000.0_dp
+            if (i>0) hydrau%reach(i)%xl = abs(xrdn(i)-xrdn(i-1))*1000.0_r64
             hydrau%reach(i)%elev1 = elev1(i)
             hydrau%reach(i)%elev2 = elev2(i)
             hydrau%reach(i)%elev = (elev1(i)+elev2(i))/2
@@ -437,18 +437,18 @@ contains
             hydrau%reach(i)%ss2 = ss2(i)
             hydrau%reach(i)%s = s(i)
             if (frsod(i) <= 0) then !fraction of bottom sod
-                hydrau%reach(i)%frsod = 0.00001_dp
+                hydrau%reach(i)%frsod = 0.00001_r64
             else
                 hydrau%reach(i)%frsod = frsod(i)
             end if
 
             if (frsed(i) <= 0) then !fraction of bottom algae coverage
-                hydrau%reach(i)%frsed = 0.00001_dp
+                hydrau%reach(i)%frsed = 0.00001_r64
             else
                 hydrau%reach(i)%frsed = frsed(i)
             end if
-            hydrau%reach(i)%latr = latd(i) + (latm(i)+lats(i)/60.0_dp)/60.0_dp
-            hydrau%reach(i)%lonr = lond(i) + (lonm(i)+lons(i)/60.0_dp)/60.0_dp
+            hydrau%reach(i)%latr = latd(i) + (latm(i)+lats(i)/60.0_r64)/60.0_r64
+            hydrau%reach(i)%lonr = lond(i) + (lonm(i)+lons(i)/60.0_r64)/60.0_r64
             hydrau%reach(i)%nm = nm(i)
             hydrau%reach(i)%hweir = hweir(i)
             hydrau%reach(i)%bweir = bweir(i)
@@ -587,9 +587,9 @@ contains
 
     subroutine allocatehydrauarrays(nr, hydrau)
 
-        integer(i4b), intent(in) :: nr
+        integer(i32), intent(in) :: nr
         type(riverhydraulics_type), intent(inout) :: hydrau
-        integer(i4b) status
+        integer(i32) status
 
         !if (.not. associated(hydrau%reach)) then
         if (nr > 0) then
@@ -610,7 +610,7 @@ contains
     subroutine makehydraulics(nr, hydrau, downstreamboundary, kai, geomethod) !gp 17-nov-04
         !gp new sub hydraulics to separate output and save flows in m**3/s and m**3/day
         implicit none
-        integer(i4b) ,intent(in) ::nr
+        integer(i32) ,intent(in) ::nr
         type(riverhydraulics_type), intent(inout) :: hydrau
 
         !gp 17-nov-04
@@ -622,10 +622,10 @@ contains
         !character(len=20) kai !reaeration model
         character(len=30) kai !reaeration model
 
-        integer(i4b) i
-        real(dp) travel, width1, width2, edif, en
-        real(dp) eout, dxint, btop, ctsiv
-        real(dp) ushear, fn, pwet, rh, hd
+        integer(i32) i
+        real(r64) travel, width1, width2, edif, en
+        real(r64) eout, dxint, btop, ctsiv
+        real(r64) ushear, fn, pwet, rh, hd
 
         !calculate hydraulics
         travel = 0
@@ -637,7 +637,7 @@ contains
                     stop 'Reaches with weirs must have a width entered!'
                 end if
                 hydrau%reach(i)%depth = hydrau%reach(i)%hweir + (hydrau%reach(i)%q &
-                    / (1.83_dp * hydrau%reach(i)%bweir)**(2.0_dp/3.0_dp))
+                    / (1.83_r64 * hydrau%reach(i)%bweir)**(2.0_r64/3.0_r64))
                 hydrau%reach(i)%ac = hydrau%reach(i)%depth * hydrau%reach(i)%b
                 hydrau%reach(i)%u = hydrau%reach(i)%q / hydrau%reach(i)%ac
                 btop = hydrau%reach(i)%b
@@ -668,7 +668,7 @@ contains
             else !trapezoidal channel using manning's equation
                 hydrau%reach(i)%depth = depthmanning(hydrau%reach(i)%q, hydrau%reach(i)%nm, hydrau%reach(i)%b, &
                     hydrau%reach(i)%ss1, hydrau%reach(i)%ss2, hydrau%reach(i)%s)
-                hydrau%reach(i)%ac = (hydrau%reach(i)%b + 0.5_dp * (hydrau%reach(i)%ss1 + &
+                hydrau%reach(i)%ac = (hydrau%reach(i)%b + 0.5_r64 * (hydrau%reach(i)%ss1 + &
                     hydrau%reach(i)%ss2) * hydrau%reach(i)%depth) * hydrau%reach(i)%depth
                 btop = hydrau%reach(i)%b + (hydrau%reach(i)%ss1 + hydrau%reach(i)%ss2) * &
                     hydrau%reach(i)%depth
@@ -684,24 +684,24 @@ contains
                 hydrau%reach(i)%asd = hydrau%reach(i)%frsod * hydrau%reach(i)%b * hydrau%reach(i)%xl
                 hydrau%reach(i)%vol = hydrau%reach(i)%ac * hydrau%reach(i)%xl
                 !gp 03-nov-04 hyporheic pore volume in m^3
-                hydrau%reach(i)%hypoporevol = hydrau%reach(i)%porosity * hydrau%reach(i)%ast * hydrau%reach(i)%hsedcm * 0.01_dp
+                hydrau%reach(i)%hypoporevol = hydrau%reach(i)%porosity * hydrau%reach(i)%ast * hydrau%reach(i)%hsedcm * 0.01_r64
             end if
 
             if (hydrau%reach(i)% ediff > 0) then
                 edif = hydrau%reach(i)%ediff
             else
                 if (hydrau%reach(i)%s >0) then
-                    edif = 0.011_dp * hydrau%reach(i)%u ** 2 * hydrau%reach(i)%b ** 2 / hydrau%reach(i)%depth &
+                    edif = 0.011_r64 * hydrau%reach(i)%u ** 2 * hydrau%reach(i)%b ** 2 / hydrau%reach(i)%depth &
                         /sqrt(grav * hydrau%reach(i)%depth * hydrau%reach(i)%s)
 
                 else if (hydrau%reach(i)%nm > 0) then
                     hydrau%reach(i)%s=(hydrau%reach(i)%nm *hydrau%reach(i)%u/rh**(2.0/3.0))**2
-                    edif = 0.011_dp * hydrau%reach(i)%u ** 2 * hydrau%reach(i)%b ** 2 / hydrau%reach(i)%depth &
+                    edif = 0.011_r64 * hydrau%reach(i)%u ** 2 * hydrau%reach(i)%b ** 2 / hydrau%reach(i)%depth &
                         /sqrt(grav * hydrau%reach(i)%depth * hydrau%reach(i)%s)
                 end if
             end if
 
-            en = hydrau%reach(i)%u * hydrau%reach(i)%xl / 2.0_dp
+            en = hydrau%reach(i)%u * hydrau%reach(i)%xl / 2.0_r64
             if (en <= edif) then
                 edif = edif - en
                 eout = edif
@@ -710,7 +710,7 @@ contains
                 eout = en
             end if
 
-            dxint = (hydrau%reach(i)%xl + hydrau%reach(i+1)%xl) / 2.0_dp
+            dxint = (hydrau%reach(i)%xl + hydrau%reach(i+1)%xl) / 2.0_r64
 
             hydrau%reach(i)%ep = edif * hydrau%reach(i)%ac / dxint
             hydrau%reach(i)%epout = eout * hydrau%reach(i)%ac / dxint
@@ -738,59 +738,59 @@ contains
                 hydrau%reach(i)%kaf = "Specified"
             elseif (kai == "Internal") then
                 if (hydrau%reach(i)%depth < 0.61) then
-                    hydrau%reach(i)%kau = 5.32_dp * hydrau%reach(i)%u ** 0.67_dp / hydrau%reach(i)%depth ** 1.85_dp
+                    hydrau%reach(i)%kau = 5.32_r64 * hydrau%reach(i)%u ** 0.67_r64 / hydrau%reach(i)%depth ** 1.85_r64
                     hydrau%reach(i)%kaf = "Owens"
-                elseif (hydrau%reach(i)%depth > 3.45 * hydrau%reach(i)%u ** 2.5_dp) then
-                    hydrau%reach(i)%kau = 3.93_dp * hydrau%reach(i)%u ** 0.5_dp / hydrau%reach(i)%depth ** 1.5_dp
+                elseif (hydrau%reach(i)%depth > 3.45 * hydrau%reach(i)%u ** 2.5_r64) then
+                    hydrau%reach(i)%kau = 3.93_r64 * hydrau%reach(i)%u ** 0.5_r64 / hydrau%reach(i)%depth ** 1.5_r64
                     hydrau%reach(i)%kaf = "O'Conn"
                 else
-                    hydrau%reach(i)%kau = 5.026_dp * hydrau%reach(i)%u / hydrau%reach(i)%depth ** 1.67_dp
+                    hydrau%reach(i)%kau = 5.026_r64 * hydrau%reach(i)%u / hydrau%reach(i)%depth ** 1.67_r64
                     hydrau%reach(i)%kaf = "Church"
                 end if
             elseif (kai == "O'Connor-Dobbins") then
-                hydrau%reach(i)%kau = 3.93_dp * hydrau%reach(i)%u ** 0.5_dp / hydrau%reach(i)%depth ** 1.5_dp
+                hydrau%reach(i)%kau = 3.93_r64 * hydrau%reach(i)%u ** 0.5_r64 / hydrau%reach(i)%depth ** 1.5_r64
                 hydrau%reach(i)%kaf = "O'Conn"
             elseif (kai == "Churchill") then
-                hydrau%reach(i)%kau = 5.026_dp * hydrau%reach(i)%u / hydrau%reach(i)%depth ** 1.67_dp
+                hydrau%reach(i)%kau = 5.026_r64 * hydrau%reach(i)%u / hydrau%reach(i)%depth ** 1.67_r64
                 hydrau%reach(i)%kaf = "Church"
             elseif (kai == "Owens-Gibbs") then
-                hydrau%reach(i)%kau = 5.32_dp * hydrau%reach(i)%u ** 0.67_dp / hydrau%reach(i)%depth ** 1.85_dp
+                hydrau%reach(i)%kau = 5.32_r64 * hydrau%reach(i)%u ** 0.67_r64 / hydrau%reach(i)%depth ** 1.85_r64
                 hydrau%reach(i)%kaf = "Owens"
             elseif (kai == "Tsivoglou-Neal") then
-                ctsiv = 0.054_dp
-                if (hydrau%reach(i)%q < (15.0_dp / 3.281_dp ** 3)) ctsiv = 0.11_dp
-                hydrau%reach(i)%kau = 86400.0_dp * ctsiv * hydrau%reach(i)%s * hydrau%reach(i)%u * 3.281_dp
+                ctsiv = 0.054_r64
+                if (hydrau%reach(i)%q < (15.0_r64 / 3.281_r64 ** 3)) ctsiv = 0.11_r64
+                hydrau%reach(i)%kau = 86400.0_r64 * ctsiv * hydrau%reach(i)%s * hydrau%reach(i)%u * 3.281_r64
                 hydrau%reach(i)%kaf = "Tsivoglou"
             elseif (kai == "Thackston-Dawson") then
-                hydrau%reach(i)%kau = 86400.0_dp * 0.000025_dp * (1.0_dp + 9.0_dp * fn ** 0.25_dp) * ushear / &
+                hydrau%reach(i)%kau = 86400.0_r64 * 0.000025_r64 * (1.0_r64 + 9.0_r64 * fn ** 0.25_r64) * ushear / &
                     hydrau%reach(i)%depth
                 hydrau%reach(i)%kaf = "Thack-Dawson"
             elseif (kai == "USGS(pool-riffle)") then
                 if (hydrau%reach(i)%q < 0.556) then
-                    hydrau%reach(i)%kau = 517.0_dp * (hydrau%reach(i)%u * hydrau%reach(i)%s) ** 0.524_dp &
-                        * hydrau%reach(i)%q ** (-0.242_dp)
+                    hydrau%reach(i)%kau = 517.0_r64 * (hydrau%reach(i)%u * hydrau%reach(i)%s) ** 0.524_r64 &
+                        * hydrau%reach(i)%q ** (-0.242_r64)
                 else
-                    hydrau%reach(i)%kau = 596.0_dp * (hydrau%reach(i)%u * hydrau%reach(i)%s) ** 0.528_dp &
-                        * hydrau%reach(i)%q ** (-0.136_dp)
+                    hydrau%reach(i)%kau = 596.0_r64 * (hydrau%reach(i)%u * hydrau%reach(i)%s) ** 0.528_r64 &
+                        * hydrau%reach(i)%q ** (-0.136_r64)
                 end if
                 hydrau%reach(i)%kaf = "Pool-riffle"
             elseif (kai == "USGS(channel-control)") then
                 if (hydrau%reach(i)%q < 0.556) then
-                    hydrau%reach(i)%kau = 88.0_dp * (hydrau%reach(i)%u * hydrau%reach(i)%s) ** 0.313_dp &
-                        * hydrau%reach(i)%depth ** (-0.353_dp)
+                    hydrau%reach(i)%kau = 88.0_r64 * (hydrau%reach(i)%u * hydrau%reach(i)%s) ** 0.313_r64 &
+                        * hydrau%reach(i)%depth ** (-0.353_r64)
                 else
-                    hydrau%reach(i)%kau = 142.0_dp * (hydrau%reach(i)%u * hydrau%reach(i)%s) ** 0.333_dp * &
-                        hydrau%reach(i)%depth ** (-0.66_dp) * btop ** (-0.243_dp)
+                    hydrau%reach(i)%kau = 142.0_r64 * (hydrau%reach(i)%u * hydrau%reach(i)%s) ** 0.333_r64 * &
+                        hydrau%reach(i)%depth ** (-0.66_r64) * btop ** (-0.243_r64)
                 end if
                 hydrau%reach(i)%kaf = "Channel-control"
             end if
 
-            travel = travel + hydrau%reach(i)%vol / hydrau%reach(i)%q / 86400.0_dp
+            travel = travel + hydrau%reach(i)%vol / hydrau%reach(i)%q / 86400.0_r64
             hydrau%reach(i)%trav = travel
         end do
 
         do i = 0, nr - 1
-            if ((hydrau%reach(i)%hweir > 0.01_dp) .or. &
+            if ((hydrau%reach(i)%hweir > 0.01_r64) .or. &
                 (hydrau%reach(i)%elev2 > hydrau%reach(i+1)%elev1 + 0.01)) then
                 hydrau%reach(i)%ep = 0
                 hydrau%reach(i)%epout = 0
@@ -812,13 +812,13 @@ contains
         !write(11,*) downstreamboundary
 
         !gp convert flows and bulk dispersion to cubic meters per day (cmd) units
-        hydrau%reach(0)%qcmd = hydrau%reach(0)%q * 86400.0_dp
-        hydrau%reach(0)%epcmd = hydrau%reach(0)%ep * 86400.0_dp
+        hydrau%reach(0)%qcmd = hydrau%reach(0)%q * 86400.0_r64
+        hydrau%reach(0)%epcmd = hydrau%reach(0)%ep * 86400.0_r64
         do i = 1, nr
-            hydrau%reach(i)%qptcmd = hydrau%reach(i)%qpt * 86400.0_dp
-            hydrau%reach(i)%qptacmd = hydrau%reach(i)%qpta * 86400.0_dp
-            hydrau%reach(i)%qcmd = hydrau%reach(i)%q * 86400.0_dp
-            hydrau%reach(i)%epcmd = hydrau%reach(i)%ep * 86400.0_dp
+            hydrau%reach(i)%qptcmd = hydrau%reach(i)%qpt * 86400.0_r64
+            hydrau%reach(i)%qptacmd = hydrau%reach(i)%qpta * 86400.0_r64
+            hydrau%reach(i)%qcmd = hydrau%reach(i)%q * 86400.0_r64
+            hydrau%reach(i)%epcmd = hydrau%reach(i)%ep * 86400.0_r64
             !gp 15-nov-04 hyporheic exchange flow in m^3/day
             hydrau%reach(i)%ehyporheiccmd = hydrau%reach(i)%hypoexchfrac * hydrau%reach(i)%qcmd !'units of (m3/d)
 
@@ -831,17 +831,17 @@ contains
 
     pure function depthmanning(qq, nmm, bb, sss1, sss2, ss) result(dep)
         implicit none
-        real(dp),intent(in) :: qq, nmm, bb, sss1, sss2, ss
-        real(dp) hold, ea
-        real(dp) dep
+        real(r64),intent(in) :: qq, nmm, bb, sss1, sss2, ss
+        real(r64) hold, ea
+        real(r64) dep
 
         do
             hold = dep
-            dep = (qq * nmm) ** 0.6_dp * (bb + dep * &
-                sqrt(sss1 * sss1 + 1.0_dp) + dep * &
-                sqrt(sss2 * sss2 + 1.0_dp)) ** 0.4_dp/ &
-                (bb + 0.5_dp * (sss1 + sss2) * dep) / ss ** 0.3_dp
-            ea = abs((dep - hold) / dep) * 100.0_dp
+            dep = (qq * nmm) ** 0.6_r64 * (bb + dep * &
+                sqrt(sss1 * sss1 + 1.0_r64) + dep * &
+                sqrt(sss2 * sss2 + 1.0_r64)) ** 0.4_r64/ &
+                (bb + 0.5_r64 * (sss1 + sss2) * dep) / ss ** 0.3_r64
+            ea = abs((dep - hold) / dep) * 100.0_r64
             if (ea < 0.001) exit
         end do
 
