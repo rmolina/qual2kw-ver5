@@ -1,24 +1,22 @@
 module class_readfile
-
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use nrtype, only: lgt, hrsday, nv
+    use class_systemparams, only: systemparams, SystemParams_
+    use m_rivertopo, only: t_rivertopo
+    use m_hydraulics, only: riverhydraulics_type, hydraulics_, makehydraulics
+    use m_meteorology, only: meteorology_t
+    use class_lightheat, only: Light_
+    use class_sourcein, only: sourcein_
+    use m_rates, only: rates_t
+    use m_water_quality, only:water_quality_t
+    use m_upstream_boundary, only: upstream_boundary_t
+    use m_downstream_boundary, only: downstream_boundary_t
+    use class_solarcalc, only: solar_type, sitesolar_, sunrisesunset
+    implicit none
+    private
+    public :: readinputfile
 contains
     subroutine readinputfile(system, hydrau, sitemeteo, hw, db, stochrate, topo, sitesolar)
-        use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-        use nrtype
-        use class_systemparams !, only: systemparams, systemparams_
-        use m_rivertopo, only: t_rivertopo
-        use m_hydraulics
-        use m_meteorology, only: meteorology_t
-
-        use class_lightheat
-        use class_sourcein
-        use m_rates, only: rates_t
-        use m_water_quality, only:water_quality_t
-        use m_upstream_boundary, only: upstream_boundary_t
-        use m_downstream_boundary
-        use class_solarcalc
-
-        implicit none
-
         type(systemparams), intent(out) :: system
         type(riverhydraulics_type), intent(out) :: hydrau
         type(meteorology_t), intent(out) :: sitemeteo
@@ -69,78 +67,7 @@ contains
         character(len=30) :: geomethod !gp 17-nov-04 depth or width for coeff/exponents in col t and u of 'reach' sheet
         real(r64), allocatable :: xrdn(:), elev1(:), elev2(:), latd(:), latm(:)
 
-        !gp 07-feb-07
-        !real(r64), allocatable :: lats(:), lond(:), lonm(:), lons(:), q(:), bb(:), &
-        ! ss1(:), ss2(:), s(:), nm(:) , alp1(:), bet1(:), &
-        ! alp2(:), bet2(:), ediff(:), kaaa(:), frsed(:), &
-        ! frsod(:), sodspec(:), jch4spec(:), jnh4spec(:), &
-        ! jsrpspec(:), hweir(:), bweir(:), &
-        ! sedthermcond(:), sedthermdiff(:), hsedcm(:), &
-        ! hypoexchfrac(:), porosity(:), rhocpsed(:), botalg0(:) !gp 11-jan-05
 
-        !gp 03-apr-08
-        !real(r64), allocatable :: lats(:), lond(:), lonm(:), lons(:), q(:), bb(:), &
-        ! ss1(:), ss2(:), s(:), nm(:) , alp1(:), bet1(:), &
-        ! alp2(:), bet2(:), ediff(:), frsed(:), &
-        ! frsod(:), sodspec(:), jch4spec(:), jnh4spec(:), &
-        ! jsrpspec(:), hweir(:), bweir(:), &
-        ! sedthermcond(:), sedthermdiff(:), hsedcm(:), &
-        ! hypoexchfrac(:), porosity(:), rhocpsed(:), &
-        ! kaaa(:), vss_rch(:), khc_rch(:), &
-        ! kdcs_rch(:), kdc_rch(:), khn_rch(:), &
-        ! von_rch(:), kn_rch(:) , ki_rch(:) , &
-        ! vdi_rch(:), khp_rch(:), vop_rch(:), &
-        ! vip_rch(:), kga_rch(:), krea_rch(:), &
-        ! kdea_rch(:), ksn_rch(:), ksp_rch(:), &
-        ! isat_rch(:), khnx_rch(:), va_rch(:), &
-        ! botalg0(:), kgaf_rch(:), abmax_rch(:), &
-        ! kreaf_rch(:), kexaf_rch(:), kdeaf_rch(:), &
-        ! ksnf_rch(:), kspf_rch(:), isatf_rch(:), &
-        ! khnxf_rch(:), ninbmin_rch(:), nipbmin_rch(:), &
-        ! ninbupmax_rch(:), nipbupmax_rch(:), kqn_rch(:), &
-        ! kqp_rch(:), nupwcfrac_rch(:), pupwcfrac_rch(:), &
-        ! kdt_rch(:), vdt_rch(:), kpath_rch(:), &
-        ! vpath_rch(:), apath_rch(:), kgah_rch(:), &
-        ! ksch_rch(:), kinhch_rch(:), kreah_rch(:), &
-        ! kdeah_rch(:), ksnh_rch(:), ksph_rch(:), &
-        ! khnxh_rch(:), ahmax_rch(:), &
-
-        !gp 16-jul-08
-        !real(r64), allocatable :: lats(:), lond(:), lonm(:), lons(:), q(:), bb(:), &
-        ! ss1(:), ss2(:), s(:), nm(:) , alp1(:), bet1(:), &
-        ! alp2(:), bet2(:), ediff(:), frsed(:), &
-        ! frsod(:), sodspec(:), jch4spec(:), jnh4spec(:), &
-        ! jsrpspec(:), hweir(:), bweir(:), &
-        ! sedthermcond(:), sedthermdiff(:), hsedcm(:), &
-        ! hypoexchfrac(:), porosity(:), rhocpsed(:), &
-        ! kaaa(:), vss_rch(:), khc_rch(:), &
-        ! kdcs_rch(:), kdc_rch(:), khn_rch(:), &
-        ! von_rch(:), kn_rch(:) , ki_rch(:) , &
-        ! vdi_rch(:), khp_rch(:), vop_rch(:), &
-        ! vip_rch(:), kga_rch(:), krea_rch(:), &
-        ! kdea_rch(:), ksn_rch(:), ksp_rch(:), &
-        ! isat_rch(:), khnx_rch(:), va_rch(:), &
-        ! botalg0(:), kgaf_rch(:), abmax_rch(:), &
-        ! krea1f_rch(:), krea2f_rch(:), kexaf_rch(:), kdeaf_rch(:), &
-        ! ksnf_rch(:), kspf_rch(:), isatf_rch(:), &
-        ! khnxf_rch(:), ninbmin_rch(:), nipbmin_rch(:), &
-        ! ninbupmax_rch(:), nipbupmax_rch(:), kqn_rch(:), &
-        ! kqp_rch(:), nupwcfrac_rch(:), pupwcfrac_rch(:), &
-        ! kdt_rch(:), vdt_rch(:), kpath_rch(:), &
-        ! vpath_rch(:), apath_rch(:), kgah_rch(:), &
-        ! ksch_rch(:), kinhch_rch(:), kreah_rch(:), &
-        ! kdeah_rch(:), ksnh_rch(:), ksph_rch(:), &
-        ! khnxh_rch(:), ahmax_rch(:), &
-        !
-        ! !gp 21-nov-06
-        ! !kgen_rch(:), vgen_rch(:)
-        ! kgen_rch(:), vgen_rch(:), &
-        ! te_ini(:), c01_ini(:), c02_ini(:), c03_ini(:), &
-        ! c04_ini(:), c05_ini(:), c06_ini(:), &
-        ! c07_ini(:), c08_ini(:), c09_ini(:), &
-        ! c10_ini(:), c11_ini(:), c12_ini(:), &
-        ! c13_ini(:), c14_ini(:), c15_ini(:), &
-        ! ph_ini(:), c17_ini(:), ninb_ini(:), nipb_ini(:)
         real(r64), allocatable :: lats(:), lond(:), lonm(:), lons(:), q(:), bb(:), &
             ss1(:), ss2(:), s(:), nm(:) , alp1(:), bet1(:), &
             alp2(:), bet2(:), ediff(:), frsed(:), &
@@ -176,13 +103,6 @@ contains
 
         character(len=30), allocatable :: rlab1(:), rlab2(:), rname(:)
 
-        !gp 13-feb-06
-        !real(r64) par, kep, kela, kenla, kess, kepom, nfacbras, atcryanstolz
-
-        !gp 24-jun-09
-        !gp 16-jul-08
-        !real(r64) par, kep, kela, kenla, kess, kepom, kemac, nfacbras, atcryanstolz
-        !real(r64) par, kep, kela, kenla, kess, kepom, kemac, nfacbras, atcryanstolz, kbrut
         real(r64) par, kep, kela, kenla, kess, kepom, kemac, nfacbras, atcryanstolz, kbrut, kcl1, kcl2
 
         character(len=30) solarmethod, longatmethod, fuwmethod
@@ -268,12 +188,6 @@ contains
 
         !read(8,*) imeth, imethph
 
-        !gp 24-jun-09
-        !gp 17-nov-04 system= systemparams_(basinname, filename, path, title, year, month, day, &
-        !gp timezone, dtuser, tf, imeth, imethph)
-        !system= systemparams_(basinname, filename, path, title, year, month, day, &
-        ! timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
-        ! showdielresults, statevariables, calcsedflux, simalk) !gp 26-oct-07
         system= systemparams_(basinname, filename, path, title, year, month, day, &
             timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
             showdielresults, statevariables, calcsedflux, simalk, writedynamic)
@@ -395,26 +309,6 @@ contains
 
         !classriver module
 
-        !gp 07-feb-06
-        !do i = 0, nrch + 1
-        ! read(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
-        ! lats(i), lond(i), lonm(i), lons(i), q(i), bb(i), ss1(i), ss2(i), s(i), nm(i), &
-        ! alp1(i), bet1(i), alp2(i), bet2(i), ediff(i), kaaa(i), frsed(i), frsod(i), &
-        ! sodspec(i), jch4spec(i), jnh4spec(i), jsrpspec(i), hweir(i), bweir(i), &
-        ! sedthermcond(i), sedthermdiff(i), hsedcm(i), &
-        ! hypoexchfrac(i), porosity(i), rhocpsed(i), botalg0(i) !gp 11-jan-05
-        !
-        !end do
-
-        !gp 16-jul-06
-        !do i = 0, nrch + 1
-        ! read(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
-        ! lats(i), lond(i), lonm(i), lons(i), q(i), bb(i), ss1(i), ss2(i), s(i), nm(i), &
-        ! alp1(i), bet1(i), alp2(i), bet2(i), ediff(i), frsed(i), frsod(i), &
-        ! sodspec(i), jch4spec(i), jnh4spec(i), jsrpspec(i), hweir(i), bweir(i), &
-        ! sedthermcond(i), sedthermdiff(i), hsedcm(i), &
-        ! hypoexchfrac(i), porosity(i), rhocpsed(i)
-        !end do
         do i = 0, nrch + 1
             read(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
                 lats(i), lond(i), lonm(i), lons(i), q(i), bb(i), ss1(i), ss2(i), s(i), nm(i), &
@@ -424,51 +318,8 @@ contains
                 hypoexchfrac(i), porosity(i), rhocpsed(i), skop(i)
         end do
 
-        !gp 21-nov-06
-        !write(10,*) 'done thru classreadfile allocate'
-        !do i=1, nrch
-        ! read(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
-        ! kdcs_rch(i), kdc_rch(i), khn_rch(i), &
-        ! von_rch(i), kn_rch(i) , ki_rch(i) , &
-        ! vdi_rch(i), khp_rch(i), vop_rch(i), &
-        ! vip_rch(i), kga_rch(i), krea_rch(i), &
-        ! kdea_rch(i), ksn_rch(i), ksp_rch(i), &
-        ! isat_rch(i), khnx_rch(i), va_rch(i), &
-        ! botalg0(i), kgaf_rch(i), abmax_rch(i), &
-        ! kreaf_rch(i), kexaf_rch(i), kdeaf_rch(i), &
-        ! ksnf_rch(i), kspf_rch(i), isatf_rch(i), &
-        ! khnxf_rch(i), ninbmin_rch(i), nipbmin_rch(i), &
-        ! ninbupmax_rch(i), nipbupmax_rch(i), kqn_rch(i), &
-        ! kqp_rch(i), nupwcfrac_rch(i), pupwcfrac_rch(i), &
-        ! kdt_rch(i), vdt_rch(i), kpath_rch(i), &
-        ! vpath_rch(i), apath_rch(i), kgah_rch(i), &
-        ! ksch_rch(i), kinhch_rch(i), kreah_rch(i), &
-        ! kdeah_rch(i), ksnh_rch(i), ksph_rch(i), &
-        ! khnxh_rch(i), ahmax_rch(i), &
-        ! kgen_rch(i), vgen_rch(i)
-        !end do
         do i=1, nrch
 
-            !gp 03-apr-08
-            !read(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
-            ! kdcs_rch(i), kdc_rch(i), khn_rch(i), &
-            ! von_rch(i), kn_rch(i) , ki_rch(i) , &
-            ! vdi_rch(i), khp_rch(i), vop_rch(i), &
-            ! vip_rch(i), kga_rch(i), krea_rch(i), &
-            ! kdea_rch(i), ksn_rch(i), ksp_rch(i), &
-            ! isat_rch(i), khnx_rch(i), va_rch(i), &
-            ! kgaf_rch(i), abmax_rch(i), &
-            ! kreaf_rch(i), kexaf_rch(i), kdeaf_rch(i), &
-            ! ksnf_rch(i), kspf_rch(i), isatf_rch(i), &
-            ! khnxf_rch(i), ninbmin_rch(i), nipbmin_rch(i), &
-            ! ninbupmax_rch(i), nipbupmax_rch(i), kqn_rch(i), &
-            ! kqp_rch(i), nupwcfrac_rch(i), pupwcfrac_rch(i), &
-            ! kdt_rch(i), vdt_rch(i), kpath_rch(i), &
-            ! vpath_rch(i), apath_rch(i), kgah_rch(i), &
-            ! ksch_rch(i), kinhch_rch(i), kreah_rch(i), &
-            ! kdeah_rch(i), ksnh_rch(i), ksph_rch(i), &
-            ! khnxh_rch(i), ahmax_rch(i), &
-            ! kgen_rch(i), vgen_rch(i)
             read(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
                 kdcs_rch(i), kdc_rch(i), khn_rch(i), &
                 von_rch(i), kn_rch(i) , ki_rch(i) , &
@@ -506,117 +357,9 @@ contains
         end do
         !write(10,*) 'done thru classreadfile reading new init cond'
 
-        !gp 20-oct-04 note units for new inputs:
-        ! sedthermcond = (cal/s) per (cm degc)
-        ! sedthermdiff = cm^2/sec
-        ! hsedcm = cm
-        ! hypoexchfrac = unitless fraction of streamflow
-        ! porosity = unitless fraction of volume
-        ! rhocpsed = cal/(cm^3 deg c)
-
         !gp 17-nov-04 topo= rivertopo_(nrch, rlab2, rname, xrdn)
         topo= t_rivertopo(nrch, rlab2, rname, xrdn, geomethod) !gp 17-nov-04
 
-        !gp 07-feb-06
-        !hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
-        ! lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
-        ! ediff, kaaa, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, hweir, &
-        ! bweir, &
-        ! sedthermcond, sedthermdiff, hsedcm, &
-        ! hypoexchfrac, porosity, rhocpsed, botalg0) !gp 11-jan-05
-
-        !gp 21-nov-06
-        !hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
-        ! lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
-        ! ediff, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, &
-        ! hweir, bweir, &
-        ! sedthermcond, sedthermdiff, hsedcm, &
-        ! hypoexchfrac, porosity, rhocpsed, &
-        ! kaaa, vss_rch, khc_rch, &
-        ! kdcs_rch, kdc_rch, khn_rch, &
-        ! von_rch, kn_rch, ki_rch, &
-        ! vdi_rch, khp_rch, vop_rch, &
-        ! vip_rch, kga_rch, krea_rch, &
-        ! kdea_rch, ksn_rch, ksp_rch, &
-        ! isat_rch, khnx_rch, va_rch, &
-        ! botalg0, kgaf_rch, abmax_rch, &
-        ! kreaf_rch, kexaf_rch, kdeaf_rch, &
-        ! ksnf_rch, kspf_rch, isatf_rch, &
-        ! khnxf_rch, ninbmin_rch, nipbmin_rch, &
-        ! ninbupmax_rch, nipbupmax_rch, kqn_rch, &
-        ! kqp_rch, nupwcfrac_rch, pupwcfrac_rch, &
-        ! kdt_rch, vdt_rch, kpath_rch, &
-        ! vpath_rch, apath_rch, kgah_rch, &
-        ! ksch_rch, kinhch_rch, kreah_rch, &
-        ! kdeah_rch, ksnh_rch, ksph_rch, &
-        ! khnxh_rch, ahmax_rch, &
-        ! kgen_rch, vgen_rch)
-
-        !gp 03-apr-08
-        !hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
-        ! lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
-        ! ediff, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, &
-        ! hweir, bweir, &
-        ! sedthermcond, sedthermdiff, hsedcm, &
-        ! hypoexchfrac, porosity, rhocpsed, &
-        ! kaaa, vss_rch, khc_rch, &
-        ! kdcs_rch, kdc_rch, khn_rch, &
-        ! von_rch, kn_rch, ki_rch, &
-        ! vdi_rch, khp_rch, vop_rch, &
-        ! vip_rch, kga_rch, krea_rch, &
-        ! kdea_rch, ksn_rch, ksp_rch, &
-        ! isat_rch, khnx_rch, va_rch, &
-        ! kgaf_rch, abmax_rch, &
-        ! kreaf_rch, kexaf_rch, kdeaf_rch, &
-        ! ksnf_rch, kspf_rch, isatf_rch, &
-        ! khnxf_rch, ninbmin_rch, nipbmin_rch, &
-        ! ninbupmax_rch, nipbupmax_rch, kqn_rch, &
-        ! kqp_rch, nupwcfrac_rch, pupwcfrac_rch, &
-        ! kdt_rch, vdt_rch, kpath_rch, &
-        ! vpath_rch, apath_rch, kgah_rch, &
-        ! ksch_rch, kinhch_rch, kreah_rch, &
-        ! kdeah_rch, ksnh_rch, ksph_rch, &
-        ! khnxh_rch, ahmax_rch, &
-        ! kgen_rch, vgen_rch, &
-        ! te_ini, c01_ini, c02_ini, c03_ini, &
-        ! c04_ini, c05_ini, c06_ini, &
-        ! c07_ini, c08_ini, c09_ini, &
-        ! c10_ini, c11_ini, c12_ini, &
-        ! c13_ini, c14_ini, c15_ini, &
-        ! ph_ini, c17_ini, ninb_ini, nipb_ini)
-
-        !gp 16-jul-08
-        !hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
-        ! lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
-        ! ediff, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, &
-        ! hweir, bweir, &
-        ! sedthermcond, sedthermdiff, hsedcm, &
-        ! hypoexchfrac, porosity, rhocpsed, &
-        ! kaaa, vss_rch, khc_rch, &
-        ! kdcs_rch, kdc_rch, khn_rch, &
-        ! von_rch, kn_rch, ki_rch, &
-        ! vdi_rch, khp_rch, vop_rch, &
-        ! vip_rch, kga_rch, krea_rch, &
-        ! kdea_rch, ksn_rch, ksp_rch, &
-        ! isat_rch, khnx_rch, va_rch, &
-        ! kgaf_rch, abmax_rch, &
-        ! krea1f_rch, krea2f_rch, kexaf_rch, kdeaf_rch, &
-        ! ksnf_rch, kspf_rch, isatf_rch, &
-        ! khnxf_rch, ninbmin_rch, nipbmin_rch, &
-        ! ninbupmax_rch, nipbupmax_rch, kqn_rch, &
-        ! kqp_rch, nupwcfrac_rch, pupwcfrac_rch, &
-        ! kdt_rch, vdt_rch, kpath_rch, &
-        ! vpath_rch, apath_rch, kgah_rch, &
-        ! ksch_rch, kinhch_rch, kreah_rch, &
-        ! kdeah_rch, ksnh_rch, ksph_rch, &
-        ! khnxh_rch, ahmax_rch, &
-        ! kgen_rch, vgen_rch, &
-        ! te_ini, c01_ini, c02_ini, c03_ini, &
-        ! c04_ini, c05_ini, c06_ini, &
-        ! c07_ini, c08_ini, c09_ini, &
-        ! c10_ini, c11_ini, c12_ini, &
-        ! c13_ini, c14_ini, c15_ini, &
-        ! ph_ini, c17_ini, ninb_ini, nipb_ini)
         hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
             lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
             ediff, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, &
@@ -913,37 +656,6 @@ contains
         !gp 17-nov-04 call makehydraulics(nrch, hydrau, downstreamboundary, kai)
         !call makehydraulics(nrch, hydrau, downstreamboundary, kai, topo%geomethod)
 
-        !gp 08-feb-06
-        !stochrate= rates_(mgc,mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, &
-        ! ksodn, ksop, ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
-        ! kn, tkn, ki, tki, vdi, tvdi, khp, tkhp,vop, vip, kspi, kga, &
-        ! tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, &
-        ! va, typef, kgaf, tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, &
-        ! abmax, tkdeaf, ksnf, kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, &
-        ! ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp, &
-        ! kpath, tkpath, vpath, pco2, xdum1, xdum2, xdum3, xdum4, xdum5, &
-        ! xdum6,xdum7, kai, kawindmethod, &
-        ! hco3use, hco3usef, &
-        ! typeh, kgah, tkgah, ksch, xdum8, kinhch, &
-        ! kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, & !gp 15-nov-04
-        ! apath, kgen, tkgen, vgen, usegenericascod, & !gp 08-dec-04
-        ! nupwcfrac, pupwcfrac) !gp 26-jan-06
-
-        !gp 03-apr-08
-        !stochrate= rates_(nrch, hydrau, mgc,mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, &
-        ! ksodn, ksop, ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
-        ! kn, tkn, ki, tki, vdi, tvdi, khp, tkhp,vop, vip, kspi, kga, &
-        ! tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, &
-        ! va, typef, kgaf, tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, &
-        ! abmax, tkdeaf, ksnf, kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, &
-        ! ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp, &
-        ! kpath, tkpath, vpath, pco2, xdum1, xdum2, xdum3, xdum4, xdum5, &
-        ! xdum6,xdum7, kai, kawindmethod, &
-        ! hco3use, hco3usef, &
-        ! typeh, kgah, tkgah, ksch, xdum8, kinhch, &
-        ! kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, &
-        ! apath, kgen, tkgen, vgen, usegenericascod, &
-        ! nupwcfrac, pupwcfrac)
         stochrate= rates_t(nrch, hydrau, mgc,mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, &
             ksodn, ksop, ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
             kn, tkn, ki, tki, vdi, tvdi, khp, tkhp,vop, vip, kspi, kga, &
@@ -1092,50 +804,6 @@ contains
         deallocate(tdhh, stat=status(3))
         deallocate(tahh, stat=status(2))
         deallocate(shadehh, stat=status(1))
-
-        !data
-! read(8,*) nteda
-! do i = 1, nteda
-! read(8,*) junk, junk, junk, junk !xteda(i), tedaav(i), tedamn(i), tedamx(i)
-! end do
-
-! read(8,*) nhydda
-! do i = 1, nhydda
-! read(8,*) junk, junk, junk, junk, junk ! xhydda(i), qdata(i), hdata(i), udata(i), travdata(i)
-! end do
-
-! do kk = 1, 3
-! read(8,*) shtnam(kk), nwqd(kk)
-! do i = 1, nwqd(kk)
-! read(8,*) junk !dist(i, kk)
-! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
-! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
-! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk
-
-        !cwqdat(i, 1, kk), cwqdat(i, 2, kk), cwqdat(i, 3, kk), cwqdat(i, 4, kk), cwqdat(i, 5, kk), _
-        ! cwqdat(i, 6, kk), cwqdat(i, 7, kk), cwqdat(i, 8, kk), cwqdat(i, 9, kk), cwqdat(i, 10, kk)
-        !read(8,*) , cwqdat(i, 11, kk), cwqdat(i, 12, kk), cwqdat(i, 13, kk), cwqdat(i, 14, kk), cwqdat(i, 15, kk), _
-        ! cwqdat(i, 16, kk), cwqdat(i, 17, kk), cwqdat(i, 18, kk), cwqdat(i, 19, kk), cwqdat(i, 20, kk)
-        !read(8,*) , cwqdat(i, 21, kk), cwqdat(i, 22, kk), cwqdat(i, 23, kk), cwqdat(i, 24, kk), cwqdat(i, 25, kk), _
-        ! cwqdat(i, 26, kk), cwqdat(i, 27, kk), cwqdat(i, 28, kk)
-! end do
-! end do
-
-! read(8,*) nrp
-! read(8,*) nwqdiur
-! do i = 1, nwqdiur
-! read(8,*) junk !distdiur
-! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
-! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
-        !read(8,*) , distdiur(i)
-        !read(8,*) , cwqdatdiur(i, 1), cwqdatdiur(i, 2), cwqdatdiur(i, 3), cwqdatdiur(i, 4), cwqdatdiur(i, 5), _
-        ! cwqdatdiur(i, 6), cwqdatdiur(i, 7), cwqdatdiur(i, 8), cwqdatdiur(i, 9), cwqdatdiur(i, 10), cwqdatdiur(i, 11)
-        !read(8,*) , cwqdatdiur(i, 12), cwqdatdiur(i, 13), cwqdatdiur(i, 14), cwqdatdiur(i, 15), cwqdatdiur(i, 16), _
-        ! cwqdatdiur(i, 17), cwqdatdiur(i, 18), cwqdatdiur(i, 19), cwqdatdiur(i, 20), cwqdatdiur(i, 21)
-! end do
-
-        !gp 21-nov-06
-        !write(10,*) 'done thru classreadfile sub readinputfile'
 
     end subroutine readinputfile
 
