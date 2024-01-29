@@ -27,283 +27,283 @@ module m_derivs
     use m_tempadjust, only: temp_adjust
     use m_upstream_boundary, only: upstream_boundary_t, instanteousheadwater
     use nrtype, only: nv, nl, adam, bdam, cpw, rhow
-    use m_sedcalcnew, only: SedCalcNumNew
+    use m_sedcalcnew, only: sedcalcnumnew
     implicit none
     private
     public :: derivs
 
 contains
 
-    SUBROUTINE derivs(nr, Meteo, Solar, HW, DB, hydrau, sys, Te, c, INb, IPb, &
-        Rates, dTe, dc, dINb, dIPb, t)
+    subroutine derivs(nr, meteo, solar, hw, db, hydrau, sys, te, c, inb, ipb, &
+        rates, dte, dc, dinb, dipb, t)
 
-        IMPLICIT NONE
-        INTEGER(i32), INTENT(IN) :: nr
-        TYPE(meteorology_t) :: Meteo
-        TYPE(solar_type) Solar !solar radiation
-        TYPE(upstream_boundary_t) HW !headwater
-        TYPE(downstream_boundary_t) DB !downstream boundary
-        TYPE(RiverHydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
-        TYPE(SystemParams) sys
-        REAL(r64), DIMENSION(:), POINTER :: INb, IPb
-        !REAL(r64), DIMENSION(:), POINTER :: phitotalSave, phitSave, philSave, phinSave, phipSave, phicSave !gp 20-Oct-04
-        !gp 27-Oct-04 REAL(r64), DIMENSION(:,:), POINTER :: Te, c
-        REAL(r64), DIMENSION(:,:), POINTER :: Te !gp 27-Oct-04
-        REAL(r64), DIMENSION(:,:,:), POINTER :: c !gp add dimension for nl
-        TYPE(rates_t) Rates
-        !gp 27-Oct-04 REAL(r64), INTENT(OUT):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
-        REAL(r64), INTENT(OUT):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr) !gp
-        REAL(r64), INTENT(IN):: t !time
+        implicit none
+        integer(i32), intent(in) :: nr
+        type(meteorology_t) :: meteo
+        type(solar_type) solar !solar radiation
+        type(upstream_boundary_t) hw !headwater
+        type(downstream_boundary_t) db !downstream boundary
+        type(riverhydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
+        type(systemparams) sys
+        real(r64), dimension(:), pointer :: inb, ipb
+        !real(r64), dimension(:), pointer :: phitotalsave, phitsave, philsave, phinsave, phipsave, phicsave !gp 20-oct-04
+        !gp 27-oct-04 real(r64), dimension(:,:), pointer :: te, c
+        real(r64), dimension(:,:), pointer :: te !gp 27-oct-04
+        real(r64), dimension(:,:,:), pointer :: c !gp add dimension for nl
+        type(rates_t) rates
+        !gp 27-oct-04 real(r64), intent(out):: dte(nr, nl), dc(nr, nv), dinb(nr), dipb(nr)
+        real(r64), intent(out):: dte(nr, nl), dc(nr, nv, nl), dinb(nr), dipb(nr) !gp
+        real(r64), intent(in):: t !time
 
-        INTEGER(i32) i,j, k
-        REAL(r64) :: evap, back, flux
-        REAL(r64) eair, longat, conv
-        !Temperature corrected rates
+        integer(i32) i,j, k
+        real(r64) :: evap, back, flux
+        real(r64) eair, longat, conv
+        !temperature corrected rates
 
-        !gp 03-Apr-08
-        !REAL(r64) khcT(nr), kdcsT(nr), kdcT(nr), kgaFT(nr), kdeaFT(nr), kreaFT(nr), kexaFT(nr)
-        REAL(r64) khcT(nr), kdcsT(nr), kdcT(nr), kgaFT(nr), kdeaFT(nr), krea1FT(nr), krea2FT(nr), kexaFT(nr)
+        !gp 03-apr-08
+        !real(r64) khct(nr), kdcst(nr), kdct(nr), kgaft(nr), kdeaft(nr), kreaft(nr), kexaft(nr)
+        real(r64) khct(nr), kdcst(nr), kdct(nr), kgaft(nr), kdeaft(nr), krea1ft(nr), krea2ft(nr), kexaft(nr)
 
-        REAL(r64) khnT(nr), khpT(nr), knT(nr), kdtT(nr), kpathT(nr)
-        REAL(r64) kiT(nr), kaT(nr), kgaT(nr), kdeaT(nr), kreaT(nr), vdiT(nr), kacT(nr)
+        real(r64) khnt(nr), khpt(nr), knt(nr), kdtt(nr), kpatht(nr)
+        real(r64) kit(nr), kat(nr), kgat(nr), kdeat(nr), kreat(nr), vdit(nr), kact(nr)
 
-        !gp 30-Nov-04
-        REAL(r64) kgenT(nr) !gp 30-Nov-04 generic constituent decay
+        !gp 30-nov-04
+        real(r64) kgent(nr) !gp 30-nov-04 generic constituent decay
 
-        REAL(r64) :: pH=0
-        REAL(r64) fcarb, fnitr, fdenitr, frespp, frespb
-        REAL(r64) ke, phip, phint
-        REAL(r64) phil, num, den
-        REAL(r64) alpha0, alpha1
+        real(r64) :: ph=0
+        real(r64) fcarb, fnitr, fdenitr, frespp, frespb
+        real(r64) ke, phip, phint
+        real(r64) phil, num, den
+        real(r64) alpha0, alpha1
 
-        REAL(r64) prefam, prefamF
-        REAL(r64) SOD, JCH4, JNH4, JNO3, JPO4
+        real(r64) prefam, prefamf
+        real(r64) sod, jch4, jnh4, jno3, jpo4
 
-        REAL(r64) Jcin, Jnin, Jpin
-        REAL(r64) ow, NH3w, NO3w, PO4w, Tw
-        REAL(r64) Jamm, Jnitr, Jmeth, Jmethg, Jphos
+        real(r64) jcin, jnin, jpin
+        real(r64) ow, nh3w, no3w, po4w, tw
+        real(r64) jamm, jnitr, jmeth, jmethg, jphos
 
-        REAL(r64) botlight
-        REAL(r64) dam, dropft, defa, defb, Iat(nr) !changed by Hua
+        real(r64) botlight
+        real(r64) dam, dropft, defa, defb, iat(nr) !changed by hua
 
-        !pH
-        REAL(r64) K1, K2, KW, Kh, CO2sat
+        !ph
+        real(r64) k1, k2, kw, kh, co2sat
 
-        !gp 01-Nov-07
-        !REAL(r64) hh, alp0, alp1, cHCO3CO3
-        REAL(r64) hh, alp0, alp1, alp2, cHCO3CO3
+        !gp 01-nov-07
+        !real(r64) hh, alp0, alp1, chco3co3
+        real(r64) hh, alp0, alp1, alp2, chco3co3
 
-        REAL(r64) :: CSOD =0
+        real(r64) :: csod =0
 
-        REAL(r64) DetrDiss, DetrSettl
-        REAL(r64) CBODsHydr, CBODsOxid, CBODfOxid
-        REAL(r64) OrgNHydr, NH4Nitrif, Denitr
-        REAL(r64) OrgPHydr
-        REAL(r64) OrgNSettl, OrgPSettl, InorgPSettl
-        REAL(r64) InorgSettl
-        REAL(r64) OxReaer
-        REAL(r64) PhytoPhoto, PhytoResp, PhytoDeath, PhytoSettl
-        REAL(r64) BotAlgPhoto, BotAlgResp, BotAlgDeath, BotAlgExc
-        REAL(r64) BotAlgUptakeN, BotAlgUptakeP
-        REAL(r64) :: NINb = 0, NIPb =0, FBnb =0, FBpb =0
-        REAL(r64) :: phic =0
-        REAL(r64) :: PLIM, NLIM
+        real(r64) detrdiss, detrsettl
+        real(r64) cbodshydr, cbodsoxid, cbodfoxid
+        real(r64) orgnhydr, nh4nitrif, denitr
+        real(r64) orgphydr
+        real(r64) orgnsettl, orgpsettl, inorgpsettl
+        real(r64) inorgsettl
+        real(r64) oxreaer
+        real(r64) phytophoto, phytoresp, phytodeath, phytosettl
+        real(r64) botalgphoto, botalgresp, botalgdeath, botalgexc
+        real(r64) botalguptaken, botalguptakep
+        real(r64) :: ninb = 0, nipb =0, fbnb =0, fbpb =0
+        real(r64) :: phic =0
+        real(r64) :: plim, nlim
 
-        !gp 15-Nov-04 INTEGER(i32) :: hco3useF
+        !gp 15-nov-04 integer(i32) :: hco3usef
 
         !pathogens
-        REAL(r64) :: ksol=0
+        real(r64) :: ksol=0
 
-        !gp 27-Oct-04 REAL(r64) pHs(0:nr), K1s(0:nr), K2s(0:nr), Khs(0:nr) !New 08/29/04 for less pH solver be called
-        REAL(r64) pHs(0:nr, nl), K1s(0:nr, nl), K2s(0:nr, nl), Khs(0:nr, nl) !gp add dim for nl
+        !gp 27-oct-04 real(r64) phs(0:nr), k1s(0:nr), k2s(0:nr), khs(0:nr) !new 08/29/04 for less ph solver be called
+        real(r64) phs(0:nr, nl), k1s(0:nr, nl), k2s(0:nr, nl), khs(0:nr, nl) !gp add dim for nl
 
-        !gp 15-Nov-04 move Ehyporheic to hydrau
-        !gp 20-Oct-04 sediment and hyporheic heat flux variables
-        !gp REAL(r64) Jsed(nr), Jhyporheic(nr), Ehyporheic(nr)
-        REAL(r64) Jsed(nr), Jhyporheic(nr)
+        !gp 15-nov-04 move ehyporheic to hydrau
+        !gp 20-oct-04 sediment and hyporheic heat flux variables
+        !gp real(r64) jsed(nr), jhyporheic(nr), ehyporheic(nr)
+        real(r64) jsed(nr), jhyporheic(nr)
 
-        !gp 03-Nov-04 hyporheic kinetics variables
-        REAL(r64) kgaHT(nr), fcarbH, HeteroGrow
+        !gp 03-nov-04 hyporheic kinetics variables
+        real(r64) kgaht(nr), fcarbh, heterogrow
 
-        !gp 15-Nov-04 additional variables for level 2 hyporheic biofilm kinetics
-        REAL(r64) kreaHT(nr), kdeaHT(nr), HeteroResp, HeteroDeath, prefamH
+        !gp 15-nov-04 additional variables for level 2 hyporheic biofilm kinetics
+        real(r64) kreaht(nr), kdeaht(nr), heteroresp, heterodeath, prefamh
 
-        !gp 08-Dec-04 COD oxidation if generic constituent is used as COD
-        REAL(r64) CODoxid
+        !gp 08-dec-04 cod oxidation if generic constituent is used as cod
+        real(r64) codoxid
 
-        !gp 03-Dec-09 variables for fraction of ionized NH4+ and phosphate speciation
-        REAL(r64) Fi, Kamm
-        REAL(r64) KPO41, KPO42,KPO43
-        REAL(r64) DPO
-        REAL(r64) FPO41, FPO42,FPO43
-        REAL(r64) K1NH3, KgNH3, HeNH3, vnh3, naus, NH3gas
-        REAL(r64) Pcharge, Uw10
+        !gp 03-dec-09 variables for fraction of ionized nh4+ and phosphate speciation
+        real(r64) fi, kamm
+        real(r64) kpo41, kpo42,kpo43
+        real(r64) dpo
+        real(r64) fpo41, fpo42,fpo43
+        real(r64) k1nh3, kgnh3, henh3, vnh3, naus, nh3gas
+        real(r64) pcharge, uw10
 
-        dTe =0; dc =0; dINb =0; dIPb =0
+        dte =0; dc =0; dinb =0; dipb =0
         !gp move kawind to this sub to use interpolated hourly wind speed
-        !REAL(r64) kawind
+        !real(r64) kawind
 
-        sys%tday = t - Int(t)
+        sys%tday = t - int(t)
 
-        CALL InstanteousMeteo(nr, t, Meteo)
+        call instanteousmeteo(nr, t, meteo)
 
-        !SCC add the following loop to calculate pH and save results 08/29/04
-        DO i=0, nr
+        !scc add the following loop to calculate ph and save results 08/29/04
+        do i=0, nr
 
-            !gp 23-Nov-09
-            !IF (sys%IMethpH == "Newton-Raphson") THEN
-            ! CALL phsolNewton(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            !ELSE
-            ! CALL phsolBisect(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            !END IF
-            IF (sys%IMethpH == "Newton-Raphson") THEN
-                CALL phsolNewton(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            ELSEIF (sys%IMethpH == "Bisection") THEN
-                CALL phsolBisect(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            ELSE
-                CALL phsolBrent(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            END IF
+            !gp 23-nov-09
+            !if (sys%imethph == "newton-raphson") then
+            ! call phsolnewton(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
+            !else
+            ! call phsolbisect(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
+            !end if
+            if (sys%imethph == "Newton-Raphson") then
+                call phsolnewton(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
+            elseif (sys%imethph == "Bisection") then
+                call phsolbisect(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
+            else
+                call phsolbrent(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
+            end if
 
-            pHs(i, 1) = pH
-            pHs(i, 2) = 0 !not used unless hyporheic WQ is simulated
-            CALL ChemRates(Te(i, 1), K1, K2, KW, Kh, c(i, 1, 1))
-            K1s(i, 1) = K1; K2s(i, 1) = K2; Khs(i, 1) = Kh
-            K1s(i, 2) = 0; K2s(i, 2) = 0; Khs(i, 2) = 0 !gp 02-Nov-04 end of new block of code
-        END DO
+            phs(i, 1) = ph
+            phs(i, 2) = 0 !not used unless hyporheic wq is simulated
+            call chemrates(te(i, 1), k1, k2, kw, kh, c(i, 1, 1))
+            k1s(i, 1) = k1; k2s(i, 1) = k2; khs(i, 1) = kh
+            k1s(i, 2) = 0; k2s(i, 2) = 0; khs(i, 2) = 0 !gp 02-nov-04 end of new block of code
+        end do
 
-        ! Uw(0) = Uw(1)
+        ! uw(0) = uw(1)
 
         !gp evaluate point source sine functions and distribute loads to reaches for the current time t
-        CALL SourcesCalc(t, nr, Hydrau%flag)
+        call sourcescalc(t, nr, hydrau%flag)
 
-        CALL SolarCalc(nr, Solar, Meteo, hydrau, sys) !SolarCalc(tday, i)
+        call solarcalc(nr, solar, meteo, hydrau, sys) !solarcalc(tday, i)
 
-        !gp 27-Oct-04 CALL InstanteousHeadwater(HW, t, Te(0,1), c(0,:), pH)
-        !gp CALL InstanteousDownstreamboundary(DB, t, Te(nr,1), c(nr,:), Te(nr+1,1), c(nr+1,:))
-        CALL InstanteousHeadwater(HW, t, Te(0,1), c(0,:,1), pH)
+        !gp 27-oct-04 call instanteousheadwater(hw, t, te(0,1), c(0,:), ph)
+        !gp call instanteousdownstreamboundary(db, t, te(nr,1), c(nr,:), te(nr+1,1), c(nr+1,:))
+        call instanteousheadwater(hw, t, te(0,1), c(0,:,1), ph)
 
-        !gp 12-Jan-06
-        !WRITE(10,*) 'done thru Call InstanteousHeadwater'
+        !gp 12-jan-06
+        !write(10,*) 'done thru call instanteousheadwater'
 
-        CALL InstanteousDownstreamboundary(DB, t, Te(nr,1), c(nr,:,1), Te(nr+1,1), c(nr+1,:,1)) !gp 27-Oct-04 end new block
+        call instanteousdownstreamboundary(db, t, te(nr,1), c(nr,:,1), te(nr+1,1), c(nr+1,:,1)) !gp 27-oct-04 end new block
 
-        !gp 12-Jan-06
-        !WRITE(10,*) 'done thru Call InstanteousDownstreamboundary'
-        !WRITE(10,'(32F13.4)') Te(nr,1), (c(nr, k, 1), k=1, nv-2), Te(nr+1,1), (c(nr+1, k, 1), k=1, nv-2)
+        !gp 12-jan-06
+        !write(10,*) 'done thru call instanteousdownstreamboundary'
+        !write(10,'(32f13.4)') te(nr,1), (c(nr, k, 1), k=1, nv-2), te(nr+1,1), (c(nr+1, k, 1), k=1, nv-2)
 
 
         !'
         !' ------------------------------------------------------------------------------------
-        !' --- Heat transport and flux derivatives for the water column and sediment layers ---
+        !' --- heat transport and flux derivatives for the water column and sediment layers ---
         !' ------------------------------------------------------------------------------------
         !'
 
-        !Heat transport derivatives
+        !heat transport derivatives
 
-        DO i = 1, nr
-            ! dTe(i, 1) = hydrau%reach(i-1)%QCMD * Te(i - 1, 1) * rhow * cpw &
-            ! - hydrau%reach(i)%QCMD * Te(i, 1) * rhow * cpw &
-            ! + hydrau%reach(i)%QptCMD * load(i)%Te * rhow * cpw &
-            ! - hydrau%reach(i)%QptaCMD * Te(i, 1) * rhow * cpw &
-            ! + hydrau%reach(i-1)%EpCMD * (Te(i - 1, 1) - Te(i, 1)) * rhow * cpw &
-            ! + hydrau%reach(i)%EpCMD * (Te(i + 1, 1) - Te(i, 1)) * rhow * cpw
-            dTe(i,1) = hydrau%reach(i-1)%QCMD * Te(i - 1, 1) * rhow * cpw
-            dTe(i,1) = dTe(i,1) - hydrau%reach(i)%QCMD * Te(i, 1) * rhow * cpw
-            dTe(i,1) = dTe(i,1) + hydrau%reach(i)%QptCMD * load(i)%Te * rhow * cpw
-            dTe(i,1) = dTe(i,1) - hydrau%reach(i)%QptaCMD * Te(i, 1) * rhow * cpw
-            dTe(i,1) = dTe(i,1) + hydrau%reach(i-1)%EpCMD * (Te(i - 1, 1) - Te(i, 1)) * rhow * cpw
-            dTe(i,1) = dTe(i,1) + hydrau%reach(i)%EpCMD * (Te(i + 1, 1) - Te(i, 1)) * rhow * cpw
+        do i = 1, nr
+            ! dte(i, 1) = hydrau%reach(i-1)%qcmd * te(i - 1, 1) * rhow * cpw &
+            ! - hydrau%reach(i)%qcmd * te(i, 1) * rhow * cpw &
+            ! + hydrau%reach(i)%qptcmd * load(i)%te * rhow * cpw &
+            ! - hydrau%reach(i)%qptacmd * te(i, 1) * rhow * cpw &
+            ! + hydrau%reach(i-1)%epcmd * (te(i - 1, 1) - te(i, 1)) * rhow * cpw &
+            ! + hydrau%reach(i)%epcmd * (te(i + 1, 1) - te(i, 1)) * rhow * cpw
+            dte(i,1) = hydrau%reach(i-1)%qcmd * te(i - 1, 1) * rhow * cpw
+            dte(i,1) = dte(i,1) - hydrau%reach(i)%qcmd * te(i, 1) * rhow * cpw
+            dte(i,1) = dte(i,1) + hydrau%reach(i)%qptcmd * load(i)%te * rhow * cpw
+            dte(i,1) = dte(i,1) - hydrau%reach(i)%qptacmd * te(i, 1) * rhow * cpw
+            dte(i,1) = dte(i,1) + hydrau%reach(i-1)%epcmd * (te(i - 1, 1) - te(i, 1)) * rhow * cpw
+            dte(i,1) = dte(i,1) + hydrau%reach(i)%epcmd * (te(i + 1, 1) - te(i, 1)) * rhow * cpw
 
-            !'gp 05-Jul-05 (output fluxes in cal/cm^2/d)
-            saveHeatFluxTribs(i) = ((hydrau%reach(i)%QptCMD * load(i)%Te &
-                - hydrau%reach(i)%QptaCMD * Te(i, 1)) &
-                * rhow * cpw * 100 / hydrau%reach(i)%Ast)
-            saveHeatFluxAdvecDisp(i) = ((hydrau%reach(i-1)%QCMD * Te(i - 1, 1) &
-                - hydrau%reach(i)%QCMD * Te(i, 1) &
-                + hydrau%reach(i-1)%EpCMD * (Te(i - 1, 1) - Te(i, 1)) &
-                + hydrau%reach(i)%EpCMD * (Te(i + 1, 1) - Te(i, 1))) &
-                * rhow * cpw * 100 / hydrau%reach(i)%Ast)
+            !'gp 05-jul-05 (output fluxes in cal/cm^2/d)
+            saveheatfluxtribs(i) = ((hydrau%reach(i)%qptcmd * load(i)%te &
+                - hydrau%reach(i)%qptacmd * te(i, 1)) &
+                * rhow * cpw * 100 / hydrau%reach(i)%ast)
+            saveheatfluxadvecdisp(i) = ((hydrau%reach(i-1)%qcmd * te(i - 1, 1) &
+                - hydrau%reach(i)%qcmd * te(i, 1) &
+                + hydrau%reach(i-1)%epcmd * (te(i - 1, 1) - te(i, 1)) &
+                + hydrau%reach(i)%epcmd * (te(i + 1, 1) - te(i, 1))) &
+                * rhow * cpw * 100 / hydrau%reach(i)%ast)
 
-        END DO
+        end do
 
-        DO i = 1, nr
+        do i = 1, nr
 
-            !gp 16-Jul-08
-            !CALL heatBalance(evap, conv, back, longat, lightheat, Te(i,1), Meteo%Ta(i), &
-            ! Meteo%Td(i), Meteo%cc(i), Meteo%Uw(i), hydrau%reach(i)%Ast)
-            CALL heatBalance(evap, conv, back, longat, lightheat, Te(i,1), Meteo%Ta(i), &
-                Meteo%Td(i), Meteo%cc(i), Meteo%Uw(i), hydrau%reach(i)%Ast, hydrau%reach(i)%SKOP)
+            !gp 16-jul-08
+            !call heatbalance(evap, conv, back, longat, lightheat, te(i,1), meteo%ta(i), &
+            ! meteo%td(i), meteo%cc(i), meteo%uw(i), hydrau%reach(i)%ast)
+            call heatbalance(evap, conv, back, longat, lightheat, te(i,1), meteo%ta(i), &
+                meteo%td(i), meteo%cc(i), meteo%uw(i), hydrau%reach(i)%ast, hydrau%reach(i)%skop)
 
-            flux = Solar%Jsnt(i) + longat - back - conv - evap !gp changed Jsnt to Jsnt(i)
-            dTe(i, 1) = dTe(i, 1) + flux * hydrau%reach(i)%Ast / 100.0_r64
-            ! if (i==1) write(8,*) Meteo%Ta(i),Meteo%Td(i) !, Solar%Jsnt(i), longat, back, conv, evap
+            flux = solar%jsnt(i) + longat - back - conv - evap !gp changed jsnt to jsnt(i)
+            dte(i, 1) = dte(i, 1) + flux * hydrau%reach(i)%ast / 100.0_r64
+            ! if (i==1) write(8,*) meteo%ta(i),meteo%td(i) !, solar%jsnt(i), longat, back, conv, evap
 
-            !'gp 01-Jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
-            saveHeatFluxJsnt(i) = Solar%Jsnt(i)
-            saveHeatFluxLongat(i) = longat
-            saveHeatFluxBack(i) = -back
-            saveHeatFluxConv(i) = -conv
-            saveHeatFluxEvap(i) = -evap
+            !'gp 01-jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
+            saveheatfluxjsnt(i) = solar%jsnt(i)
+            saveheatfluxlongat(i) = longat
+            saveheatfluxback(i) = -back
+            saveheatfluxconv(i) = -conv
+            saveheatfluxevap(i) = -evap
 
-        END DO
+        end do
 
-        DO i = 1 , nr
+        do i = 1 , nr
             !'gp new sediment-water heat flux from sediments into the water in units of cal/cm2/day
-            Jsed(i) = (Te(i, 2) - Te(i, 1)) * &
-                86400 * 2 * hydrau%reach(i)%sedThermCond / hydrau%reach(i)%HsedCM !'units of (cal/cm2/day), note that sedThermCond is in units of (cal/sec) per (cm deg C)
+            jsed(i) = (te(i, 2) - te(i, 1)) * &
+                86400 * 2 * hydrau%reach(i)%sedthermcond / hydrau%reach(i)%hsedcm !'units of (cal/cm2/day), note that sedthermcond is in units of (cal/sec) per (cm deg c)
 
-            !'gp 05-Jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
-            saveHeatFluxJsed(i) = Jsed(i)
+            !'gp 05-jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
+            saveheatfluxjsed(i) = jsed(i)
 
-            dTe(i, 1) = dTe(i, 1) + Jsed(i) * hydrau%reach(i)%Ast/ 100 !'units of (cal/day) * (m3/cm3)
-            dTe(i, 2) = -Jsed(i) * hydrau%reach(i)%Ast / 100 !'units of (cal/day) * (m3/cm3)
-            SELECT CASE (sys%simHyporheicWQ)
-              CASE ('Level 1', 'Level 2') !gp 15-Nov-04
+            dte(i, 1) = dte(i, 1) + jsed(i) * hydrau%reach(i)%ast/ 100 !'units of (cal/day) * (m3/cm3)
+            dte(i, 2) = -jsed(i) * hydrau%reach(i)%ast / 100 !'units of (cal/day) * (m3/cm3)
+            select case (sys%simhyporheicwq)
+              case ('Level 1', 'Level 2') !gp 15-nov-04
                 !'gp new hyporheic exchange flux in units of (cal/day) * (m3/cm3)
-                Jhyporheic(i) = hydrau%reach(i)%EhyporheicCMD * &
-                    (Te(i, 2) - Te(i, 1)) * rhow * cpw * 100 / hydrau%reach(i)%Ast !'units of (cal/cm2/day)
+                jhyporheic(i) = hydrau%reach(i)%ehyporheiccmd * &
+                    (te(i, 2) - te(i, 1)) * rhow * cpw * 100 / hydrau%reach(i)%ast !'units of (cal/cm2/day)
 
-                !'gp 05-Jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
-                saveHeatFluxJhyporheic(i) = Jhyporheic(i)
+                !'gp 05-jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
+                saveheatfluxjhyporheic(i) = jhyporheic(i)
 
-                dTe(i, 1) = dTe(i, 1) + Jhyporheic(i) * hydrau%reach(i)%Ast / 100 !'units of (cal/day) * (m3/cm3)
-                dTe(i, 2) = dTe(i, 2) - Jhyporheic(i) * hydrau%reach(i)%Ast / 100 !'units of (cal/day) * (m3/cm3)
-            END SELECT
-        END DO
-        DO i = 1, nr
-            !'gp units for dTe on LHS in the next original line of code is deg C per day
-            dTe(i, 1) = dTe(i, 1) / &
-                hydrau%reach(i)%Vol / rhow / cpw !'units of deg C per day
-            !'gp sediment-water heat flux term dTs in deg C per day
-            dTe(i, 2) = dTe(i, 2) / &
-                (hydrau%reach(i)%Ast * hydrau%reach(i)%HsedCM / 100) / &
-                hydrau%reach(i)%rhoCpSed !'units of deg C per day
-        END DO
+                dte(i, 1) = dte(i, 1) + jhyporheic(i) * hydrau%reach(i)%ast / 100 !'units of (cal/day) * (m3/cm3)
+                dte(i, 2) = dte(i, 2) - jhyporheic(i) * hydrau%reach(i)%ast / 100 !'units of (cal/day) * (m3/cm3)
+            end select
+        end do
+        do i = 1, nr
+            !'gp units for dte on lhs in the next original line of code is deg c per day
+            dte(i, 1) = dte(i, 1) / &
+                hydrau%reach(i)%vol / rhow / cpw !'units of deg c per day
+            !'gp sediment-water heat flux term dts in deg c per day
+            dte(i, 2) = dte(i, 2) / &
+                (hydrau%reach(i)%ast * hydrau%reach(i)%hsedcm / 100) / &
+                hydrau%reach(i)%rhocpsed !'units of deg c per day
+        end do
 
 
-        !gp 03-Feb-05 start of bypass derivs for water quality variables
-        !unless 'All' state variables are being simulated
+        !gp 03-feb-05 start of bypass derivs for water quality variables
+        !unless 'all' state variables are being simulated
         !
-        !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-        !gp 29-Dec-09
-        !If (sys%stateVariables == "All") Then
-        If (sys%stateVariables /= "Temperature") Then
+        !gp 29-dec-09
+        !if (sys%statevariables == "all") then
+        if (sys%statevariables /= "Temperature") then
 
             !x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
             !x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
 
 
 
-            !gp 02-Nov-04 os(0) = oxsat(Te(0, 1), hydrau%reach(0)%elev)
-            os(0, 1) = oxygen_saturation(Te(0, 1), hydrau%reach(0)%elev)
-            SELECT CASE (sys%simHyporheicWQ)
-              CASE ('Level 1', 'Level 2') !gp 15-Nov-04
-                os(0, 2) = oxygen_saturation(Te(0, 2), hydrau%reach(0)%elev)
-              CASE DEFAULT
+            !gp 02-nov-04 os(0) = oxsat(te(0, 1), hydrau%reach(0)%elev)
+            os(0, 1) = oxygen_saturation(te(0, 1), hydrau%reach(0)%elev)
+            select case (sys%simhyporheicwq)
+              case ('Level 1', 'Level 2') !gp 15-nov-04
+                os(0, 2) = oxygen_saturation(te(0, 2), hydrau%reach(0)%elev)
+              case default
                 os(0, 2) = 0 !not used in calculation
-            END SELECT !gp 02-Nov-04 end new block
+            end select !gp 02-nov-04 end new block
 
             !'
             !' --------------------------------------------------------------------------
@@ -311,32 +311,32 @@ contains
             !' --------------------------------------------------------------------------
             !'
 
-            !gp 03-Apr-08
-            !CALL TempAdjust(Rates, hydrau,Meteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
-            ! kreaFT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
-            ! kreaT, vdiT, kacT, kgenT) !gp 30-Nov-04 add kgenT
-            CALL temp_adjust(Rates, hydrau,Meteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
-                krea1FT, krea2FT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
-                kreaT, vdiT, kacT, kgenT) !gp 30-Nov-04 add kgenT
+            !gp 03-apr-08
+            !call tempadjust(rates, hydrau,meteo, nr, te, khct, kdcst, kdct, kgaft, kdeaft, &
+            ! kreaft, kexaft, khnt, khpt, knt, kdtt, kpatht, kit, kat, kgat, kdeat, &
+            ! kreat, vdit, kact, kgent) !gp 30-nov-04 add kgent
+            call temp_adjust(rates, hydrau,meteo, nr, te, khct, kdcst, kdct, kgaft, kdeaft, &
+                krea1ft, krea2ft, kexaft, khnt, khpt, knt, kdtt, kpatht, kit, kat, kgat, kdeat, &
+                kreat, vdit, kact, kgent) !gp 30-nov-04 add kgent
 
 
-            !'gp 20-Oct-04 temp limitation factor for output
-            DO i = 1 , nr
-                phitSave(i) = Rates%tkgaF ** (Te(i, 1) - 20)
-            END DO
+            !'gp 20-oct-04 temp limitation factor for output
+            do i = 1 , nr
+                phitsave(i) = rates%tkgaf ** (te(i, 1) - 20)
+            end do
 
-            DO i=1 ,nr
-                !gp 27-Oct-04 os(i)=oxsat(Te(i,1), hydrau%reach(i)%elev)
-                os(i, 1)=oxygen_saturation(Te(i, 1), hydrau%reach(i)%elev) !gp 27-Oct-04
-            END DO
+            do i=1 ,nr
+                !gp 27-oct-04 os(i)=oxsat(te(i,1), hydrau%reach(i)%elev)
+                os(i, 1)=oxygen_saturation(te(i, 1), hydrau%reach(i)%elev) !gp 27-oct-04
+            end do
 
             !'
             !' ---------------------------------------------------------------------------
             !' ---------------------------------------------------------------------------
             !' --- ---
-            !' --- Water column water quality deriviatives ---
-            !' --- Note that units are mass/time in the main i loop ---
-            !' --- and at the the derivs are divided by Vol(i) to get mass/volume/time ---
+            !' --- water column water quality deriviatives ---
+            !' --- note that units are mass/time in the main i loop ---
+            !' --- and at the the derivs are divided by vol(i) to get mass/volume/time ---
             !' --- or area to get mass/area/time ---
             !' --- ---
             !' ---------------------------------------------------------------------------
@@ -344,421 +344,421 @@ contains
             !'
 
             !transport and small dams
-            DO i = 1, nr
-                DO k = 1, nv - 1
-                    SELECT CASE (k)
+            do i = 1, nr
+                do k = 1, nv - 1
+                    select case (k)
 
-                        !gp 31-Mar-05 cT is variable nv-1 (debug Alkalinity deriv)
-                      CASE (3,nv-1)
+                        !gp 31-mar-05 ct is variable nv-1 (debug alkalinity deriv)
+                      case (3,nv-1)
 
-                        dropft = hydrau%reach(i -1)%drop * 3.281_r64 !SCC
+                        dropft = hydrau%reach(i -1)%drop * 3.281_r64 !scc
                         dam = 1.0_r64 / (1 + 0.116_r64 * adam * bdam * dropft * (1 - 0.034_r64 * dropft) * &
-                            (1.0_r64 + 0.046_r64 * Te(i - 1, 1)))
-                        IF (k == 3) THEN
+                            (1.0_r64 + 0.046_r64 * te(i - 1, 1)))
+                        if (k == 3) then
                             defa = os(i - 1, 1) - c(i - 1, 3, 1)
                             defb = dam * defa
-                            dc(i, k, 1) = hydrau%reach(i-1)%QCMD * (os(i-1, 1) - defb) !gp 27-Oct-04 end new block
+                            dc(i, k, 1) = hydrau%reach(i-1)%qcmd * (os(i-1, 1) - defb) !gp 27-oct-04 end new block
 
-                            !'gp 05-Jul-05 (save DO fluxes in gO2/m^2/d)
-                            saveDOfluxHeadwater(i) = (hydrau%reach(i-1)%QCMD * (os(i - 1, 1) - defb) &
-                                - hydrau%reach(i-1)%QCMD * c(i - 1, k, 1)) / hydrau%reach(i)%Ast
+                            !'gp 05-jul-05 (save do fluxes in go2/m^2/d)
+                            savedofluxheadwater(i) = (hydrau%reach(i-1)%qcmd * (os(i - 1, 1) - defb) &
+                                - hydrau%reach(i-1)%qcmd * c(i - 1, k, 1)) / hydrau%reach(i)%ast
 
-                            !gp 31-Mar-05 cT is variable nv-2
-                            !ELSEIF (k == 15) THEN
-                        ELSEIF (k == nv-1) THEN
+                            !gp 31-mar-05 ct is variable nv-2
+                            !elseif (k == 15) then
+                        elseif (k == nv-1) then
 
-                            CO2sat = Khs(i-1, 1) * Rates%pco2
-                            hh = 10.0_r64 ** (-pHs(i-1, 1))
-                            alp0 = hh * hh / (hh ** 2.0 + K1s(i-1, 1) * hh + K1s(i-1, 1) * K2s(i-1, 1))
-                            cHCO3CO3 = (1.0_r64 - alp0) * c(i-1, k, 1)
-                            defa = CO2sat - alp0 * c(i-1, k, 1)
+                            co2sat = khs(i-1, 1) * rates%pco2
+                            hh = 10.0_r64 ** (-phs(i-1, 1))
+                            alp0 = hh * hh / (hh ** 2.0 + k1s(i-1, 1) * hh + k1s(i-1, 1) * k2s(i-1, 1))
+                            chco3co3 = (1.0_r64 - alp0) * c(i-1, k, 1)
+                            defa = co2sat - alp0 * c(i-1, k, 1)
                             defb = dam * defa
-                            dc(i, k, 1) = hydrau%reach(i-1)%QCMD * (cHCO3CO3 + CO2sat - defb) !gp 27-Oct-04 end new block
+                            dc(i, k, 1) = hydrau%reach(i-1)%qcmd * (chco3co3 + co2sat - defb) !gp 27-oct-04 end new block
 
-                            !'gp 05-Jul-05 (save CO2 fluxes in gC/m^2/d)
-                            saveCO2fluxHeadwater(i) = (hydrau%reach(i-1)%QCMD * (cHCO3CO3 + CO2sat - defb) &
-                                - hydrau%reach(i-1)%QCMD * c(i - 1, k, 1)) &
-                                / hydrau%reach(i)%Ast / Rates%rccc
+                            !'gp 05-jul-05 (save co2 fluxes in gc/m^2/d)
+                            saveco2fluxheadwater(i) = (hydrau%reach(i-1)%qcmd * (chco3co3 + co2sat - defb) &
+                                - hydrau%reach(i-1)%qcmd * c(i - 1, k, 1)) &
+                                / hydrau%reach(i)%ast / rates%rccc
 
-                        END IF
-                      CASE DEFAULT !ELSE
-                        dc(i, k, 1) = hydrau%reach(i-1)%QCMD * c(i - 1, k, 1) !gp 27-Oct-04 end new block
-                    END SELECT
-                    dc(i, k, 1) = dc(i, k, 1) - hydrau%reach(i)%QCMD * c(i, k, 1) &
-                        + hydrau%reach(i)%QptCMD * load(i)%c(k) &
-                        - hydrau%reach(i)%QptaCMD * c(i, k, 1) &
-                        + hydrau%reach(i-1)%EpCMD * (c(i - 1, k, 1) - c(i, k, 1)) &
-                        + hydrau%reach(i)%EpCMD * (c(i + 1, k, 1) - c(i, k, 1)) !gp 27-Oct-04 end new block
+                        end if
+                      case default !else
+                        dc(i, k, 1) = hydrau%reach(i-1)%qcmd * c(i - 1, k, 1) !gp 27-oct-04 end new block
+                    end select
+                    dc(i, k, 1) = dc(i, k, 1) - hydrau%reach(i)%qcmd * c(i, k, 1) &
+                        + hydrau%reach(i)%qptcmd * load(i)%c(k) &
+                        - hydrau%reach(i)%qptacmd * c(i, k, 1) &
+                        + hydrau%reach(i-1)%epcmd * (c(i - 1, k, 1) - c(i, k, 1)) &
+                        + hydrau%reach(i)%epcmd * (c(i + 1, k, 1) - c(i, k, 1)) !gp 27-oct-04 end new block
 
-                    !'gp 05-Jul-05 (save net trib/GW and advec/disp DO fluxes in gO2/m^2/d and CO2 fluxes in gC/m^2/d)
-                    Select Case (k)
-                      Case (3)
-                        saveDOfluxTribs(i) = (hydrau%reach(i)%QptCMD * load(i)%c(k) &
-                            - hydrau%reach(i)%QptaCMD * c(i, k, 1)) &
-                            / hydrau%reach(i)%Ast
-                        saveDOfluxAdvecDisp(i) = saveDOfluxHeadwater(i) &
-                            + (-hydrau%reach(i)%QCMD * c(i, k, 1) &
-                            + hydrau%reach(i-1)%EpCMD * (c(i - 1, k, 1) - c(i, k, 1)) &
-                            + hydrau%reach(i)%EpCMD * (c(i + 1, k, 1) - c(i, k, 1))) &
-                            / hydrau%reach(i)%Ast
-                      Case (nv - 1)
-                        saveCO2fluxTribs(i) = (hydrau%reach(i)%QptCMD * load(i)%c(k) &
-                            - hydrau%reach(i)%QptaCMD * c(i, k, 1)) &
-                            / hydrau%reach(i)%Ast / Rates%rccc
-                        saveCO2fluxAdvecDisp(i) = saveCO2fluxHeadwater(i) &
-                            + (-hydrau%reach(i)%QCMD * c(i, k, 1) &
-                            + hydrau%reach(i-1)%EpCMD * (c(i - 1, k, 1) - c(i, k, 1)) &
-                            + hydrau%reach(i)%EpCMD * (c(i + 1, k, 1) - c(i, k, 1))) &
-                            / hydrau%reach(i)%Ast / Rates%rccc
-                    End Select
+                    !'gp 05-jul-05 (save net trib/gw and advec/disp do fluxes in go2/m^2/d and co2 fluxes in gc/m^2/d)
+                    select case (k)
+                      case (3)
+                        savedofluxtribs(i) = (hydrau%reach(i)%qptcmd * load(i)%c(k) &
+                            - hydrau%reach(i)%qptacmd * c(i, k, 1)) &
+                            / hydrau%reach(i)%ast
+                        savedofluxadvecdisp(i) = savedofluxheadwater(i) &
+                            + (-hydrau%reach(i)%qcmd * c(i, k, 1) &
+                            + hydrau%reach(i-1)%epcmd * (c(i - 1, k, 1) - c(i, k, 1)) &
+                            + hydrau%reach(i)%epcmd * (c(i + 1, k, 1) - c(i, k, 1))) &
+                            / hydrau%reach(i)%ast
+                      case (nv - 1)
+                        saveco2fluxtribs(i) = (hydrau%reach(i)%qptcmd * load(i)%c(k) &
+                            - hydrau%reach(i)%qptacmd * c(i, k, 1)) &
+                            / hydrau%reach(i)%ast / rates%rccc
+                        saveco2fluxadvecdisp(i) = saveco2fluxheadwater(i) &
+                            + (-hydrau%reach(i)%qcmd * c(i, k, 1) &
+                            + hydrau%reach(i-1)%epcmd * (c(i - 1, k, 1) - c(i, k, 1)) &
+                            + hydrau%reach(i)%epcmd * (c(i + 1, k, 1) - c(i, k, 1))) &
+                            / hydrau%reach(i)%ast / rates%rccc
+                    end select
 
-                END DO
-            END DO
+                end do
+            end do
 
             ! ----------------
             ! --- kinetics ---
             ! ----------------
 
-            DO i = 1, nr
+            do i = 1, nr
 
                 ! --- ph dependent variables for later use in deriv calcs in this i loop
 
-                hh = 10.0_r64 ** (-pHs(i, 1))
-                alp0 = hh * hh / (hh ** 2.0_r64 + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1))
-                alp1 = K1s(i, 1) * hh / (hh ** 2.0_r64 + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1)) !fraction of cT as HCO3-
-                alp2 = K1s(i, 1) * K2s(i, 1) / (hh ** 2.0_r64 + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1)) !fraction of cT as CO3--
+                hh = 10.0_r64 ** (-phs(i, 1))
+                alp0 = hh * hh / (hh ** 2.0_r64 + k1s(i, 1) * hh + k1s(i, 1) * k2s(i, 1))
+                alp1 = k1s(i, 1) * hh / (hh ** 2.0_r64 + k1s(i, 1) * hh + k1s(i, 1) * k2s(i, 1)) !fraction of ct as hco3-
+                alp2 = k1s(i, 1) * k2s(i, 1) / (hh ** 2.0_r64 + k1s(i, 1) * hh + k1s(i, 1) * k2s(i, 1)) !fraction of ct as co3--
 
-                !'gp 03-Dec-09
-                !'fraction of total ammonia that is ionized ammonia NH4+ (Fi)
-                Kamm = 10.0_r64 ** (-(0.09018_r64 + 2729.92_r64 / (Te(i, 1) + 273.15_r64))) !'equilibrium coeff for ammonia dissociation NH4+ = NH3(aq) + H+
-                Fi = hh / (hh + Kamm) !'fraction of ionized NH4+ = [NH4+ / (NH4+ + NH3)]
-                !'fraction of SRP that is H2PO4- (FPO41), HPO4-- (FPO42), and PO4--- (FPO43)
-                KPO41 = 10.0_r64 ** (-2.15_r64) !'= [H+][H2PO4-]/[H3PO4] for eqn H3PO4 = H+ + H2PO4-
-                KPO42 = 10.0_r64 ** (-7.2_r64) !'= [H+][HPO4--]/[H2PO4-] for eqn H2PO4- = H+ + HPO4--
-                KPO43 = 10.0_r64 ** (-12.35_r64) !'= [H+][PO4---]/[HPO4--] for eqn HPO4-- = H+ + PO4---
-                DPO = 1.0_r64 / (hh ** 3.0_r64 + KPO41 * hh ** 2.0_r64 + KPO41 * KPO42 * hh + KPO41 * KPO42 * KPO43) !'intermediate calc of denominator
-                FPO41 = KPO41 * hh ** 2.0_r64 * DPO !'fraction of phosphate as H2PO4-
-                FPO42 = KPO41 * KPO42 * hh * DPO !'fraction of phosphate as HPO4--
-                FPO43 = KPO41 * KPO42 * KPO43 * DPO !'fraction of phosphate as PO4---
-                !'stoichiometric conversion factors for alkalinity (some are pH dependent) (ralkbn & ralkbp calc in classstoch.f90)
-                !ralkbn = 1# / 14.0067 / 1000# / 1000# !'eqH+/L per mgN/m^3 (1eqH+/moleN / 14gN/moleN / 1000mgN/gN / 1000L/m^3)
-                !ralkbp = (FPO41 + 2# * FPO42 + 3# * FPO43) / 30.973762 / 1000# / 1000# !'eqH+/L per mgP/m^3 (eqH+/moleP / 31gP/moleP / 1000mgP/gP / 1000L/m^3)
-                Pcharge = (FPO41 + 2.0_r64 * FPO42 + 3.0_r64 * FPO43) !'average charge of P species to multiply by ralkbp
-                !'ammonia gas transfer at air/water interface (eqns from Chapra et al QUAL2K manual ver 2.11b8)
-                K1NH3 = 1.171_r64 * kaT(i) * hydrau%reach(i)%depth !'liquid film exchange coefficient for NH3 (m/d)
-                Uw10 = (10.0_r64 / 7.0_r64) ** 0.15_r64 * Meteo%Uw(i) !'wind speed at 10 m (m/s)
-                KgNH3 = 175.287_r64 * Uw10 + 262.9305_r64 !'NH3 mass transfer velocity (m/d)
-                HeNH3 = 0.0000136785_r64 * 1.052_r64 ** (Te(i, 1) - 20.0_r64) !'Henry's Law constant for NH3 gas (atm m^3/mole)
-                vnh3 = K1NH3 * HeNH3 / (HeNH3 + 0.00008206_r64 * (Te(i, 1) + 273.15_r64) * (K1NH3 / KgNH3)) !'NH3 gas transfer coefficient (m/d)
-                naus = 0.000000002_r64 / HeNH3 * 14000.0_r64 !'sat'n conc of NH3 assuming partial press of NH3 in atm = 2e-9 atm (values range from 1-10e-9 in rural and 10-100e-9 in heavily polluted areas)
-                NH3gas = vnh3 * hydrau%reach(i)%Ast * (naus - (1.0_r64 - Fi) * c(i, 7, 1)) !'loss or gain of NH3 via gas transfer (mgN/day)
+                !'gp 03-dec-09
+                !'fraction of total ammonia that is ionized ammonia nh4+ (fi)
+                kamm = 10.0_r64 ** (-(0.09018_r64 + 2729.92_r64 / (te(i, 1) + 273.15_r64))) !'equilibrium coeff for ammonia dissociation nh4+ = nh3(aq) + h+
+                fi = hh / (hh + kamm) !'fraction of ionized nh4+ = [nh4+ / (nh4+ + nh3)]
+                !'fraction of srp that is h2po4- (fpo41), hpo4-- (fpo42), and po4--- (fpo43)
+                kpo41 = 10.0_r64 ** (-2.15_r64) !'= [h+][h2po4-]/[h3po4] for eqn h3po4 = h+ + h2po4-
+                kpo42 = 10.0_r64 ** (-7.2_r64) !'= [h+][hpo4--]/[h2po4-] for eqn h2po4- = h+ + hpo4--
+                kpo43 = 10.0_r64 ** (-12.35_r64) !'= [h+][po4---]/[hpo4--] for eqn hpo4-- = h+ + po4---
+                dpo = 1.0_r64 / (hh ** 3.0_r64 + kpo41 * hh ** 2.0_r64 + kpo41 * kpo42 * hh + kpo41 * kpo42 * kpo43) !'intermediate calc of denominator
+                fpo41 = kpo41 * hh ** 2.0_r64 * dpo !'fraction of phosphate as h2po4-
+                fpo42 = kpo41 * kpo42 * hh * dpo !'fraction of phosphate as hpo4--
+                fpo43 = kpo41 * kpo42 * kpo43 * dpo !'fraction of phosphate as po4---
+                !'stoichiometric conversion factors for alkalinity (some are ph dependent) (ralkbn & ralkbp calc in classstoch.f90)
+                !ralkbn = 1# / 14.0067 / 1000# / 1000# !'eqh+/l per mgn/m^3 (1eqh+/molen / 14gn/molen / 1000mgn/gn / 1000l/m^3)
+                !ralkbp = (fpo41 + 2# * fpo42 + 3# * fpo43) / 30.973762 / 1000# / 1000# !'eqh+/l per mgp/m^3 (eqh+/molep / 31gp/molep / 1000mgp/gp / 1000l/m^3)
+                pcharge = (fpo41 + 2.0_r64 * fpo42 + 3.0_r64 * fpo43) !'average charge of p species to multiply by ralkbp
+                !'ammonia gas transfer at air/water interface (eqns from chapra et al qual2k manual ver 2.11b8)
+                k1nh3 = 1.171_r64 * kat(i) * hydrau%reach(i)%depth !'liquid film exchange coefficient for nh3 (m/d)
+                uw10 = (10.0_r64 / 7.0_r64) ** 0.15_r64 * meteo%uw(i) !'wind speed at 10 m (m/s)
+                kgnh3 = 175.287_r64 * uw10 + 262.9305_r64 !'nh3 mass transfer velocity (m/d)
+                henh3 = 0.0000136785_r64 * 1.052_r64 ** (te(i, 1) - 20.0_r64) !'henry's law constant for nh3 gas (atm m^3/mole)
+                vnh3 = k1nh3 * henh3 / (henh3 + 0.00008206_r64 * (te(i, 1) + 273.15_r64) * (k1nh3 / kgnh3)) !'nh3 gas transfer coefficient (m/d)
+                naus = 0.000000002_r64 / henh3 * 14000.0_r64 !'sat'n conc of nh3 assuming partial press of nh3 in atm = 2e-9 atm (values range from 1-10e-9 in rural and 10-100e-9 in heavily polluted areas)
+                nh3gas = vnh3 * hydrau%reach(i)%ast * (naus - (1.0_r64 - fi) * c(i, 7, 1)) !'loss or gain of nh3 via gas transfer (mgn/day)
 
                 !determine solar radiation
-                Iat(i) = lightheat%PAR * Solar%Jsnt(i)
+                iat(i) = lightheat%par * solar%jsnt(i)
 
-                CALL oxygen_inhibition_and_enhancement(Rates, c(i, 3, 1), fcarb, fnitr, fdenitr, frespp, frespb) !gp 27-Oct-04
+                call oxygen_inhibition_and_enhancement(rates, c(i, 3, 1), fcarb, fnitr, fdenitr, frespp, frespb) !gp 27-oct-04
 
                 !light extinction
 
-                !gp 13-Feb-06 include macrophyte extinction if bottom plants are simulated as macrophytes
-                IF ((hydrau%reach(i)%NUpWCfrac < 1.0_r64) .OR. (hydrau%reach(i)%PUpWCfrac < 1.0_r64)) THEN
+                !gp 13-feb-06 include macrophyte extinction if bottom plants are simulated as macrophytes
+                if ((hydrau%reach(i)%nupwcfrac < 1.0_r64) .or. (hydrau%reach(i)%pupwcfrac < 1.0_r64)) then
                     !include macrophyte biomass extinction if macrophytes are simulated
-                    ke= lightExtinction(lightheat, c(i, 12, 1), c(i, 2, 1), c(i, 11, 1), c(i, nv, 1)/hydrau%reach(i)%depth)
-                ELSE
+                    ke= lightextinction(lightheat, c(i, 12, 1), c(i, 2, 1), c(i, 11, 1), c(i, nv, 1)/hydrau%reach(i)%depth)
+                else
                     !do not include macrophyte biomass extinction of periphyton are simulated
-                    ke= lightExtinction(lightheat, c(i, 12, 1), c(i, 2, 1), c(i, 11, 1), 0.0_r64)
-                END IF
+                    ke= lightextinction(lightheat, c(i, 12, 1), c(i, 2, 1), c(i, 11, 1), 0.0_r64)
+                end if
 
                 !
-                ! --- (11) Phytoplankton (mgA/day) ---
+                ! --- (11) phytoplankton (mga/day) ---
                 !
 
                 !nutrient limitation
 
-                !gp 09-Dec-09 include Fi
-                !IF (hydrau%reach(i)%ksn + c(i, 7, 1) + c(i, 8, 1) <= 0) THEN
+                !gp 09-dec-09 include fi
+                !if (hydrau%reach(i)%ksn + c(i, 7, 1) + c(i, 8, 1) <= 0) then
                 ! phint = 0
-                !ELSE
+                !else
                 ! phint = (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksn + c(i, 7, 1) + c(i, 8, 1))
-                !END IF
-                IF (hydrau%reach(i)%ksn + Fi * c(i, 7, 1) + c(i, 8, 1) <= 0) THEN
+                !end if
+                if (hydrau%reach(i)%ksn + fi * c(i, 7, 1) + c(i, 8, 1) <= 0) then
                     phint = 0
-                ELSE
-                    phint = (Fi * c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksn + Fi * c(i, 7, 1) + c(i, 8, 1))
-                END IF
+                else
+                    phint = (fi * c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksn + fi * c(i, 7, 1) + c(i, 8, 1))
+                end if
 
-                IF ((hydrau%reach(i)%ksp + c(i, 10, 1)) <= 0) THEN
+                if ((hydrau%reach(i)%ksp + c(i, 10, 1)) <= 0) then
                     phip = 0
-                ELSE
+                else
                     phip = c(i, 10, 1) / (hydrau%reach(i)%ksp + c(i, 10, 1))
-                END IF
-                IF (phip < phint) phint = phip
-                IF (Rates%hco3use == "No") THEN
-                    phic = alp0 * c(i, nv-1, 1) / (Rates%ksc + alp0 * c(i, nv-1, 1))
-                ELSE
-                    phic = (alp0 + alp1) * c(i, nv-1, 1) / (Rates%ksc + (alp0 + alp1) * c(i, nv-1, 1))
-                END IF
-                IF (phic < phint) phint = phic
+                end if
+                if (phip < phint) phint = phip
+                if (rates%hco3use == "No") then
+                    phic = alp0 * c(i, nv-1, 1) / (rates%ksc + alp0 * c(i, nv-1, 1))
+                else
+                    phic = (alp0 + alp1) * c(i, nv-1, 1) / (rates%ksc + (alp0 + alp1) * c(i, nv-1, 1))
+                end if
+                if (phic < phint) phint = phic
 
                 !light limitation
 
-                SELECT CASE (Rates%Ilight)
-                  CASE (1) !Half-saturation
-                    IF (hydrau%reach(i)%Isat == 0) THEN
+                select case (rates%ilight)
+                  case (1) !half-saturation
+                    if (hydrau%reach(i)%isat == 0) then
                         phil = 1.0
-                    ELSE
-                        phil = 1.0 / (ke * hydrau%reach(i)%depth) * LOG((hydrau%reach(i)%Isat + Iat(i)) &
-                            / (hydrau%reach(i)%Isat + Iat(i) * EXP(-ke * hydrau%reach(i)%depth)))
-                    END IF
-                  CASE (2) !Smith
-                    IF (hydrau%reach(i)%Isat == 0) THEN
+                    else
+                        phil = 1.0 / (ke * hydrau%reach(i)%depth) * log((hydrau%reach(i)%isat + iat(i)) &
+                            / (hydrau%reach(i)%isat + iat(i) * exp(-ke * hydrau%reach(i)%depth)))
+                    end if
+                  case (2) !smith
+                    if (hydrau%reach(i)%isat == 0) then
                         phil = 1.0
-                    ELSE
-                        num = Iat(i) / hydrau%reach(i)%Isat + SQRT(1 + (Iat(i) / hydrau%reach(i)%Isat) ** 2)
-                        den = Iat(i) * EXP(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%Isat &
-                            + SQRT(1 + (Iat(i) * EXP(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%Isat) ** 2)
-                        phil = 1.0 / (ke * hydrau%reach(i)%depth) * LOG(num / den)
-                    END IF
-                  CASE (3) !Steele
-                    IF (hydrau%reach(i)%Isat == 0) THEN
+                    else
+                        num = iat(i) / hydrau%reach(i)%isat + sqrt(1 + (iat(i) / hydrau%reach(i)%isat) ** 2)
+                        den = iat(i) * exp(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%isat &
+                            + sqrt(1 + (iat(i) * exp(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%isat) ** 2)
+                        phil = 1.0 / (ke * hydrau%reach(i)%depth) * log(num / den)
+                    end if
+                  case (3) !steele
+                    if (hydrau%reach(i)%isat == 0) then
                         phil = 1.0
-                    ELSE
-                        alpha0 = Iat(i) / hydrau%reach(i)%Isat
-                        alpha1 = Iat(i) / hydrau%reach(i)%Isat * EXP(-ke * hydrau%reach(i)%depth)
-                        phil = EXP(1.0_r64) * (EXP(-alpha1) - EXP(-alpha0)) / (ke * hydrau%reach(i)%depth)
-                    END IF
-                END SELECT
+                    else
+                        alpha0 = iat(i) / hydrau%reach(i)%isat
+                        alpha1 = iat(i) / hydrau%reach(i)%isat * exp(-ke * hydrau%reach(i)%depth)
+                        phil = exp(1.0_r64) * (exp(-alpha1) - exp(-alpha0)) / (ke * hydrau%reach(i)%depth)
+                    end if
+                end select
 
-                PhytoPhoto = phil * phint * kgaT(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mgA/day
-                PhytoResp = frespp * kreaT(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mgA/day
-                PhytoDeath = kdeaT(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mgA/day
-                PhytoSettl = hydrau%reach(i)%va * hydrau%reach(i)%Asd * c(i, 11, 1) !mgA/day
-                dc(i, 11, 1) = dc(i, 11, 1) + PhytoPhoto - PhytoResp - PhytoDeath - PhytoSettl !mgA/day
+                phytophoto = phil * phint * kgat(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mga/day
+                phytoresp = frespp * kreat(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mga/day
+                phytodeath = kdeat(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mga/day
+                phytosettl = hydrau%reach(i)%va * hydrau%reach(i)%asd * c(i, 11, 1) !mga/day
+                dc(i, 11, 1) = dc(i, 11, 1) + phytophoto - phytoresp - phytodeath - phytosettl !mga/day
 
                 !
-                ! --- (16) Bottom Algae (gD/day) ---
+                ! --- (16) bottom algae (gd/day) ---
                 !
 
                 !luxury uptake calcs
 
-                IF (c(i, nv, 1) > 0) THEN
-                    NINb = INb(i) / c(i, nv, 1)
-                    NIPb = IPb(i) / c(i, nv, 1)
-                ELSE
-                    NINb = Rates%ana / Rates%ada
-                    NIPb = Rates%apa / Rates%ada
-                END IF
-                IF (NINb > 0) THEN
-                    FBnb = hydrau%reach(i)%NINbmin / NINb
-                ELSE
-                    FBnb = 1.0_r64
-                END IF
-                IF (FBnb < 0) FBnb = 0.0_r64
-                IF (FBnb > 1.0_r64) FBnb = 1.0_r64
-                IF (NIPb > 0.0_r64) THEN
-                    FBpb = hydrau%reach(i)%NIPbmin / NIPb
-                ELSE
-                    FBpb = 1.0_r64
-                END IF
-                IF (FBpb < 0) FBpb = 0.0_r64
-                IF (FBpb > 1.0_r64) FBpb = 1.0_r64
+                if (c(i, nv, 1) > 0) then
+                    ninb = inb(i) / c(i, nv, 1)
+                    nipb = ipb(i) / c(i, nv, 1)
+                else
+                    ninb = rates%ana / rates%ada
+                    nipb = rates%apa / rates%ada
+                end if
+                if (ninb > 0) then
+                    fbnb = hydrau%reach(i)%ninbmin / ninb
+                else
+                    fbnb = 1.0_r64
+                end if
+                if (fbnb < 0) fbnb = 0.0_r64
+                if (fbnb > 1.0_r64) fbnb = 1.0_r64
+                if (nipb > 0.0_r64) then
+                    fbpb = hydrau%reach(i)%nipbmin / nipb
+                else
+                    fbpb = 1.0_r64
+                end if
+                if (fbpb < 0) fbpb = 0.0_r64
+                if (fbpb > 1.0_r64) fbpb = 1.0_r64
 
-                phint = 1.0_r64 - FBnb
-                phinSave(i) = phint !'gp 20-Oct-04
-                phip = 1.0_r64 - FBpb
-                phipSave(i) = phip !'gp 20-Oct-04
-                IF (phip < phint) phint = phip
+                phint = 1.0_r64 - fbnb
+                phinsave(i) = phint !'gp 20-oct-04
+                phip = 1.0_r64 - fbpb
+                phipsave(i) = phip !'gp 20-oct-04
+                if (phip < phint) phint = phip
 
-                IF (Rates%hco3useF == "No") THEN
-                    phic = alp0 * c(i, nv-1, 1) / (Rates%kscF + alp0 * c(i, nv-1, 1)) !gp !CO2 is the limiting substrate
-                ELSE
-                    phic = (alp0 + alp1) * c(i, nv-1, 1) / (Rates%kscF + (alp0 + alp1) * c(i, nv-1, 1)) !gp !HCO3- is the limiting substrate
-                END IF
-                phicSave(i) = phic !'gp 20-Oct-04
-                IF (phic < phint) phint = phic
+                if (rates%hco3usef == "No") then
+                    phic = alp0 * c(i, nv-1, 1) / (rates%kscf + alp0 * c(i, nv-1, 1)) !gp !co2 is the limiting substrate
+                else
+                    phic = (alp0 + alp1) * c(i, nv-1, 1) / (rates%kscf + (alp0 + alp1) * c(i, nv-1, 1)) !gp !hco3- is the limiting substrate
+                end if
+                phicsave(i) = phic !'gp 20-oct-04
+                if (phic < phint) phint = phic
 
                 !light limitation
 
-                botlight = Iat(i) * EXP(-ke * hydrau%reach(i)%depth)
-                IF ((hydrau%reach(i)%NUpWCfrac < 1.0_r64) .OR. (hydrau%reach(i)%PUpWCfrac < 1.0_r64)) THEN
+                botlight = iat(i) * exp(-ke * hydrau%reach(i)%depth)
+                if ((hydrau%reach(i)%nupwcfrac < 1.0_r64) .or. (hydrau%reach(i)%pupwcfrac < 1.0_r64)) then
                     !use water column average light for macrophytes
-                    SELECT CASE (Rates%IlightF)
-                      CASE (1) !Half-saturation
-                        IF (hydrau%reach(i)%IsatF == 0) THEN
+                    select case (rates%ilightf)
+                      case (1) !half-saturation
+                        if (hydrau%reach(i)%isatf == 0) then
                             phil = 1.0
-                        ELSE
-                            phil = 1.0 / (ke * hydrau%reach(i)%depth) * LOG((hydrau%reach(i)%IsatF + Iat(i)) &
-                                / (hydrau%reach(i)%IsatF + Iat(i) * EXP(-ke * hydrau%reach(i)%depth)))
-                        END IF
-                      CASE (2) !Smith
-                        IF (hydrau%reach(i)%IsatF == 0) THEN
+                        else
+                            phil = 1.0 / (ke * hydrau%reach(i)%depth) * log((hydrau%reach(i)%isatf + iat(i)) &
+                                / (hydrau%reach(i)%isatf + iat(i) * exp(-ke * hydrau%reach(i)%depth)))
+                        end if
+                      case (2) !smith
+                        if (hydrau%reach(i)%isatf == 0) then
                             phil = 1.0
-                        ELSE
-                            num = Iat(i) / hydrau%reach(i)%IsatF + SQRT(1 + (Iat(i) / hydrau%reach(i)%IsatF) ** 2)
-                            den = Iat(i) * EXP(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%IsatF &
-                                + SQRT(1 + (Iat(i) * EXP(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%IsatF) ** 2)
-                            phil = 1.0 / (ke * hydrau%reach(i)%depth) * LOG(num / den)
-                        END IF
-                      CASE (3) !Steele
-                        IF (hydrau%reach(i)%IsatF == 0) THEN
+                        else
+                            num = iat(i) / hydrau%reach(i)%isatf + sqrt(1 + (iat(i) / hydrau%reach(i)%isatf) ** 2)
+                            den = iat(i) * exp(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%isatf &
+                                + sqrt(1 + (iat(i) * exp(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%isatf) ** 2)
+                            phil = 1.0 / (ke * hydrau%reach(i)%depth) * log(num / den)
+                        end if
+                      case (3) !steele
+                        if (hydrau%reach(i)%isatf == 0) then
                             phil = 1.0
-                        ELSE
-                            alpha0 = Iat(i) / hydrau%reach(i)%IsatF
-                            alpha1 = Iat(i) / hydrau%reach(i)%IsatF * EXP(-ke * hydrau%reach(i)%depth)
-                            phil = EXP(1.0_r64) * (EXP(-alpha1) - EXP(-alpha0)) / (ke * hydrau%reach(i)%depth)
-                        END IF
-                    END SELECT
-                ELSE
+                        else
+                            alpha0 = iat(i) / hydrau%reach(i)%isatf
+                            alpha1 = iat(i) / hydrau%reach(i)%isatf * exp(-ke * hydrau%reach(i)%depth)
+                            phil = exp(1.0_r64) * (exp(-alpha1) - exp(-alpha0)) / (ke * hydrau%reach(i)%depth)
+                        end if
+                    end select
+                else
                     !use bottom light for periphyton
-                    SELECT CASE (Rates%IlightF)
-                      CASE (1) !Half-saturation
-                        IF (hydrau%reach(i)%IsatF + botlight <= 0) THEN
+                    select case (rates%ilightf)
+                      case (1) !half-saturation
+                        if (hydrau%reach(i)%isatf + botlight <= 0) then
                             phil = 1.0_r64
-                        ELSE
-                            phil = botlight / (hydrau%reach(i)%IsatF + botlight)
-                        END IF
-                      CASE (2) !Smith
-                        IF (botlight ** 2 + hydrau%reach(i)%IsatF ** 2 == 0) THEN
+                        else
+                            phil = botlight / (hydrau%reach(i)%isatf + botlight)
+                        end if
+                      case (2) !smith
+                        if (botlight ** 2 + hydrau%reach(i)%isatf ** 2 == 0) then
                             phil = 1.0_r64
-                        ELSE
-                            phil = botlight / SQRT(botlight ** 2 + hydrau%reach(i)%IsatF ** 2)
-                        END IF
-                      CASE (3) !Steele
-                        IF (hydrau%reach(i)%IsatF <= 0) THEN
+                        else
+                            phil = botlight / sqrt(botlight ** 2 + hydrau%reach(i)%isatf ** 2)
+                        end if
+                      case (3) !steele
+                        if (hydrau%reach(i)%isatf <= 0) then
                             phil = 1.0_r64
-                        ELSE
-                            phil = botlight / hydrau%reach(i)%IsatF * EXP(1 - botlight / hydrau%reach(i)%IsatF)
-                        END IF
-                    END SELECT
-                END IF
+                        else
+                            phil = botlight / hydrau%reach(i)%isatf * exp(1 - botlight / hydrau%reach(i)%isatf)
+                        end if
+                    end select
+                end if
 
-                philSave(i) = phil
+                philsave(i) = phil
 
-                IF (Rates%typeF == "Zero-order") THEN
-                    BotAlgPhoto = phil * phint * kgaFT(i) * hydrau%reach(i)%Asb !gD/day
-                ELSE
-                    BotAlgPhoto = phil * phint * kgaFT(i) * hydrau%reach(i)%Asb * c(i, nv, 1) &
-                        * (1 - c(i, nv, 1) / hydrau%reach(i)%abmax) !gD/day
-                END IF
+                if (rates%typef == "Zero-order") then
+                    botalgphoto = phil * phint * kgaft(i) * hydrau%reach(i)%asb !gd/day
+                else
+                    botalgphoto = phil * phint * kgaft(i) * hydrau%reach(i)%asb * c(i, nv, 1) &
+                        * (1 - c(i, nv, 1) / hydrau%reach(i)%abmax) !gd/day
+                end if
 
-                phitotalSave(i) = phil * phint * phitSave(i)
+                phitotalsave(i) = phil * phint * phitsave(i)
 
                 !basal resp
-                BotAlgResp = krea1FT(i) * hydrau%reach(i)%Asb * c(i, nv, 1) !gD/day
+                botalgresp = krea1ft(i) * hydrau%reach(i)%asb * c(i, nv, 1) !gd/day
                 !add phot-resp
-                If (Rates%typeF == "Zero-order") Then
-                    BotAlgResp = BotAlgResp + krea2FT(i) * phil * phint * kgaFT(i) * hydrau%reach(i)%Asb
-                Else !'else first-order growth used for photo resp
-                    BotAlgResp = BotAlgResp + krea2FT(i) * phil * phint * kgaFT(i) * hydrau%reach(i)%Asb &
+                if (rates%typef == "Zero-order") then
+                    botalgresp = botalgresp + krea2ft(i) * phil * phint * kgaft(i) * hydrau%reach(i)%asb
+                else !'else first-order growth used for photo resp
+                    botalgresp = botalgresp + krea2ft(i) * phil * phint * kgaft(i) * hydrau%reach(i)%asb &
                         * c(i, nv, 1) * (1 - c(i, nv, 1) / hydrau%reach(i)%abmax)
-                End If
+                end if
                 !'adjust for oxygen attenuation
-                BotAlgResp = frespb * BotAlgResp !gD/day
+                botalgresp = frespb * botalgresp !gd/day
 
-                BotAlgExc = kexaFT(i) * hydrau%reach(i)%Asb * c(i, nv, 1) !gD/day (note that BotAlgExc does not contribute to dc(i,nv,1)
-                BotAlgDeath = kdeaFT(i) * hydrau%reach(i)%Asb * c(i, nv, 1) !gD/day
-                dc(i, nv, 1) = BotAlgPhoto - BotAlgResp - BotAlgDeath !gD/day
+                botalgexc = kexaft(i) * hydrau%reach(i)%asb * c(i, nv, 1) !gd/day (note that botalgexc does not contribute to dc(i,nv,1)
+                botalgdeath = kdeaft(i) * hydrau%reach(i)%asb * c(i, nv, 1) !gd/day
+                dc(i, nv, 1) = botalgphoto - botalgresp - botalgdeath !gd/day
 
-                !gp 25-Jun-09
-                saveBotAlgPhoto(i) = BotAlgPhoto / hydrau%reach(i)%Asb
-                saveBotAlgResp(i) = BotAlgResp / hydrau%reach(i)%Asb
-                saveBotAlgDeath(i) = BotAlgDeath / hydrau%reach(i)%Asb
-                saveBotAlgNetGrowth(i) = dc(i, nv, 1) / hydrau%reach(i)%Asb
+                !gp 25-jun-09
+                savebotalgphoto(i) = botalgphoto / hydrau%reach(i)%asb
+                savebotalgresp(i) = botalgresp / hydrau%reach(i)%asb
+                savebotalgdeath(i) = botalgdeath / hydrau%reach(i)%asb
+                savebotalgnetgrowth(i) = dc(i, nv, 1) / hydrau%reach(i)%asb
 
-                !periphyton uptake of N and P
+                !periphyton uptake of n and p
 
-                !gp 03-Dec-09
-                !IF ((hydrau%reach(i)%ksnF + c(i, 7, 1) + c(i, 8, 1)) > 0) THEN
-                ! NLIM = hydrau%reach(i)%KqN / (hydrau%reach(i)%KqN + NINb - hydrau%reach(i)%NINbmin)
-                ! IF (NLIM < 0) THEN
-                ! NLIM = 0
-                ! ELSE IF (NLIM > 1.0) THEN
-                ! NLIM = 1.0_r64
-                ! END IF
-                ! BotAlgUptakeN = hydrau%reach(i)%Asb * NLIM * c(i, nv, 1) * hydrau%reach(i)%NINbupmax &
-                ! * (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksnF + c(i, 7, 1) &
+                !gp 03-dec-09
+                !if ((hydrau%reach(i)%ksnf + c(i, 7, 1) + c(i, 8, 1)) > 0) then
+                ! nlim = hydrau%reach(i)%kqn / (hydrau%reach(i)%kqn + ninb - hydrau%reach(i)%ninbmin)
+                ! if (nlim < 0) then
+                ! nlim = 0
+                ! else if (nlim > 1.0) then
+                ! nlim = 1.0_r64
+                ! end if
+                ! botalguptaken = hydrau%reach(i)%asb * nlim * c(i, nv, 1) * hydrau%reach(i)%ninbupmax &
+                ! * (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksnf + c(i, 7, 1) &
                 ! + c(i, 8, 1))
-                !ELSE
-                ! BotAlgUptakeN = 0
-                !END IF
-                IF ((hydrau%reach(i)%ksnF + Fi * c(i, 7, 1) + c(i, 8, 1)) > 0) THEN
-                    NLIM = hydrau%reach(i)%KqN / (hydrau%reach(i)%KqN + NINb - hydrau%reach(i)%NINbmin)
-                    IF (NLIM < 0) THEN
-                        NLIM = 0
-                    ELSE IF (NLIM > 1.0) THEN
-                        NLIM = 1.0_r64
-                    END IF
-                    BotAlgUptakeN = hydrau%reach(i)%Asb * NLIM * c(i, nv, 1) * hydrau%reach(i)%NINbupmax &
-                        * (Fi * c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksnF + Fi * c(i, 7, 1) &
+                !else
+                ! botalguptaken = 0
+                !end if
+                if ((hydrau%reach(i)%ksnf + fi * c(i, 7, 1) + c(i, 8, 1)) > 0) then
+                    nlim = hydrau%reach(i)%kqn / (hydrau%reach(i)%kqn + ninb - hydrau%reach(i)%ninbmin)
+                    if (nlim < 0) then
+                        nlim = 0
+                    else if (nlim > 1.0) then
+                        nlim = 1.0_r64
+                    end if
+                    botalguptaken = hydrau%reach(i)%asb * nlim * c(i, nv, 1) * hydrau%reach(i)%ninbupmax &
+                        * (fi * c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksnf + fi * c(i, 7, 1) &
                         + c(i, 8, 1))
-                ELSE
-                    BotAlgUptakeN = 0
-                END IF
+                else
+                    botalguptaken = 0
+                end if
 
-                IF ((hydrau%reach(i)%kspF + c(i, 10, 1)) > 0) THEN
-                    PLIM = hydrau%reach(i)%KqP / (hydrau%reach(i)%KqP + NIPb - hydrau%reach(i)%NIPbmin)
-                    IF (PLIM < 0) THEN
-                        PLIM = 0
-                    ELSE IF (PLIM > 1) THEN
-                        PLIM = 1.0_r64
-                    END IF
-                    BotAlgUptakeP = hydrau%reach(i)%Asb * PLIM * c(i, nv, 1) * hydrau%reach(i)%NIPbupmax &
-                        * c(i, 10, 1) / (hydrau%reach(i)%kspF + c(i, 10, 1))
-                ELSE
-                    BotAlgUptakeP = 0
-                END IF
+                if ((hydrau%reach(i)%kspf + c(i, 10, 1)) > 0) then
+                    plim = hydrau%reach(i)%kqp / (hydrau%reach(i)%kqp + nipb - hydrau%reach(i)%nipbmin)
+                    if (plim < 0) then
+                        plim = 0
+                    else if (plim > 1) then
+                        plim = 1.0_r64
+                    end if
+                    botalguptakep = hydrau%reach(i)%asb * plim * c(i, nv, 1) * hydrau%reach(i)%nipbupmax &
+                        * c(i, 10, 1) / (hydrau%reach(i)%kspf + c(i, 10, 1))
+                else
+                    botalguptakep = 0
+                end if
 
-                !gp 03-Dec-09
-                !If (BotAlgUptakeN * sys%dt > (c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol) Then
-                ! BotAlgUptakeN = (c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol / sys%dt !'mgN/day
-                !End If
-                !If (BotAlgUptakeP * sys%dt > c(i, 10, 1) * hydrau%reach(i)%vol) Then
-                ! BotAlgUptakeP = c(i, 10, 1) * hydrau%reach(i)%vol / sys%dt !'mgP/day
-                !End If
-                If (BotAlgUptakeN * sys%dt > (Fi * c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol) Then
-                    BotAlgUptakeN = (Fi * c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol / sys%dt !'mgN/day
-                End If
-                If (BotAlgUptakeP * sys%dt > c(i, 10, 1) * hydrau%reach(i)%vol) Then
-                    BotAlgUptakeP = c(i, 10, 1) * hydrau%reach(i)%vol / sys%dt !'mgP/day
-                End If
+                !gp 03-dec-09
+                !if (botalguptaken * sys%dt > (c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol) then
+                ! botalguptaken = (c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol / sys%dt !'mgn/day
+                !end if
+                !if (botalguptakep * sys%dt > c(i, 10, 1) * hydrau%reach(i)%vol) then
+                ! botalguptakep = c(i, 10, 1) * hydrau%reach(i)%vol / sys%dt !'mgp/day
+                !end if
+                if (botalguptaken * sys%dt > (fi * c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol) then
+                    botalguptaken = (fi * c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol / sys%dt !'mgn/day
+                end if
+                if (botalguptakep * sys%dt > c(i, 10, 1) * hydrau%reach(i)%vol) then
+                    botalguptakep = c(i, 10, 1) * hydrau%reach(i)%vol / sys%dt !'mgp/day
+                end if
 
-                !change in intracellular N and P in periphyton
-                dINb(i) = BotAlgUptakeN - NINb * BotAlgDeath - NINb * BotAlgExc !mgN/day
-                dIPb(i) = BotAlgUptakeP - NIPb * BotAlgDeath - NIPb * BotAlgExc !mgP/day
+                !change in intracellular n and p in periphyton
+                dinb(i) = botalguptaken - ninb * botalgdeath - ninb * botalgexc !mgn/day
+                dipb(i) = botalguptakep - nipb * botalgdeath - nipb * botalgexc !mgp/day
 
                 !ammonium preference
 
-                !gp 03-Dec-09
+                !gp 03-dec-09
                 !prefam = 0
-                !IF (c(i, 7, 1) * c(i, 8, 1) > 0) THEN
+                !if (c(i, 7, 1) * c(i, 8, 1) > 0) then
                 ! prefam = c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnx + c(i, 7, 1)) / (hydrau%reach(i)%khnx + c(i, 8, 1)) &
                 ! + c(i, 7, 1) * hydrau%reach(i)%khnx / (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnx + c(i, 8, 1))
-                !END IF
-                !prefamF = 0
-                !IF (c(i, 7, 1) + c(i, 8, 1) > 0) THEN
-                ! prefamF = c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnxF + c(i, 7, 1)) / (hydrau%reach(i)%khnxF + c(i, 8, 1)) &
-                ! + c(i, 7, 1) * hydrau%reach(i)%khnxF / (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnxF + c(i, 8, 1))
-                !END IF
+                !end if
+                !prefamf = 0
+                !if (c(i, 7, 1) + c(i, 8, 1) > 0) then
+                ! prefamf = c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnxf + c(i, 7, 1)) / (hydrau%reach(i)%khnxf + c(i, 8, 1)) &
+                ! + c(i, 7, 1) * hydrau%reach(i)%khnxf / (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnxf + c(i, 8, 1))
+                !end if
                 prefam = 0
-                IF (Fi * c(i, 7, 1) * c(i, 8, 1) > 0) THEN
-                    prefam = Fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnx + Fi * c(i, 7, 1)) &
+                if (fi * c(i, 7, 1) * c(i, 8, 1) > 0) then
+                    prefam = fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnx + fi * c(i, 7, 1)) &
                         / (hydrau%reach(i)%khnx + c(i, 8, 1)) &
-                        + Fi * c(i, 7, 1) * hydrau%reach(i)%khnx / (Fi * c(i, 7, 1) + c(i, 8, 1)) &
+                        + fi * c(i, 7, 1) * hydrau%reach(i)%khnx / (fi * c(i, 7, 1) + c(i, 8, 1)) &
                         / (hydrau%reach(i)%khnx + c(i, 8, 1))
-                END IF
-                prefamF = 0
-                IF (Fi * c(i, 7, 1) + c(i, 8, 1) > 0) THEN
-                    prefamF = Fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnxF + Fi * c(i, 7, 1)) &
-                        / (hydrau%reach(i)%khnxF + c(i, 8, 1)) &
-                        + Fi * c(i, 7, 1) * hydrau%reach(i)%khnxF / (Fi * c(i, 7, 1) + c(i, 8, 1)) &
-                        / (hydrau%reach(i)%khnxF + c(i, 8, 1))
-                END IF
+                end if
+                prefamf = 0
+                if (fi * c(i, 7, 1) + c(i, 8, 1) > 0) then
+                    prefamf = fi * c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnxf + fi * c(i, 7, 1)) &
+                        / (hydrau%reach(i)%khnxf + c(i, 8, 1)) &
+                        + fi * c(i, 7, 1) * hydrau%reach(i)%khnxf / (fi * c(i, 7, 1) + c(i, 8, 1)) &
+                        / (hydrau%reach(i)%khnxf + c(i, 8, 1))
+                end if
 
                 !
-                ! --- sediment fluxes of O2, C, N, and P ---
+                ! --- sediment fluxes of o2, c, n, and p ---
                 !
 
-                If (sys%calcSedFlux == "Yes" .OR. sys%calcSedFlux == "Option 1" .OR. sys%calcSedFlux == "Option 2") Then !gp 11-Jan-06
+                if (sys%calcsedflux == "Yes" .or. sys%calcsedflux == "Option 1" .or. sys%calcsedflux == "Option 2") then !gp 11-jan-06
 
                     Jcin = Rates%roc * Rates%aca * hydrau%reach(i)%va * c(i, 11, 1) &
                         + hydrau%reach(i)%vdt * c(i, 12, 1) / Rates%adc * Rates%roc !gO2/m^2/d
