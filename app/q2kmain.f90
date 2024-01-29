@@ -36,21 +36,18 @@
 !****************************************************************************
 
 program q2kmain
-
-    ! variables
-
-    use m_constants
-    use m_system_params
-    use m_hydraulics
-    use m_meteorology
-    use m_upstream_boundary
-    use m_downstream_boundary
-    use m_rates
-    use class_solarcalc
-! use class_rivertopo
-    use m_readfile
-    use m_integration, only: integration
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use m_hydraulics, only: riverhydraulics_type
+    use m_meteorology, only: meteorology_t
+    use m_upstream_boundary, only: upstream_boundary_t
+    use m_downstream_boundary, only: downstream_boundary_t
+    use m_rates, only: rates_t
+    use class_solarcalc, only: solar_type
+    use m_system_params, only: system_params_t
+    use m_rivertopo, only: t_rivertopo
     use m_output, only: outdata_t, output
+    use m_readfile, only: readinputfile
+    use m_integration, only: integration
 
 
 !gp 04-feb-05
@@ -74,12 +71,12 @@ program q2kmain
     type(system_params_t) sys !declare the system parameter variables
     type(t_rivertopo) topo !river topology
     type(outdata_t) prout
-    integer(i4b) begintime, endtime
+    integer(i32) begintime, endtime
 
 
 !gp 04-feb-05
 ! character(len=260) ::msgfile, dirname !11/16/04
-! integer(i4b) istat !11/16/04
+! integer(i32) istat !11/16/04
     character(len=260) ::msgfile !gp long file names are limited to 255 characters (260 for full paths)
 
 
