@@ -16,7 +16,7 @@ module m_derivs
         hypofluxno3, hypofluxsrp, hypofluxic
     use m_light_heat, only: lightheat, heatbalance, lightextinction
     use m_phsolve, only: chemrates, modfp2, ph_solver
-    use class_solarcalc, only: solar_type, solarcalc
+    use m_solar_calc, only: solar_type, solarcalc
     use m_sourcein, only: load, sourcescalc
     use m_system_params, only: system_params_t
     use m_downstream_boundary, only: downstream_boundary_t, instanteousdownstreamboundary

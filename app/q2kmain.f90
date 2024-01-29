@@ -42,7 +42,7 @@ program q2kmain
     use m_upstream_boundary, only: upstream_boundary_t
     use m_downstream_boundary, only: downstream_boundary_t
     use m_rates, only: rates_t
-    use class_solarcalc, only: solar_type
+    use m_solar_calc, only: solar_type
     use m_system_params, only: system_params_t
     use m_rivertopo, only: t_rivertopo
     use m_output, only: outdata_t, output

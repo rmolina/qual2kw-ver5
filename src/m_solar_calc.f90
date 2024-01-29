@@ -1,7 +1,7 @@
 ! solarradiation.f90
 ! calculate solar radiation
 
-module class_solarcalc
+module m_solar_calc
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_constants, only: pii, w0, e
     use m_date, only: date_t
@@ -363,4 +363,4 @@ contains
 
     end function ri
 
-end module class_solarcalc
+end module m_solar_calc

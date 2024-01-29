@@ -11,7 +11,7 @@ module m_readfile
     use m_water_quality, only:water_quality_t
     use m_upstream_boundary, only: upstream_boundary_t
     use m_downstream_boundary, only: downstream_boundary_t
-    use class_solarcalc, only: solar_type, sitesolar_, sunrisesunset
+    use m_solar_calc, only: solar_type, sitesolar_, sunrisesunset
     implicit none
     private
     public :: readinputfile
