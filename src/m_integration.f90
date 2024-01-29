@@ -20,7 +20,7 @@ module m_integration
     use m_light_heat, only: lightheat, heatbalance, lightextinction
     use class_phsolve, only: chemrates, modfp2, ph_solver, ct
     use class_solarcalc, only: solar_type, solarcalc
-    use class_sourcein, only: load, sourcescalc
+    use m_sourcein, only: load, sourcescalc
     use m_system_params, only: system_params_t
     use m_downstream_boundary, only: downstream_boundary_t, instanteousdownstreamboundary
     use m_meteorology, only: meteorology_t, instanteousmeteo

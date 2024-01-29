@@ -1,6 +1,6 @@
 !sourceinbackup.f90
 
-module class_sourcein
+module m_sourcein
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_constants, only: nv, pii, cpw, rhow
     use m_rivertopo, only: t_rivertopo
@@ -351,4 +351,4 @@ contains
 
     end function
 
-end module class_sourcein
+end module m_sourcein

@@ -3,7 +3,7 @@ module m_output
     use m_constants, only: nv, nl
     use m_hydraulics, only: riverhydraulics_type
     use class_phsolve, only: ph_solver
-    use class_sourcein, only: load, npt, ndiff, sourcescalc
+    use m_sourcein, only: load, npt, ndiff, sourcescalc
     use m_system_params, only: system_params_t
     use m_rates, only: rates_t
     use m_rivertopo, only: t_rivertopo

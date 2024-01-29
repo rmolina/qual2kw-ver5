@@ -6,7 +6,7 @@ module m_readfile
     use m_hydraulics, only: riverhydraulics_type, hydraulics_, makehydraulics
     use m_meteorology, only: meteorology_t
     use m_light_heat, only: Light_
-    use class_sourcein, only: sourcein_
+    use m_sourcein, only: sourcein_
     use m_rates, only: rates_t
     use m_water_quality, only:water_quality_t
     use m_upstream_boundary, only: upstream_boundary_t
