@@ -322,7 +322,7 @@ contains
         real(r64) hh, oh, alke, f1, f2
 
         call chemrates(te, k1, k2, kw, kh, cond)
-        hh = 10.0_r64 ** -ph
+        hh = 10.0_r64 ** (-ph)
         oh = kw / hh
 
         !gp 03-dec-09
@@ -406,7 +406,7 @@ contains
         real(r64) k1, k2, kw, kh
         real(r64) alp0, alp1, alp2, hh
 
-        hh = 10.0_r64 ** -ph
+        hh = 10.0_r64 ** (-ph)
         call chemrates(te, k1, k2, kw, kh, cond)
         alp0 = hh ** 2 / (hh ** 2 + k1 * hh + k1 * k2)
         alp1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
