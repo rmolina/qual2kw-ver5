@@ -194,7 +194,7 @@ contains
         real(dp) alp0, alp1, alp2, hh
         real(dp) ta, mu, lam1, lam2
 
-        hh = 10.0_dp ** -ph
+        hh = 10.0_dp ** (-ph)
         ta = te + 273.15_dp
         mu = 0.000016_dp * cond
         lam1 = 10.0_dp ** (-0.5_dp * 1 * sqrt(mu))
