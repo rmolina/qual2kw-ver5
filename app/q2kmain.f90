@@ -1,97 +1,97 @@
-!  Q2KMAIN.f90
+! Q2KMAIN.f90
 !
 !****************************************************************************
 !
-!  PROGRAM: Q2KFORTRANTEST
+! PROGRAM: Q2KFORTRANTEST
 !
-!  PURPOSE:  Entry point for the console application.
+! PURPOSE: Entry point for the console application.
 !
 ! The following water quality state variables are simulated in QUAL2Kw ver5.x
 ! (i=reach, j=layer [1=water column, 2=sediment temperature/hyporheic pore water])
 !
-! Variable       Variable name                             Units
-! ----------     -------------                             -----
-! c(i, 1, j)     Conductivity                              umho/cm
-! c(i, 2, j)     Inorganic Suspended Solids                mgD/L (D=dry weight)
-! c(i, 3, j)     Dissolved Oxygen                          mgO/L (O=oxygen)
-! c(i, 4, j)     Slow CBOD                                 mgO/L
-! c(i, 5, j)     Fast CBOD                                 mgO/L
-! c(i, 6, j)     Organic N (dissolved and particulate)     ugN/L
-! c(i, 7, j)     Ammonia N                                 ugN/L
-! c(i, 8, j)     Nitrate + Nitrite N                       ugN/L
-! c(i, 9, j)     Organic P (dissolved and particulate)     ugP/L
-! c(i, 10, j)    Soluble Reactive P                        ugP/L
-! c(i, 11, j)    Phytoplankton                             ugA/L (A=chlorophyll a)
-! c(i, 12, j)    Particulate Organic Mater (POM)           mgD/L
-! c(i, 13, j)    Pathogen indicator organism               number/volume
-! c(i, 14, j)    Generic constituent                       user defined
-! c(i, nv-2, j)  Alkalinity                                mgCaCO3/L
-! c(i, nv-1, j)  Total Inorganic C                         moles/L
-! c(i, nv, 1)    bottom algae                              gD/m^2
-! c(i, nv, 2)    hyporheic biofilm                         gD/m^2
-! Te(i, j)       temperature                               deg C
-! INb(i)         Internal N in bottom algae cells          mgN/m^2
-! IPb(i)         Internal P in bottom algae cells          mgP/m^2
+! Variable Variable name Units
+! ---------- ------------- -----
+! c(i, 1, j) Conductivity umho/cm
+! c(i, 2, j) Inorganic Suspended Solids mgD/L (D=dry weight)
+! c(i, 3, j) Dissolved Oxygen mgO/L (O=oxygen)
+! c(i, 4, j) Slow CBOD mgO/L
+! c(i, 5, j) Fast CBOD mgO/L
+! c(i, 6, j) Organic N (dissolved and particulate) ugN/L
+! c(i, 7, j) Ammonia N ugN/L
+! c(i, 8, j) Nitrate + Nitrite N ugN/L
+! c(i, 9, j) Organic P (dissolved and particulate) ugP/L
+! c(i, 10, j) Soluble Reactive P ugP/L
+! c(i, 11, j) Phytoplankton ugA/L (A=chlorophyll a)
+! c(i, 12, j) Particulate Organic Mater (POM) mgD/L
+! c(i, 13, j) Pathogen indicator organism number/volume
+! c(i, 14, j) Generic constituent user defined
+! c(i, nv-2, j) Alkalinity mgCaCO3/L
+! c(i, nv-1, j) Total Inorganic C moles/L
+! c(i, nv, 1) bottom algae gD/m^2
+! c(i, nv, 2) hyporheic biofilm gD/m^2
+! Te(i, j) temperature deg C
+! INb(i) Internal N in bottom algae cells mgN/m^2
+! IPb(i) Internal P in bottom algae cells mgP/m^2
 !
 !****************************************************************************
 
-program Q2KMain
+program q2kmain
 
-    ! Variables
+    ! variables
 
-    USE nrtype
-    USE Class_SystemParams
-    USE Class_Hydraulics
-    USE m_meteorology
-    USE m_upstream_boundary
-    USE m_downstream_boundary
-    USE m_rates
-    USE Class_SolarCalc
-!	USE Class_RiverTopo
-    USE Class_ReadFile
-    USE Class_Integration
-	USE m_output, only: outdata_t, Output
-
-
-!gp 04-Feb-05
-!	USE DFPORT		!11/16/04
+    use nrtype
+    use class_systemparams
+    use class_hydraulics
+    use m_meteorology
+    use m_upstream_boundary
+    use m_downstream_boundary
+    use m_rates
+    use class_solarcalc
+! use class_rivertopo
+    use class_readfile
+    use class_integration
+    use m_output, only: outdata_t, output
 
 
-    IMPLICIT NONE
+!gp 04-feb-05
+! use dfport !11/16/04
+
+
+    implicit none
 
 
 
 
-    ! Variables
-    CHARACTER(LEN=260) :: infile, outfile	!input & output file name
+    ! variables
+    character(len=260) :: infile, outfile !input & output file name
     !gp long file names are limited to 255 characters (260 for full paths)
-    TYPE(RiverHydraulics_type) hydrau	!channel dimensions, hydraulics, physical characters
-    TYPE(meteorology_t) Meteo			!meteology information
-    TYPE(upstream_boundary_t) HW			!headwater
-    TYPE(downstream_boundary_t) DB		!downstream boundary
-    TYPE(rates_t) Rates			!stoch, reaction, temperature and all other rate
-    TYPE(solar_type) :: Solar		!solar radiation
-    TYPE(SystemParams) sys			!declare the system parameter variables
-    TYPE(t_rivertopo) Topo		!river topology
-    TYPE(outdata_t) prOut
-    INTEGER(I4B) i, j, k
-    INTEGER(I4B) begintime, endtime
+    type(riverhydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
+    type(meteorology_t) meteo !meteology information
+    type(upstream_boundary_t) hw !headwater
+    type(downstream_boundary_t) db !downstream boundary
+    type(rates_t) rates !stoch, reaction, temperature and all other rate
+    type(solar_type) :: solar !solar radiation
+    type(systemparams) sys !declare the system parameter variables
+    type(t_rivertopo) topo !river topology
+    type(outdata_t) prout
+    integer(i4b) i, j, k
+    integer(i4b) begintime, endtime
 
 
-!gp 04-Feb-05
-!	CHARACTER(LEN=260) ::msgFile, dirname	!11/16/04
-!	INTEGER(I4B) istat							!11/16/04
-    CHARACTER(LEN=260) ::msgFile 				!gp long file names are limited to 255 characters (260 for full paths)
+!gp 04-feb-05
+! character(len=260) ::msgfile, dirname !11/16/04
+! integer(i4b) istat !11/16/04
+    character(len=260) ::msgfile !gp long file names are limited to 255 characters (260 for full paths)
 
 
-    CALL SYSTEM_CLOCK(begintime)
+    call system_clock(begintime)
 
-    WRITE(*,*)
+    write(*,*)
     WRITE(*,'(50A)') ' QUAL2Kw version 5.1'
     WRITE(*,'(50A)') ' Department of Ecology and Tufts University'
     WRITE(*,*)
     WRITE(*,'(50A)') ' G.J. Pelletier, S.C. Chapra, and Hua Tao'
-    !WRITE(*,'(50A)') '        modified from QUAL2K ver 1.4 by Hua Tao and S.C. Chapra'
+    !WRITE(*,'(50A)') ' modified from QUAL2K ver 1.4 by Hua Tao and S.C. Chapra'
     WRITE(*,*)
     WRITE(*,'(50A)') ' Program is running, please wait...'
     WRITE(*,*)
@@ -100,83 +100,83 @@ program Q2KMain
     msgFile = 'message.dat'
 
 
-    open (unit=8, File=msgFile, status='OLD', ACTION='READ')
-    READ(8,*) infile, outfile
+    open (unit=8, file=msgfile, status='old', action='read')
+    read(8,*) infile, outfile
 
-    CLOSE (8)
+    close (8)
 
 
-!gp debug 04-Feb-05
-!open (unit=11, File='debug.out', status='replace', ACTION='READWRITE')
-!write(11,*) sDir
+!gp debug 04-feb-05
+!open (unit=11, file='debug.out', status='replace', action='readwrite')
+!write(11,*) sdir
 !write(11,*) msgfile
 !write(11,*) infile, outfile
 !close (11)
 
 
-    !infile='C:\research\qual2k\q2k\input\BC092187.q2k'
-    !infile='C:\research\qual2k\input\BC092187ThackP1.q2k'
-!	infile='C:\research\qual2k\input\BC092187v1_2Fortran.q2k'
-!	infile='C:\research\qual2k\input\SRdummyFortran.q2k'
-    OPEN (unit=8, FILE=infile, status='OLD', ACTION='READ')
+    !infile='c:\research\qual2k\q2k\input\bc092187.q2k'
+    !infile='c:\research\qual2k\input\bc092187thackp1.q2k'
+! infile='c:\research\qual2k\input\bc092187v1_2fortran.q2k'
+! infile='c:\research\qual2k\input\srdummyfortran.q2k'
+    open (unit=8, file=infile, status='old', action='read')
     !read in file
 
-!gp 12-Jan-06, 21-Nov-06
-!	OPEN (unit=10, FILE='debug.txt', status='REPLACE', ACTION='WRITE')
-!	OPEN (unit=11, FILE='debug2.txt', status='REPLACE', ACTION='WRITE')
+!gp 12-jan-06, 21-nov-06
+! open (unit=10, file='debug.txt', status='replace', action='write')
+! open (unit=11, file='debug2.txt', status='replace', action='write')
 
-    call ReadInputfile(sys, hydrau, Meteo, HW, DB, Rates, Topo, Solar)
+    call readinputfile(sys, hydrau, meteo, hw, db, rates, topo, solar)
 
 
-    !finishing READING
-    CLOSE (8)
+    !finishing reading
+    close (8)
 
     !do simulation
-    !gp 17-Nov-04 prOut= Outdata_(topo%nr)
-    prOut= outdata_t(topo%nr, sys)		!gp 17-Nov-04 pass sys to allocate dynamic diel arrays
+    !gp 17-nov-04 prout= outdata_(topo%nr)
+    prout= outdata_t(topo%nr, sys) !gp 17-nov-04 pass sys to allocate dynamic diel arrays
 
-!	outfile= 'C:\research\qual2k\input\BC092187v1_2Fortran.out'
-!	outfile= 'C:\research\qual2k\input\SRdummyFortran.out'
-    OPEN (unit=8, FILE=outfile, status='REPLACE', ACTION='WRITE')
+! outfile= 'c:\research\qual2k\input\bc092187v1_2fortran.out'
+! outfile= 'c:\research\qual2k\input\srdummyfortran.out'
+    open (unit=8, file=outfile, status='replace', action='write')
 
-    !gp 23-Jun-09
-    IF (sys%writeDynamic == "Yes") THEN
-        open (unit=12, File='dynamic.txt', status='replace', ACTION='WRITE')
-        WRITE(12,'(44A13)') 'reach', 't', 'Tempw', 'Cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'Norg', &
-            'NH4N', 'NO23N', 'Porg', 'SRP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
-            'Bot Algae', 'Bot Algae', 'TSS', 'TP', 'TN', 'DOsat', 'NH3ui', 'Int N', 'Int P', &
-            'phiTemp', 'phiLight', 'phiNitr', 'phiPhos', 'phiCarb', 'phiTotal', &
-            'BotAlgPhoto', 'BotAlgResp', 'BotAlgDeath', 'BotAlgGrow', &
-            'BotAlgPhoto', 'BotAlgResp', 'BotAlgDeath', 'BotAlgGrow'
-    END IF
+    !gp 23-jun-09
+    if (sys%writedynamic == "Yes") then
+        open (unit=12, file='dynamic.txt', status='replace', action='write')
+        write(12,'(44a13)') 'reach', 't', 'tempw', 'cond', 'iss', 'do', 'cbods', 'cbodf', 'norg', &
+            'nh4n', 'no23n', 'porg', 'srp', 'phyto', 'detritus', 'pathogen', 'generic', 'alk', 'ph', &
+            'bot algae', 'bot algae', 'tss', 'tp', 'tn', 'dosat', 'nh3ui', 'int n', 'int p', &
+            'phitemp', 'philight', 'phinitr', 'phiphos', 'phicarb', 'phitotal', &
+            'botalgphoto', 'botalgresp', 'botalgdeath', 'botalggrow', &
+            'botalgphoto', 'botalgresp', 'botalgdeath', 'botalggrow'
+    end if
 
 
-    CALL Integration(sys, Rates, Meteo, Solar, HW, DB, &
-        hydrau, prOut, topo%nr)
+    call integration(sys, rates, meteo, solar, hw, db, &
+        hydrau, prout, topo%nr)
 
-    !gp 23-Jun-09
-    IF (sys%writeDynamic == "Yes") THEN
+    !gp 23-jun-09
+    if (sys%writedynamic == "Yes") then
         close (12)
-    END IF
+    end if
 
-    CALL Output(prOut, topo%nr, topo, hydrau, Rates, sys)
+    call output(prout, topo%nr, topo, hydrau, rates, sys)
 
-    CALL SYSTEM_CLOCK(endtime)
+    call system_clock(endtime)
 
-    WRITE(*,*) 'elapsed time: ', (endtime-begintime)/1000.0, ' seconds'
-    CLOSE (8)
+    write(*,*) 'elapsed time: ', (endtime-begintime)/1000.0, ' seconds'
+    close (8)
 
-!	CALL Output(Temn, Temx, Teav, osav, pHsav, cmn, cmx, cav, &
-!								pHmn, pHmx, pHav, TNmn, TNmx, TNav, &
-!								TPmn, TPmx, TPav, NH3mn, NH3mx, NH3av, time1, nj)
+! call output(temn, temx, teav, osav, phsav, cmn, cmx, cav, &
+! phmn, phmx, phav, tnmn, tnmx, tnav, &
+! tpmn, tpmx, tpav, nh3mn, nh3mx, nh3av, time1, nj)
 
-    ! Body of Q2KFORTRANTEST
+    ! body of q2kfortrantest
 
-!gp 12-Jan-06, 21-Nov-06
-!	CLOSE (10)
-!	CLOSE (11)
+!gp 12-jan-06, 21-nov-06
+! close (10)
+! close (11)
 
-end program Q2KMain
+end program q2kmain
 
 
 
