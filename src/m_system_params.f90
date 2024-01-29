@@ -92,7 +92,7 @@ contains
         system%basinname=basinname ; system%filename=filename; system%path=path
         system%title = title;
         system%today = date_t(year,month,day); system%timezone=timezone
-        system%dtuser = dtuser ; system%days = tf
+        system%dtuser = dtuser ; system%days = int(tf, i32)
 
         !time-step control
 
@@ -103,8 +103,8 @@ contains
         dtmax = 2.0 ** (int(log(4.0 / 24.0) / log(2.0)))
         if (system%dt > dtmax) system%dt = dtmax
 
-        system%np = tf
-        system%nc = 1.0_r64 /system%dt
+        system%np = int(tf, i32)
+        system%nc = int(1.0_r64 / system%dt, i32)
 
         !integration method
         select case (imeth)
