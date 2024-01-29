@@ -18,7 +18,7 @@ module class_integration
         saveco2fluxbotalgresp, saveco2fluxbotalgphoto, saveco2fluxsod, hypofluxdo, hypofluxcbod, hypofluxnh4, &
         hypofluxno3, hypofluxsrp, hypofluxic
     use class_lightheat, only: lightheat, heatbalance, lightextinction
-    use class_phsolve, only: chemrates, modfp2, phsolnewton, phsolbisect, phsolbrent, ct
+    use class_phsolve, only: chemrates, modfp2, ph_solver, ct
     use class_solarcalc, only: solar_type, solarcalc
     use class_sourcein, only: load, sourcescalc
     use class_systemparams, only: systemparams
@@ -310,24 +310,8 @@ contains
                                     intg%c(i, 7, j) + intg%c(i, 8, j)
                                 dosat = oxygen_saturation(intg%te(i, j), hydrau%reach(i)%elev)
 
-                                !gp 23-nov-09
-                                !if (sys%imethph == "newton-raphson") then
-                                !call phsolnewton(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                ! intg%c(i, 1, j))
-                                !else
-                                !call phsolbisect(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                ! intg%c(i, 1, j))
-                                !end if
-                                if (sys%imethph == "Newton-Raphson") then
-                                    call phsolnewton(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                        intg%c(i, 1, j))
-                                elseif (sys%IMethpH == "Bisection") then
-                                    call phsolbisect(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                        intg%c(i, 1, j))
-                                else
-                                    call phsolbrent(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                        intg%c(i, 1, j))
-                                end if
+                                call ph_solver(sys%imethph, ph, &
+                                    intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), intg%c(i, 1, j))
 
                                 nh3 = 1.0_r64/(1 + 10.0_r64 ** (-ph)/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
                                     (intg%te(i, j) + 273.15_r64))) * intg%c(i, 7, j)
@@ -385,24 +369,8 @@ contains
                                     intg%c(i, 7, j) + intg%c(i, 8, j)
                                 dosat = oxygen_saturation(intg%te(i, j), hydrau%reach(i)%elev)
 
-                                !gp 23-nov-09
-                                !if (sys%imethph == "newton-raphson") then
-                                !call phsolnewton(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                ! intg%c(i, 1, j))
-                                !else
-                                !call phsolbisect(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                ! intg%c(i, 1, j))
-                                !end if
-                                if (sys%imethph == "Newton-Raphson") then
-                                    call phsolnewton(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                        intg%c(i, 1, j))
-                                elseif (sys%imethph == "Bisection") then
-                                    call phsolbisect(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                        intg%c(i, 1, j))
-                                else
-                                    call phsolbrent(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                                        intg%c(i, 1, j))
-                                end if
+                                call ph_solver(sys%imethph, &
+                                    ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), intg%c(i, 1, j))
 
                                 nh3 = 1.0_r64/(1 + 10.0_r64 ** (-ph)/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
                                     (intg%te(i, j) + 273.15_r64))) * intg%c(i, 7, j)
@@ -548,24 +516,8 @@ contains
                     pr%cmx(i, k, j) = intg%c(i, k, j)
                 end do
 
-                !gp 23-nov-09
-                !if (imethph == "newton-raphson") then !public imethph as string
-                ! call phsolnewton(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                ! intg%c(i, 1, j))
-                !else
-                !call phsolbisect(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                ! intg%c(i, 1, j))
-                !end if
-                if (imethph == "Newton-Raphson") then
-                    call phsolnewton(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                        intg%c(i, 1, j))
-                elseif (imethph == "Bisection") then
-                    call phsolbisect(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                        intg%c(i, 1, j))
-                else
-                    call phsolbrent(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                        intg%c(i, 1, j))
-                end if
+                call ph_solver(imethph, &
+                    ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), intg%c(i, 1, j))
 
                 pr%phav(i, j) = 0
                 pr%phmn(i, j) = ph
@@ -765,24 +717,8 @@ contains
 
                 !solve ph value for now
 
-                !gp 23-nov-09
-                !if (imethph == "newton-raphson") then
-                ! call phsolnewton(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                ! intg%c(i, 1, j))
-                !else
-                ! call phsolbisect(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                ! intg%c(i, 1, j))
-                !end if
-                if (imethph == "Newton-Raphson") then
-                    call phsolnewton(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                        intg%c(i, 1, j))
-                elseif (imethph == "Bisection") then
-                    call phsolbisect(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                        intg%c(i, 1, j))
-                else
-                    call phsolbrent(ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), &
-                        intg%c(i, 1, j))
-                end if
+                call ph_solver(imethph, &
+                    ph, intg%c(i, nv - 1, j), intg%te(i, j), intg%c(i, nv - 2, j), intg%c(i, 1, j))
 
                 phss(i, j) = ph
                 if (ph < pr%phmn(i, j)) then

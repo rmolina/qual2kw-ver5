@@ -15,7 +15,7 @@ module m_derivs
         saveco2fluxbotalgresp, saveco2fluxbotalgphoto, saveco2fluxsod, hypofluxdo, hypofluxcbod, hypofluxnh4, &
         hypofluxno3, hypofluxsrp, hypofluxic
     use class_lightheat, only: lightheat, heatbalance, lightextinction
-    use class_phsolve, only: chemrates, modfp2, phsolnewton, phsolbisect, phsolbrent, ct
+    use class_phsolve, only: chemrates, modfp2, ph_solver, ct
     use class_solarcalc, only: solar_type, solarcalc
     use class_sourcein, only: load, sourcescalc
     use class_systemparams, only: systemparams
@@ -150,19 +150,7 @@ contains
         !scc add the following loop to calculate ph and save results 08/29/04
         do i=0, nr
 
-            !gp 23-nov-09
-            !if (sys%imethph == "newton-raphson") then
-            ! call phsolnewton(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            !else
-            ! call phsolbisect(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            !end if
-            if (sys%imethph == "Newton-Raphson") then
-                call phsolnewton(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            elseif (sys%imethph == "Bisection") then
-                call phsolbisect(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            else
-                call phsolbrent(ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
-            end if
+            call ph_solver(sys%imethph, ph, c(i, nv - 1, 1), te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
 
             phs(i, 1) = ph
             phs(i, 2) = 0 !not used unless hyporheic wq is simulated
@@ -1058,19 +1046,7 @@ contains
 
                 DO i=0, nr
 
-                    !gp 23-Nov-09
-                    !IF (sys%IMethpH == "Newton-Raphson") THEN
-                    ! CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    !ELSE
-                    ! CALL phsolBisect(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    !END IF
-                    IF (sys%IMethpH == "Newton-Raphson") THEN
-                        CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    ELSEIF (sys%IMethpH == "Bisection") THEN
-                        CALL phsolBisect(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    ELSE
-                        CALL phsolBrent(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    END IF
+                    call ph_solver(sys%imethph, ph, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
 
                     pHs(i, 2) = pH
                     CALL ChemRates(Te(i, 2), K1, K2, KW, Kh, c(i, 1, 2))
@@ -1389,21 +1365,7 @@ contains
                 !
 
                 DO i=0, nr
-
-                    !gp 23-Nov-09
-                    !IF (sys%IMethpH == "Newton-Raphson") THEN
-                    ! CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    !ELSE
-                    ! CALL phsolBisect(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    !END IF
-                    IF (sys%IMethpH == "Newton-Raphson") THEN
-                        CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    ELSEIF (sys%IMethpH == "Bisection") THEN
-                        CALL phsolBisect(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    ELSE
-                        CALL phsolBrent(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
-                    END IF
-
+                    call ph_solver(sys%imethph, ph, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
                     pHs(i, 2) = pH
                     CALL ChemRates(Te(i, 2), K1, K2, KW, Kh, c(i, 1, 2))
                     K1s(i, 2) = K1; K2s(i, 2) = K2; Khs(i, 2) = Kh

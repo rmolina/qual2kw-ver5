@@ -2,7 +2,7 @@ module m_output
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: nv, nl
     use class_hydraulics, only: riverhydraulics_type
-    use class_phsolve, only: phsolnewton, phsolbisect, phsolbrent
+    use class_phsolve, only: ph_solver
     use class_sourcein, only: load, npt, ndiff, sourcescalc
     use class_systemparams, only: SystemParams
     use m_rates, only: rates_t
@@ -354,21 +354,8 @@ contains
                 do i = 1, nr
 
                     if (load(i)%c(nv - 2) > 0 .and. load(i)%c(nv - 1) > 0) then !gp 03-dec-04
-
-                        !gp 23-nov-09
-                        !if (system%imethph == "newton-raphson") then
-                        ! call phsolnewton(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1)) !gp 03-dec-04
-                        !else
-                        ! call phsolbisect(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1)) !gp 03-dec-04
-                        !end if
-                        if (system%imethph == "Newton-Raphson") Then
-                            call phsolnewton(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1))
-                        elseif (system%imethph == "Bisection") then
-                            call phsolbisect(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1))
-                        else
-                            call phsolbrent(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1))
-                        end if
-
+                        call ph_solver(system%imethph, &
+                            ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1))
                     else
                         ph=0.0
                     end if

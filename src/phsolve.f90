@@ -2,7 +2,7 @@ module class_phsolve
     use nrtype
     implicit none
     private
-    public :: ct, phsolnewton, phsolbisect, phsolbrent, chemrates, modfp2
+    public :: ct, ph_solver, chemrates, modfp2
 
 contains
 
@@ -262,6 +262,23 @@ contains
     end subroutine phsolnewton
 
 !#####################################################################
+
+    subroutine ph_solver(imethph_0, xr_0, ct_0, te_0, alk_0, cond_0)
+        real(dp), intent(inout) :: xr_0
+        real(dp), intent(in) :: ct_0, te_0, alk_0, cond_0
+        character(len=30), intent(in) :: imethph_0 ! integration method
+
+        select case (imethph_0)
+          case ('Newton-Raphson')
+            call phsolnewton(xr_0, ct_0, te_0, alk_0, cond_0)
+          case ('Bisection')
+            call phsolbisect(xr_0, ct_0, te_0, alk_0, cond_0)
+          case default ! "Brent"
+            call phsolbrent(xr_0, ct_0, te_0, alk_0, cond_0)
+        end select
+
+    end subroutine ph_solver
+
 
     pure function fnh3(ph, te)
         ! calculate fraction nh3
