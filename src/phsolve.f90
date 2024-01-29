@@ -6,41 +6,41 @@ module class_phsolve
 
 contains
 
-!gp 23-nov-09
-!!#####################################################################
-!!12/15/07
-!subroutine phsolver(imethph, ph, ct, te, alk, cond)
-!character(*), intent(in) :: imethph ! ph solve method
-!real(dp), intent(out) :: ph
-!real(dp), intent(in) :: ct, te, alk, cond
-!
-!if (imethph == "newton-raphson") then
-! call phsolnewton(ph, ct, te, alk, cond)
-!elseif (imethph == "bisection") then !09/23/07
-! call phsolbisect(ph, ct, te, alk, cond)
-!else !brent method
-! call phsolfzerotx(ph, ct, te, alk, cond)
-!end if
-!
-!end subroutine
-!!#####################################################################
+    !gp 23-nov-09
+    !!#####################################################################
+    !!12/15/07
+    !subroutine phsolver(imethph, ph, ct, te, alk, cond)
+    !character(*), intent(in) :: imethph ! ph solve method
+    !real(dp), intent(out) :: ph
+    !real(dp), intent(in) :: ct, te, alk, cond
+    !
+    !if (imethph == "newton-raphson") then
+    ! call phsolnewton(ph, ct, te, alk, cond)
+    !elseif (imethph == "bisection") then !09/23/07
+    ! call phsolbisect(ph, ct, te, alk, cond)
+    !else !brent method
+    ! call phsolfzerotx(ph, ct, te, alk, cond)
+    !end if
+    !
+    !end subroutine
+    !!#####################################################################
 
-!09/23/07 new ph solver, brent method, used as default method
+    !09/23/07 new ph solver, brent method, used as default method
 
-!gp 23-nov-09
-!subroutine phsolfzerotx(xr, ct, te, alk, cond)
+    !gp 23-nov-09
+    !subroutine phsolfzerotx(xr, ct, te, alk, cond)
     subroutine phsolbrent(xr, ct, te, alk, cond)
 
-!fzerotx textbook version of fzero.
-! x = fzerotx(f,[a,b]) tries to find a zero of f(x) between a and b.
-! f(a) and f(b) must have opposite signs. fzerotx returns one
-! end point of a small subinterval of [a,b] where f changes sign.
+        !fzerotx textbook version of fzero.
+        ! x = fzerotx(f,[a,b]) tries to find a zero of f(x) between a and b.
+        ! f(a) and f(b) must have opposite signs. fzerotx returns one
+        ! end point of a small subinterval of [a,b] where f changes sign.
 
-!in&out varaibles
+        !in&out varaibles
         real(dp), intent(out) :: xr
         real(dp), intent(in) :: ct, te, alk, cond
 
-!local variables
+        !local variables
         real(dp) a, b, c, d, e
         real(dp) fa, fb, fc
         real(dp) p, q, r, s
@@ -48,12 +48,12 @@ contains
         real(dp) alke
         real(dp), parameter:: eps2 = 2.22044604925031e-16
 
-! initialize
+        ! initialize
         a = 0.0
         b = 14.0
 
-!gp 03-dec-09
-!alke = alk / 50000.0
+        !gp 03-dec-09
+        !alke = alk / 50000.0
         alke = alk / 50043.45_dp
 
         fa = f(a, ct, te, alke, cond)
@@ -73,7 +73,7 @@ contains
         d = b - c
         e = d
 
-! main loop, exit from middle of the loop
+        ! main loop, exit from middle of the loop
         do while (fb /= 0)
             ! the three current points, a, b, and c, satisfy:
             ! f(x) changes sign between a and b.
@@ -273,20 +273,6 @@ contains
 
     end function fnh3
 
-    ! !oxygen satuation concentration function
-    ! !temp- temperature
-    ! ! elev- elevation
-    ! pure function oxsat(temp, elev)
-    ! real(dp) oxsat
-    ! real(dp), intent(in) :: temp, elev
-    ! real(dp) taa, lnosf
-
-    ! taa = temp + 273.15_dp
-    ! lnosf = -139.34411_dp + 157570.1_dp / taa - 66423080.0_dp / (taa * taa)
-    ! lnosf= lnosf + 12438.0e6_dp / (taa * taa * taa) - 8621949.0e5_dp / (taa * taa * taa * taa)
-    ! oxsat = exp(lnosf) * (1.0_dp - 0.0001148_dp * elev)
-    ! end function
-
     !caculate k for tmeperature te
     subroutine chemrates(te, k1, k2, kw, kh, cond)
 
@@ -307,7 +293,7 @@ contains
         kw = 10.0_dp ** (6.0875_dp - 0.01706_dp * ta - 4470.99_dp / ta) / lam1 / lam1
         kh = 10.0_dp ** -(-2385.73_dp / ta - 0.0152642_dp * ta + 14.0184_dp)
 
-    end subroutine
+    end subroutine chemrates
 
 
     function ct(ph, alk, te, cond)
