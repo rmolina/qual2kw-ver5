@@ -36,7 +36,7 @@ contains
         !integer(i32) i, j, k, status(113) !gp 03-apr-08
         integer(i32) i, j, k, status(114) !gp 16-jul-08
 
-        integer(i32) nrch, nelem !number of reach, num of element
+        integer(i32) nrch !number of reach
         integer(i32) nptin, ndiffin !num of point load/src, num of non-point
         !system parameters
 
@@ -147,9 +147,7 @@ contains
         character(len=30) xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, typef
         character(len=30) kawindmethod !reaeartion wind effect
         !data
-        integer(i32) kk, nteda, nhydda, nwqd(3), nrp, nwqdiur
-        real(r64) junk !junk data
-        character(len=30) xxx, shtnam(3) !junk string,
+        character(len=30) xxx
 
         !gp 23-nov-09
         !integer(i32) dlstime
