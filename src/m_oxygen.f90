@@ -13,8 +13,11 @@ contains
         real(r64) taa, lnosf
 
         taa = temp + 273.15_r64
-        lnosf = -139.34411_r64 + 157570.1_r64 / taa - 66423080.0_r64 / taa ** 2 &
-            + 12438000000.0_r64 / taa ** 3 - 862194900000.0_r64 / taa ** 4
+        lnosf = -139.34411_r64 &
+            + 157570.1_r64 / taa &
+            - 66423080.0_r64 / taa ** 2 &
+            + 12438000000.0_r64 / taa ** 3 &
+            - 862194900000.0_r64 / taa ** 4
         oxygen_saturation = exp(lnosf) * (1 - 0.0001148_r64 * elev)
 
     end function oxygen_saturation
@@ -22,23 +25,14 @@ contains
     subroutine oxygen_inhibition_and_enhancement(rates, o2, fcarb, fnitr, fdenitr, frespp, frespb)
 
         real(r64), intent(out) :: fcarb, fnitr, fdenitr, frespp, frespb
-        type(rates_t), intent(in) :: rates
         real(r64), intent(in) :: o2
+        type(rates_t), intent(in) :: rates
 
-        !oxygen inhibition of carbon oxidation
-        fcarb = oxygen_inhibition(rates%ikoxc, rates%ksocf, o2)
-
-        !oxygen inhibition of nitrification
-        fnitr = oxygen_inhibition(rates%ikoxn, rates%ksona, o2)
-
-        !oxygen enhancement of denitrification
-        fdenitr = oxygen_enhancement(rates%ikoxdn, rates%ksodn, o2)
-
-        !oxygen inhibition of phytoplankton respiration
-        frespp = oxygen_inhibition(rates%ikoxp, rates%ksop, o2)
-
-        !oxygen inhibition of bottom plant respiration
-        frespb = oxygen_inhibition(rates%ikoxb, rates%ksob, o2)
+        fcarb = oxygen_inhibition(rates%ikoxc, rates%ksocf, o2) !oxygen inhibition of carbon oxidation
+        fnitr = oxygen_inhibition(rates%ikoxn, rates%ksona, o2) !oxygen inhibition of nitrification
+        fdenitr = oxygen_enhancement(rates%ikoxdn, rates%ksodn, o2) !oxygen enhancement of denitrification
+        frespp = oxygen_inhibition(rates%ikoxp, rates%ksop, o2) !oxygen inhibition of phytoplankton respiration
+        frespb = oxygen_inhibition(rates%ikoxb, rates%ksob, o2) !oxygen inhibition of bottom plant respiration
 
     end subroutine oxygen_inhibition_and_enhancement
 
