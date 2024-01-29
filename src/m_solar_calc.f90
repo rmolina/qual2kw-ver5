@@ -1,366 +1,366 @@
-! solarRadiation.f90
+! solarradiation.f90
 ! calculate solar radiation
 
-MODULE Class_SolarCalc
+module class_solarcalc
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    USE m_constants, only: pii, w0, e
+    use m_constants, only: pii, w0, e
     use m_date, only: date_t
-    USE m_solar_position, only: calcJD, degToRad, radToDeg, solarposition, sunrise, sunset
-    USE m_RiverTopo, only: t_rivertopo
+    use m_solar_position, only: calcjd, degtorad, radtodeg, solarposition, sunrise, sunset
+    use m_rivertopo, only: t_rivertopo
     use m_hydraulics, only: riverhydraulics_type
     use class_lightheat, only: lightheat
-    IMPLICIT NONE
-    PRIVATE
-	PUBLIC :: Solar_type, SunriseSunset, SolarCalc, sitesolar_
+    implicit none
+    private
+    public :: solar_type, sunrisesunset, solarcalc, sitesolar_
 
-    TYPE solar_type
-        !REAL(R64) xyear, xmon, xday, Julday				!Julian day
-        REAL(R64) :: nfacBras =2.0_R64, atcRyanStolz=0.8_R64		!Bras parameter, Ryan-Stolz parameter
+    type solar_type
+        !real(r64) xyear, xmon, xday, julday !julian day
+        real(r64) :: nfacbras =2.0_r64, atcryanstolz=0.8_r64 !bras parameter, ryan-stolz parameter
 
-        !GP 23-Nov-09
-        !INTEGER(I32) timezoneHour, dlstime				!timezone hour, daylight saving time in hours
-        REAL(R64) timezoneHour, dlstime				!timezone hour, daylight saving time in hours
+        !gp 23-nov-09
+        !integer(i32) timezonehour, dlstime !timezone hour, daylight saving time in hours
+        real(r64) timezonehour, dlstime !timezone hour, daylight saving time in hours
 
-        CHARACTER(LEN=30) :: solarMethod = "Bras"
-        REAL(R64), DIMENSION(:), POINTER :: ff, sunrs, sunss, Jsnt
-    END TYPE
+        character(len=30) :: solarmethod = "Bras"
+        real(r64), dimension(:), pointer :: ff, sunrs, sunss, jsnt
+    end type
 
-!	REAL(R64), ALLOCATABLE ::ff(:), sunrs(:), sunss(:)
-!	REAL(R64), ALLOCATABLE ::Jsnt(:)
+! real(r64), allocatable ::ff(:), sunrs(:), sunss(:)
+! real(r64), allocatable ::jsnt(:)
 
-CONTAINS
+contains
 
-    FUNCTION sitesolar_(nr, timezone, solarMethod, fBras, fRyan, dlstime) RESULT(Solar)
-        !Data constructor for Solar type
+    function sitesolar_(nr, timezone, solarmethod, fbras, fryan, dlstime) result(solar)
+        !data constructor for solar type
 
-        TYPE(solar_type) Solar
+        type(solar_type) solar
 
-        INTEGER(I32), INTENT(IN) :: nr
-        REAL(R64), INTENT(IN) :: fBras, fRyan
+        integer(i32), intent(in) :: nr
+        real(r64), intent(in) :: fbras, fryan
 
-        !GP 23-Nov-09
-        !INTEGER(I32), INTENT(IN) :: dlstime
-        REAL(R64), INTENT(IN) :: dlstime
+        !gp 23-nov-09
+        !integer(i32), intent(in) :: dlstime
+        real(r64), intent(in) :: dlstime
 
-        !GP 23-Nov-09
-        !CHARACTER (*), INTENT(IN) :: timezone, solarMethod
-        CHARACTER (*), INTENT(IN) :: solarMethod
-        REAL(R64), INTENT(IN) :: timezone
+        !gp 23-nov-09
+        !character (*), intent(in) :: timezone, solarmethod
+        character (*), intent(in) :: solarmethod
+        real(r64), intent(in) :: timezone
 
-        INTEGER(I32) status(4), i
+        integer(i32) status(4), i
 
-        ALLOCATE (Solar%ff(0:nr), STAT=status(1))
-        ALLOCATE (Solar%sunrs(0:nr), STAT=status(2))
-        ALLOCATE (Solar%sunss(0:nr), STAT=status(3))
-        ALLOCATE (Solar%Jsnt(0:nr), STAT=status(4))
+        allocate (solar%ff(0:nr), stat=status(1))
+        allocate (solar%sunrs(0:nr), stat=status(2))
+        allocate (solar%sunss(0:nr), stat=status(3))
+        allocate (solar%jsnt(0:nr), stat=status(4))
 
-        DO i=1, 4
-            IF (status(i)==1) THEN
-                STOP 'Class_SolarCalc:sitesolar_ failed. Insufficient Memory!'
-            END IF
-        END DO
+        do i=1, 4
+            if (status(i)==1) then
+                stop 'Class_SolarCalc:sitesolar_ failed. Insufficient Memory!'
+            end if
+        end do
 
-        !GP 23-Nov-09
-        !Select Case (timezone)
-        !	Case ("Atlantic")
-        !		Solar%timezoneHour = -4
-        !	Case ("Eastern")
-        !		Solar%timezoneHour = -5
-        !	Case ("Central")
-        !		Solar%timezoneHour = -6
-        !	Case ("Mountain")
-        !		Solar%timezoneHour = -7
-        !	Case ("Pacific")
-        !		Solar%timezoneHour = -8
-        !	Case ("Alaska")
-        !		Solar%timezoneHour = -9
-        !	Case ("Hawaii-Aleutian")
-        !		Solar%timezoneHour = -10
-        !	Case ("Samoa")
-        !		Solar%timezoneHour = -11
-        !	Case Default		!gp 17-Nov-04 allow user to enter any integer hour time zone (e.g. PST=-8, GMT/UTC=0, etc)
-        !		IF (LEN_TRIM(timezone)==0) THEN
-        !			Solar%timezoneHour = 0		!time zone is GMT/UTC if it is left blank in the xls file
-        !		ELSE
-        !			OPEN (unit=9, File='c:\qual2kw5\scratch.q2k', status='SCRATCH', ACTION='READWRITE')
-        !			WRITE(9,*) timezone				!write character value to scratch file
-        !			REWIND(9)
-        !			READ(9,*) Solar%timezoneHour	!read integer value from scratch file
-        !			CLOSE (9)
-        !			IF (Solar%timezoneHour < -12 .or. Solar%timezoneHour > 14) THEN
-        !				STOP		!Invalid input for time zone. Select from the list or enter an integer hour (e.g. PST=-8, GMT=0, etc)
-        !			END IF
-        !		END IF
-        !End Select
-        Solar%timezoneHour = timezone
+        !gp 23-nov-09
+        !select case (timezone)
+        ! case ("atlantic")
+        ! solar%timezonehour = -4
+        ! case ("eastern")
+        ! solar%timezonehour = -5
+        ! case ("central")
+        ! solar%timezonehour = -6
+        ! case ("mountain")
+        ! solar%timezonehour = -7
+        ! case ("pacific")
+        ! solar%timezonehour = -8
+        ! case ("alaska")
+        ! solar%timezonehour = -9
+        ! case ("hawaii-aleutian")
+        ! solar%timezonehour = -10
+        ! case ("samoa")
+        ! solar%timezonehour = -11
+        ! case default !gp 17-nov-04 allow user to enter any integer hour time zone (e.g. pst=-8, gmt/utc=0, etc)
+        ! if (len_trim(timezone)==0) then
+        ! solar%timezonehour = 0 !time zone is gmt/utc if it is left blank in the xls file
+        ! else
+        ! open (unit=9, file='c:\qual2kw5\scratch.q2k', status='scratch', action='readwrite')
+        ! write(9,*) timezone !write character value to scratch file
+        ! rewind(9)
+        ! read(9,*) solar%timezonehour !read integer value from scratch file
+        ! close (9)
+        ! if (solar%timezonehour < -12 .or. solar%timezonehour > 14) then
+        ! stop !invalid input for time zone. select from the list or enter an integer hour (e.g. pst=-8, gmt=0, etc)
+        ! end if
+        ! end if
+        !end select
+        solar%timezonehour = timezone
 
-        Solar%solarMethod=solarMethod
-        Solar%nfacBras=fBras
-        Solar%atcRyanStolz = fRyan
-        Solar%dlstime=dlstime
+        solar%solarmethod=solarmethod
+        solar%nfacbras=fbras
+        solar%atcryanstolz = fryan
+        solar%dlstime=dlstime
 
-    END FUNCTION sitesolar_
+    end function sitesolar_
 
-    SUBROUTINE SunriseSunset(nr, Solar, hydrau, today)
+    subroutine sunrisesunset(nr, solar, hydrau, today)
         !gp calculate sunrise, sunset, and photoperid
-        INTEGER(I32), INTENT(IN) :: nr
-        TYPE(date_t), INTENT(IN) :: today						!11/16/04
-        TYPE(solar_type), INTENT(INOUT) :: Solar
-        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
+        integer(i32), intent(in) :: nr
+        type(date_t), intent(in) :: today !11/16/04
+        type(solar_type), intent(inout) :: solar
+        type(riverhydraulics_type), intent(in) :: hydrau
 
-        REAL(R64) photo, tset, tsun
-        INTEGER(I32) i
+        real(r64) photo, tset, tsun
+        integer(i32) i
 
-        DO i = 1, nr ! ne() for dynamic simulation
+        do i = 1, nr ! ne() for dynamic simulation
 
             tsun = sunrise(hydrau%reach(i)%latr, -hydrau%reach(i)%lonr, today%year, today%month, &
-                today%day, Solar%timezoneHour, Solar%dlstime)				!sunrise in days
+                today%day, solar%timezonehour, solar%dlstime) !sunrise in days
             tset = sunset(hydrau%reach(i)%latr, -hydrau%reach(i)%lonr, today%year, today%month, &
-                today%day, Solar%timezoneHour, Solar%dlstime)				!sunset in days
+                today%day, solar%timezonehour, solar%dlstime) !sunset in days
 
-            photo = tset - tsun                !photoperiod in days
-            !tnoon = solarnoon(latr, -lonr, Solar%xyear, Solar%xmon, &
-            !	Solar%xday, Solar%timezoneHour, Solar%dlstime)				!time of solar noon in days
+            photo = tset - tsun !photoperiod in days
+            !tnoon = solarnoon(latr, -lonr, solar%xyear, solar%xmon, &
+            ! solar%xday, solar%timezonehour, solar%dlstime) !time of solar noon in days
 
             !gp note: the next three variables are not used for solar elevation/radiation calculations
-            !because solar elevation for each segment at each time step is calculated with the new NOAA functions
+            !because solar elevation for each segment at each time step is calculated with the new noaa functions
             !instead of the half-sine approximation
-            Solar%ff(i) = photo
-            Solar%sunrs(i) = tsun * 24.0_R64
-            Solar%sunss(i) = tset * 24.0_R64
-        END DO
-    End SUBROUTINE SunriseSunset
+            solar%ff(i) = photo
+            solar%sunrs(i) = tsun * 24.0_r64
+            solar%sunss(i) = tset * 24.0_r64
+        end do
+    end subroutine sunrisesunset
 
-    SUBROUTINE SolarCalc(nr, Solar, siteMeteo, hydrau, system)
-        USE m_system_params
-        USE m_hydraulics
-        USE m_meteorology
+    subroutine solarcalc(nr, solar, sitemeteo, hydrau, system)
+        use m_system_params
+        use m_hydraulics
+        use m_meteorology
 
-        INTEGER(I32), INTENT(IN) :: nr
-        TYPE(solar_type), INTENT(INOUT) :: Solar
-        TYPE(meteorology_t) siteMeteo								!meteology information
-        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
-        TYPE(system_params_t), INTENT(IN) :: system
+        integer(i32), intent(in) :: nr
+        type(solar_type), intent(inout) :: solar
+        type(meteorology_t) sitemeteo !meteology information
+        type(riverhydraulics_type), intent(in) :: hydrau
+        type(system_params_t), intent(in) :: system
 
-        INTEGER(I32) i, j
+        integer(i32) i, j
 
-        DO i=1, nr
-            IF ((system%tday>= Solar%sunrs(i)/24.0_R64 - 0.01_R64).AND. &
-                (system%tday <= Solar%sunss(i)/24.0_R64 + 0.01_R64)) THEN
+        do i=1, nr
+            if ((system%tday>= solar%sunrs(i)/24.0_r64 - 0.01_r64).and. &
+                (system%tday <= solar%sunss(i)/24.0_r64 + 0.01_r64)) then
 
-                !gp 16-Jul-08
-                !Solar%Jsnt(i)=SolarCalcHelper(system%today,hydrau%reach(i)%latr, &
-                !			hydrau%reach(i)%lonr, hydrau%reach(i)%elev, siteMeteo%cc(i), &
-                !			siteMeteo%shadeT(i), system%tday, Solar)
-                Solar%Jsnt(i)=SolarCalcHelper(system%today,hydrau%reach(i)%latr, &
-                    hydrau%reach(i)%lonr, hydrau%reach(i)%elev, siteMeteo%cc(i), &
-                    siteMeteo%shadeT(i), siteMeteo%solarT(i), system%tday, Solar)
+                !gp 16-jul-08
+                !solar%jsnt(i)=solarcalchelper(system%today,hydrau%reach(i)%latr, &
+                ! hydrau%reach(i)%lonr, hydrau%reach(i)%elev, sitemeteo%cc(i), &
+                ! sitemeteo%shadet(i), system%tday, solar)
+                solar%jsnt(i)=solarcalchelper(system%today,hydrau%reach(i)%latr, &
+                    hydrau%reach(i)%lonr, hydrau%reach(i)%elev, sitemeteo%cc(i), &
+                    sitemeteo%shadet(i), sitemeteo%solart(i), system%tday, solar)
 
-            ELSE
-                Solar%Jsnt(i) = 0
-            END IF
-        END DO
-    END SUBROUTINE SolarCalc
+            else
+                solar%jsnt(i) = 0
+            end if
+        end do
+    end subroutine solarcalc
 
 
-    !gp 16-Jul-08
-    !FUNCTION SolarCalcHelper(today, latr, lonr, elev, cc, shadeT, tday, &
-    !						 Solar) RESULT(Jsnt)
-    FUNCTION SolarCalcHelper(today, latr, lonr, elev, cc, shadeT, solarT, tday, &
-        Solar) RESULT(Jsnt)
+    !gp 16-jul-08
+    !function solarcalchelper(today, latr, lonr, elev, cc, shadet, tday, &
+    ! solar) result(jsnt)
+    function solarcalchelper(today, latr, lonr, elev, cc, shadet, solart, tday, &
+        solar) result(jsnt)
 
         !solar radiation at the current reach at this time step
-!		USE  Class_Hydraulics, ONLY: channel
-        TYPE(solar_type), INTENT(IN) :: Solar
-        TYPE(date_t), INTENT(IN) :: today							!11/16/04
+! use class_hydraulics, only: channel
+        type(solar_type), intent(in) :: solar
+        type(date_t), intent(in) :: today !11/16/04
 
-        !gp 23-Jun-09
-        !TYPE(LightHeat_type), INTENT(IN) :: lightheat
+        !gp 23-jun-09
+        !type(lightheat_type), intent(in) :: lightheat
 
-        !gp 16-Jul-08
-        !REAL(R64), INTENT(IN):: latr, lonr, elev, cc, shadeT, tday	!cc cloudy cover
-        REAL(R64), INTENT(IN):: latr, lonr, elev, cc, shadeT, solarT, tday	!cc cloud cover
+        !gp 16-jul-08
+        !real(r64), intent(in):: latr, lonr, elev, cc, shadet, tday !cc cloudy cover
+        real(r64), intent(in):: latr, lonr, elev, cc, shadet, solart, tday !cc cloud cover
 
-!		TYPE(Solar), INTENT(IN) :: Solar
-        REAL(R64) Jsnt
-        REAL(R64) curdayfrac      !current time as fraction of day from 0-1
-        REAL(R64) curHourFrac     !intermediate calc
-        REAL(R64) curMinFrac      !intermediate calc
-        INTEGER(I32) curhh        !current hour during integration
-        INTEGER(I32) curmm        !current minute during integration
-        REAL(R64) curss           !current second during integration
-        REAL(R64) el              !solar elevation (deg from horizon)
-        REAL(R64) ALDO            !reflection of solar rad from water surface
-        REAL(R64) Iclear
-        REAL(R64) az							!solar azimuth in deg from N
-        REAL(R64) erv						!earth radius vector distance to sun in AU
+! type(solar), intent(in) :: solar
+        real(r64) jsnt
+        real(r64) curdayfrac !current time as fraction of day from 0-1
+        real(r64) curhourfrac !intermediate calc
+        real(r64) curminfrac !intermediate calc
+        integer(i32) curhh !current hour during integration
+        integer(i32) curmm !current minute during integration
+        real(r64) curss !current second during integration
+        real(r64) el !solar elevation (deg from horizon)
+        real(r64) aldo !reflection of solar rad from water surface
+        real(r64) iclear
+        real(r64) az !solar azimuth in deg from n
+        real(r64) erv !earth radius vector distance to sun in au
 
-        REAL(R64) Julday
+        real(r64) julday
 
         curdayfrac = tday
-        curHourFrac = curdayfrac * 24.0_R64 - Int(curdayfrac * 24.0_R64)     !intermediate calc
-        curMinFrac = curHourFrac * 60.0_R64 - Int(curHourFrac * 60.0_R64)    !intermediate calc
-        curhh = Int(curdayfrac * 24.0_R64)                             !current hour
-        curmm = Int(curHourFrac * 60.0_R64)                            !current minute
-        curss = curMinFrac * 60.0_R64                                  !current second
+        curhourfrac = curdayfrac * 24.0_r64 - int(curdayfrac * 24.0_r64) !intermediate calc
+        curminfrac = curhourfrac * 60.0_r64 - int(curhourfrac * 60.0_r64) !intermediate calc
+        curhh = int(curdayfrac * 24.0_r64) !current hour
+        curmm = int(curhourfrac * 60.0_r64) !current minute
+        curss = curminfrac * 60.0_r64  !current second
 
-        !gp For i = 1 To nr
+        !gp for i = 1 to nr
 
         !gp calculate solar elevation
 
         !el = solarelevation(latr, -lonr, today%year, today%month, today%day, curhh, curmm, curss, &
-        !										Solar%timezoneHour, Solar%dlstime)
-        Call solarposition(latr, -lonr, today%year, today%month, today%day, curhh, curmm, curss, &
-            Solar%timezoneHour, Solar%dlstime, az, el, erv)
-!gp 16-Jul-08
-        If (Solar%solarMethod == "Observed") Then
-            Jsnt = solarT / (4.183076 * 100 * 100 / 86400)    !'convert from W/m^2 to cal/cm^2/d
-        Else
+        ! solar%timezonehour, solar%dlstime)
+        call solarposition(latr, -lonr, today%year, today%month, today%day, curhh, curmm, curss, &
+            solar%timezonehour, solar%dlstime, az, el, erv)
+!gp 16-jul-08
+        if (solar%solarmethod == "Observed") then
+            jsnt = solart / (4.183076 * 100 * 100 / 86400) !'convert from w/m^2 to cal/cm^2/d
+        else
 
             !gp optional solar radiation codes for clear sky
-            If (el <= 0) Then
-                Jsnt = 0
-            Else
-                Julday = calcJD(today%year, today%month, today%day)
-                SELECT CASE (Solar%solarMethod)
-                  CASE ("Bras")							!clear sky Iclear units of W/m^2
-                    Iclear = BrasSolar(Julday, today%year, tday, el, Solar%nfacBras, erv)
-                  CASE DEFAULT
-                    ! ("Ryan-Stolzenbach")
-                    Iclear = RyanStolzSolar(Julday, today%year, tday, el, Solar%atcRyanStolz, elev, erv)
-                End SELECT
-                Jsnt = Iclear / (4.183076_R64 * 100.0_R64 * 100.0_R64 / 86400.0_R64)   !convert from W/m^2 to cal/cm^2/d
-            End If
+            if (el <= 0) then
+                jsnt = 0
+            else
+                julday = calcjd(today%year, today%month, today%day)
+                select case (solar%solarmethod)
+                  case ("Bras") !clear sky iclear units of w/m^2
+                    iclear = brassolar(julday, today%year, tday, el, solar%nfacbras, erv)
+                  case default
+                    ! ("ryan-stolzenbach")
+                    iclear = ryanstolzsolar(julday, today%year, tday, el, solar%atcryanstolz, elev, erv)
+                end select
+                jsnt = iclear / (4.183076_r64 * 100.0_r64 * 100.0_r64 / 86400.0_r64) !convert from w/m^2 to cal/cm^2/d
+            end if
 
             !cloud cover correction for solar radiation
 
-            !gp 24-Jun-09
-            !Jsnt = Jsnt * (1.0_R64 - 0.65_R64 * cc ** 2)
-            Jsnt = Jsnt * (1.0_R64 - lightheat%KCL1 * cc ** 2)
+            !gp 24-jun-09
+            !jsnt = jsnt * (1.0_r64 - 0.65_r64 * cc ** 2)
+            jsnt = jsnt * (1.0_r64 - lightheat%kcl1 * cc ** 2)
 
-!gp 16-Jul-08
-        End If
+!gp 16-jul-08
+        end if
 
-        !adjustment of Jsnt for effective shading from vegetation and topography
-        !note: shadeT(i) at time=t is interpolated from hourly input values in Sub Derivs
-        Jsnt = Jsnt * (1.0_R64 - shadeT)
+        !adjustment of jsnt for effective shading from vegetation and topography
+        !note: shadet(i) at time=t is interpolated from hourly input values in sub derivs
+        jsnt = jsnt * (1.0_r64 - shadet)
 
         !gp calculate fraction of solar radiation reflected from the water surface
-        !using Anderson (1954) as reported by Brown and Barnwell (1987) for QUAL2e
-        If (el > 0) Then
-            If (cc < 0.1_R64) Then
-                ALDO = 1.18_R64 * el ** (-0.77_R64)
-                !	ElseIf ((cc(i) >= 0.1) .And. (cc(i) < 0.5)) Then
-            ElseIf (cc < 0.5_R64) Then
-                ALDO = 2.2_R64 * el ** (-0.97_R64)
-                !	ElseIf ((cc(i) >= 0.5) .And. (cc(i) < 0.9)) Then
-            ElseIf (cc < 0.9_R64) Then
-                ALDO = 0.95_R64 * el ** (-0.75_R64)
-                !	ElseIf (cc(i) >= 0.9) Then
-            Else
-                ALDO = 0.35_R64 * el ** (-0.45_R64)
-            End If
-        Else
-            ALDO = 0
-        End If
-        If (ALDO < 0) ALDO = 0
-        If (ALDO > 1.0_R64)	ALDO = 1.0_R64
+        !using anderson (1954) as reported by brown and barnwell (1987) for qual2e
+        if (el > 0) then
+            if (cc < 0.1_r64) then
+                aldo = 1.18_r64 * el ** (-0.77_r64)
+                ! elseif ((cc(i) >= 0.1) .and. (cc(i) < 0.5)) then
+            elseif (cc < 0.5_r64) then
+                aldo = 2.2_r64 * el ** (-0.97_r64)
+                ! elseif ((cc(i) >= 0.5) .and. (cc(i) < 0.9)) then
+            elseif (cc < 0.9_r64) then
+                aldo = 0.95_r64 * el ** (-0.75_r64)
+                ! elseif (cc(i) >= 0.9) then
+            else
+                aldo = 0.35_r64 * el ** (-0.45_r64)
+            end if
+        else
+            aldo = 0
+        end if
+        if (aldo < 0) aldo = 0
+        if (aldo > 1.0_r64) aldo = 1.0_r64
         !adjust for reflection
-        Jsnt = Jsnt * (1 - ALDO)          !units of cal/cm^2/day
+        jsnt = jsnt * (1 - aldo) !units of cal/cm^2/day
 
-    End FUNCTION SolarCalcHelper
+    end function solarcalchelper
 
 
-    FUNCTION BrasSolar(jd, year, dayfrac, el, nfac, R) RESULT(Iclear)
+    function brassolar(jd, year, dayfrac, el, nfac, r) result(iclear)
 
         !**********************************************************************
         !*inputs:
-        !*jd = julian day (Jan 1=1, etc.)
+        !*jd = julian day (jan 1=1, etc.)
         !*year = current year
         !*dayfrac = current time of day as a fraction of the day (0-1)
         !*el = solar elevation (deg from horizon)
         !*nfac = atmospheric turbidity paramter (2=clear, 5=smoggy"
         !*
         !*output:
-        !*Iclear = clear-sky solar radiation at input solar elevation (W/m^2)
+        !*iclear = clear-sky solar radiation at input solar elevation (w/m^2)
         !**********************************************************************
-        REAL(R64), INTENT(IN) :: jd, year, dayfrac, el, nfac
-        REAL(R64) Iclear
-        REAL(R64) R, I0, m, a1
+        real(r64), intent(in) :: jd, year, dayfrac, el, nfac
+        real(r64) iclear
+        real(r64) r, i0, m, a1
 
-        !NREL solar constant (W/m^2)
-        !	W0 = 1367
+        !nrel solar constant (w/m^2)
+        ! w0 = 1367
 
-        !ratio of actual earth-sun distance to mean earth-sun distance (Bras eqn 2.10
-        !R=Ri(year,jd, dayfrac)
+        !ratio of actual earth-sun distance to mean earth-sun distance (bras eqn 2.10
+        !r=ri(year,jd, dayfrac)
 
-        !solar radiation on horizontal surface at top of atmosphere (Bras eqn 2.9)
-        I0 = (W0 / R ** 2) * SIN(degToRad(el))
+        !solar radiation on horizontal surface at top of atmosphere (bras eqn 2.9)
+        i0 = (w0 / r ** 2) * sin(degtorad(el))
 
-        !optical air mass (Bras eqn 2.22)
-        m = (SIN(degToRad(el)) + 0.15_R64 * (el + 3.885_R64) ** (-1.253_R64)) ** (-1)    !Bras eqn 2.22
+        !optical air mass (bras eqn 2.22)
+        m = (sin(degtorad(el)) + 0.15_r64 * (el + 3.885_r64) ** (-1.253_r64)) ** (-1) !bras eqn 2.22
 
-        !molecular scattering coeff (Bras eqn 2.26)
-        a1 = 0.128_R64 - 0.054_R64 * Log(m) / e
+        !molecular scattering coeff (bras eqn 2.26)
+        a1 = 0.128_r64 - 0.054_r64 * log(m) / e
 
-        !clear-sky solar radiation at earth surface on horizontal surface (W/m^2) (Bras eqn 2.25)
-        Iclear = I0 * Exp(-nfac * a1 * m)
+        !clear-sky solar radiation at earth surface on horizontal surface (w/m^2) (bras eqn 2.25)
+        iclear = i0 * exp(-nfac * a1 * m)
 
-    End FUNCTION BrasSolar
+    end function brassolar
 
 
-    FUNCTION RyanStolzSolar(jd, year, dayfrac, el, atc, z, R) RESULT(rs)
+    function ryanstolzsolar(jd, year, dayfrac, el, atc, z, r) result(rs)
         !**************************************************************************
         ! input variables
-        !   jd      julian day (Jan 1=1 etc)
-        !   year = current year
-        !   dayfrac = current time of day as a fraction of the day (0-1)
-        !   el      solar elevation deg from horizon
-        !   atc     atmospheric transmission coefficient (0.70-0.91, default 0.8)
-        !   z       elevation, metres -- required if imthd=2
+        ! jd julian day (jan 1=1 etc)
+        ! year = current year
+        ! dayfrac = current time of day as a fraction of the day (0-1)
+        ! el solar elevation deg from horizon
+        ! atc atmospheric transmission coefficient (0.70-0.91, default 0.8)
+        ! z elevation, metres -- required if imthd=2
 
         ! output variable
-        !   rs      clear-sky solar radiation, W m-2
+        ! rs clear-sky solar radiation, w m-2
         !***************************************************************************
-        REAL(R64), INTENT(IN) :: jd, year, dayfrac, el, atc, z
-        REAL(R64) rs
-        REAL(R64) at
-        REAL(R64) sinal , al , a0
-        REAL(R64) rs_toa , R , rm
+        real(r64), intent(in) :: jd, year, dayfrac, el, atc, z
+        real(r64) rs
+        real(r64) at
+        real(r64) sinal , al , a0
+        real(r64) rs_toa , r , rm
 
-        !NREL solar constant, W m-2
-        !W0 = 1367#
+        !nrel solar constant, w m-2
+        !w0 = 1367#
         ! atmospheric transmission coefficient (0.70-0.91)
         ! from ryan et al. mit publication
         at = atc
-        sinal = SIN(degToRad(el))						!Sine of the solar elevation angle
+        sinal = sin(degtorad(el)) !sine of the solar elevation angle
 
-        If (sinal < 0) Then
+        if (sinal < 0) then
             rs = 0.0
-        Else
-            al = Asin(sinal)
-            a0 = radToDeg(al)                 !convert the radians to degree
-            !ratio of actual earth-sun distance to mean earth-sun distance (Bras eqn 2.10
-            !R=Ri(year,jd, dayfrac)
+        else
+            al = asin(sinal)
+            a0 = radtodeg(al) !convert the radians to degree
+            !ratio of actual earth-sun distance to mean earth-sun distance (bras eqn 2.10
+            !r=ri(year,jd, dayfrac)
 
-            rm = (((288.0_R64 - 0.0065_R64 * z) / 288.0_R64) ** 5.256_R64) / (sinal + 0.15_R64 * (a0 + 3.885_R64) ** (-1.253_R64))
-            rs_toa = W0 * sinal / R ** 2       !RS on the top of atmosphere
-            rs = rs_toa * (at ** rm)           !RS on the ground
-        End If
-    End FUNCTION RyanStolzSolar
+            rm = (((288.0_r64 - 0.0065_r64 * z) / 288.0_r64) ** 5.256_r64) / (sinal + 0.15_r64 * (a0 + 3.885_r64) ** (-1.253_r64))
+            rs_toa = w0 * sinal / r ** 2 !rs on the top of atmosphere
+            rs = rs_toa * (at ** rm) !rs on the ground
+        end if
+    end function ryanstolzsolar
 
-    PURE FUNCTION Ri(year,jd, dayfrac)
-        REAL(R64), INTENT(IN) :: year, jd, dayfrac
-        REAL(R64) Ri
-        INTEGER(I32) days
+    pure function ri(year,jd, dayfrac)
+        real(r64), intent(in) :: year, jd, dayfrac
+        real(r64) ri
+        integer(i32) days
 
-        If (year / 4 - Int(year / 4) == 0) Then
+        if (year / 4 - int(year / 4) == 0) then
             days=366
-        Else
+        else
             days=365
-        End If
-        Ri = 1 + 0.017_R64 * Cos((2 * PII / days) * (186.0_R64 - jd - 1 + dayfrac))
+        end if
+        ri = 1 + 0.017_r64 * cos((2 * pii / days) * (186.0_r64 - jd - 1 + dayfrac))
 
-    END FUNCTION Ri
+    end function ri
 
-END MODULE Class_SolarCalc
+end module class_solarcalc
