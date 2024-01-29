@@ -74,7 +74,6 @@ program q2kmain
     type(systemparams) sys !declare the system parameter variables
     type(t_rivertopo) topo !river topology
     type(outdata_t) prout
-    integer(i4b) i, j, k
     integer(i4b) begintime, endtime
 
 
