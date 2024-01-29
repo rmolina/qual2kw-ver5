@@ -2,6 +2,7 @@
 !classoutput.f90
 
 MODULE Class_Output
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     USE nrtype
     USE Class_SourceIn
     USE Class_IntegrationData
@@ -9,66 +10,68 @@ MODULE Class_Output
     IMPLICIT NONE
 
     TYPE Outdata_type
-        !gp 24-Oct-04 INTEGER(I4B) nj
-        INTEGER(I4B) nj !gp need long integer for nj
-        REAL(DP), DIMENSION(:), POINTER :: tdy
+        !gp 24-Oct-04 INTEGER(i32) nj
+        INTEGER(i32) nj !gp need long integer for nj
+        REAL(r64), DIMENSION(:), POINTER :: tdy
         !gp 27-Oct-04 add dimension for nl
-        !gp REAL(DP), DIMENSION(:,:), POINTER :: cmn, cmx, cav !constituents concentrations
-        !gp REAL(DP), DIMENSION(:), POINTER :: Temn, Temx, Teav, osav !temperature, saturated DO
-        !gp REAL(DP), DIMENSION(:), POINTER :: pHmn, pHmx, pHav, pHsav !pH
-        !gp REAL(DP), DIMENSION(:), POINTER :: TNmn, TNmx, TNav !Total nitrogen
-        !gp REAL(DP), DIMENSION(:), POINTER :: TPmn, TPmx, TPav !Total Phosphorus
-        !gp REAL(DP), DIMENSION(:), POINTER :: NH3mn, NH3mx, NH3av !NH3
-        !gp REAL(DP), DIMENSION(:,:), POINTER :: pHpr, NINbpr, NIPbpr !bottom algae luxury update
-        !gp REAL(DP), DIMENSION(:,:), POINTER :: phitotalSavepr, phitSavepr, philSavepr, &
+        !gp REAL(r64), DIMENSION(:,:), POINTER :: cmn, cmx, cav !constituents concentrations
+        !gp REAL(r64), DIMENSION(:), POINTER :: Temn, Temx, Teav, osav !temperature, saturated DO
+        !gp REAL(r64), DIMENSION(:), POINTER :: pHmn, pHmx, pHav, pHsav !pH
+        !gp REAL(r64), DIMENSION(:), POINTER :: TNmn, TNmx, TNav !Total nitrogen
+        !gp REAL(r64), DIMENSION(:), POINTER :: TPmn, TPmx, TPav !Total Phosphorus
+        !gp REAL(r64), DIMENSION(:), POINTER :: NH3mn, NH3mx, NH3av !NH3
+        !gp REAL(r64), DIMENSION(:,:), POINTER :: pHpr, NINbpr, NIPbpr !bottom algae luxury update
+        !gp REAL(r64), DIMENSION(:,:), POINTER :: phitotalSavepr, phitSavepr, philSavepr, &
         !gp phinSavepr, phipSavepr, phicSavepr !gp 20-Oct-04 bottom algae growth limitation factors
-        !gp REAL(DP), DIMENSION(:,:,:), POINTER :: cpr, Tepr !Print out
-        REAL(DP), DIMENSION(:,:,:), POINTER :: cmn, cmx, cav !constituents concentrations (nr, nv, nl)
-        REAL(DP), DIMENSION(:,:), POINTER :: Temn, Temx, Teav, osav !temperature, saturated DO (nr, nl)
-        REAL(DP), DIMENSION(:,:), POINTER :: pHmn, pHmx, pHav, pHsav !pH (nr, nl)
-        REAL(DP), DIMENSION(:,:), POINTER :: TNmn, TNmx, TNav !Total nitrogen (nr, nl)
-        REAL(DP), DIMENSION(:,:), POINTER :: TPmn, TPmx, TPav !Total Phosphorus (nr, nl)
-        REAL(DP), DIMENSION(:,:), POINTER :: NH3mn, NH3mx, NH3av !NH3 (nr, nl)
-        REAL(DP), DIMENSION(:,:,:), POINTER :: pHpr !bottom algae luxury update (nr, nj, nl)
-        REAL(DP), DIMENSION(:,:), POINTER :: NINbpr, NIPbpr !bottom algae luxury update (nr, nj)
+        !gp REAL(r64), DIMENSION(:,:,:), POINTER :: cpr, Tepr !Print out
+        REAL(r64), DIMENSION(:,:,:), POINTER :: cmn, cmx, cav !constituents concentrations (nr, nv, nl)
+        REAL(r64), DIMENSION(:,:), POINTER :: Temn, Temx, Teav, osav !temperature, saturated DO (nr, nl)
+        REAL(r64), DIMENSION(:,:), POINTER :: pHmn, pHmx, pHav, pHsav !pH (nr, nl)
+        REAL(r64), DIMENSION(:,:), POINTER :: TNmn, TNmx, TNav !Total nitrogen (nr, nl)
+        REAL(r64), DIMENSION(:,:), POINTER :: TPmn, TPmx, TPav !Total Phosphorus (nr, nl)
+        REAL(r64), DIMENSION(:,:), POINTER :: NH3mn, NH3mx, NH3av !NH3 (nr, nl)
+        REAL(r64), DIMENSION(:,:,:), POINTER :: pHpr !bottom algae luxury update (nr, nj, nl)
+        REAL(r64), DIMENSION(:,:), POINTER :: NINbpr, NIPbpr !bottom algae luxury update (nr, nj)
 
         !gp 20-Oct-04 growth limitation factors for bottom algae (nr, nj)
-        REAL(DP), DIMENSION(:,:), POINTER :: phitotalSavepr, phitSavepr, philSavepr, phinSavepr, phipSavepr, phicSavepr
+        REAL(r64), DIMENSION(:,:), POINTER :: phitotalSavepr, phitSavepr, philSavepr, phinSavepr, phipSavepr, phicSavepr
 
         !gp 28-Oct-04 diagenesis flux between sediment/water (nr, nj)
-        REAL(DP), DIMENSION(:,:), POINTER :: DiagFluxDOpr, DiagFluxCBODpr, DiagFluxNH4pr, DiagFluxNO3pr, DiagFluxSRPpr, DiagFluxICpr
+        REAL(r64), DIMENSION(:,:), POINTER :: DiagFluxDOpr, DiagFluxCBODpr, DiagFluxNH4pr, DiagFluxNO3pr, &
+            DiagFluxSRPpr, DiagFluxICpr
 
         !gp 28-Oct-04 hyporheic exchange flux between sediment/water (nr, nj)
-        REAL(DP), DIMENSION(:,:), POINTER :: HypoFluxDOpr, HypoFluxCBODpr, HypoFluxNH4pr, HypoFluxNO3pr, HypoFluxSRPpr, HypoFluxICpr
+        REAL(r64), DIMENSION(:,:), POINTER :: HypoFluxDOpr, HypoFluxCBODpr, HypoFluxNH4pr, HypoFluxNO3pr, HypoFluxSRPpr, &
+            HypoFluxICpr
 
         !gp 15-Nov-04 reach-average daily-average flux between sediment/water (nr)
-        REAL(DP), DIMENSION(:), POINTER :: DiagFluxDOav, DiagFluxCBODav, DiagFluxNH4av, DiagFluxNO3av, DiagFluxSRPav
-        REAL(DP), DIMENSION(:), POINTER :: HypoFluxDOav, HypoFluxCBODav, HypoFluxNH4av, HypoFluxNO3av, HypoFluxSRPav
+        REAL(r64), DIMENSION(:), POINTER :: DiagFluxDOav, DiagFluxCBODav, DiagFluxNH4av, DiagFluxNO3av, DiagFluxSRPav
+        REAL(r64), DIMENSION(:), POINTER :: HypoFluxDOav, HypoFluxCBODav, HypoFluxNH4av, HypoFluxNO3av, HypoFluxSRPav
 
         !gp 11-Jan-05 reach-min/max/mean cell quota mgN/gD and mgP/gD (nr)
-        REAL(DP), DIMENSION(:), POINTER :: NINbmn, NINbmx, NINbav, NIPbmn, NIPbmx, NIPbav
+        REAL(r64), DIMENSION(:), POINTER :: NINbmn, NINbmx, NINbav, NIPbmn, NIPbmx, NIPbav
 
-        REAL(DP), DIMENSION(:,:,:), POINTER :: Tepr !Print out (nr, nj, nl)
-        REAL(DP), DIMENSION(:,:,:,:), POINTER :: cpr !Print out (nr, nv, nj, nl)
+        REAL(r64), DIMENSION(:,:,:), POINTER :: Tepr !Print out (nr, nj, nl)
+        REAL(r64), DIMENSION(:,:,:,:), POINTER :: cpr !Print out (nr, nv, nj, nl)
 
         !gp 05-Jul-05 heat/DO/CO2 fluxes
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxJsnt, pr_saveHeatFluxLongat, pr_saveHeatFluxBack, pr_saveHeatFluxConv
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxEvap, pr_saveHeatFluxJsed, pr_saveHeatFluxJhyporheic, &
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveHeatFluxJsnt, pr_saveHeatFluxLongat, pr_saveHeatFluxBack, pr_saveHeatFluxConv
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveHeatFluxEvap, pr_saveHeatFluxJsed, pr_saveHeatFluxJhyporheic, &
             pr_saveHeatFluxTribs
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveHeatFluxAdvecDisp
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxReaer, pr_saveDOfluxCBODfast, pr_saveDOfluxCBODslow, pr_saveDOfluxNitrif
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxPhytoResp, pr_saveDOfluxPhytoPhoto, pr_saveDOfluxBotalgResp, &
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveHeatFluxAdvecDisp
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveDOfluxReaer, pr_saveDOfluxCBODfast, pr_saveDOfluxCBODslow, pr_saveDOfluxNitrif
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveDOfluxPhytoResp, pr_saveDOfluxPhytoPhoto, pr_saveDOfluxBotalgResp, &
             pr_saveDOfluxBotalgPhoto
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxSOD, pr_saveDOfluxCOD, pr_saveDOfluxHyporheic, pr_saveDOfluxTribs
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveDOfluxAdvecDisp
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxReaer, pr_saveCO2fluxCBODfast, pr_saveCO2fluxCBODslow
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxPhytoResp, pr_saveCO2fluxPhytoPhoto, pr_saveCO2fluxBotalgResp, &
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveDOfluxSOD, pr_saveDOfluxCOD, pr_saveDOfluxHyporheic, pr_saveDOfluxTribs
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveDOfluxAdvecDisp
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveCO2fluxReaer, pr_saveCO2fluxCBODfast, pr_saveCO2fluxCBODslow
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveCO2fluxPhytoResp, pr_saveCO2fluxPhytoPhoto, pr_saveCO2fluxBotalgResp, &
             pr_saveCO2fluxBotalgPhoto
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxSOD, pr_saveCO2fluxHyporheic, pr_saveCO2fluxTribs
-        REAL(DP), DIMENSION(:,:), POINTER :: pr_saveCO2fluxAdvecDisp
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveCO2fluxSOD, pr_saveCO2fluxHyporheic, pr_saveCO2fluxTribs
+        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveCO2fluxAdvecDisp
 
         !gp 25-Jun-09
-        REAL(DP), DIMENSION(:), POINTER :: av_BotAlgPhoto, av_BotAlgResp, av_BotAlgDeath, av_BotAlgNetGrowth
+        REAL(r64), DIMENSION(:), POINTER :: av_BotAlgPhoto, av_BotAlgResp, av_BotAlgDeath, av_BotAlgNetGrowth
 
     END TYPE
 
@@ -80,16 +83,16 @@ CONTAINS
         !gp 17-Nov-04
         USE Class_SystemParams
 
-        INTEGER(I4B), INTENT(IN) :: nr
+        INTEGER(i32), INTENT(IN) :: nr
         TYPE(OutData_type) pr
 
-        !gp 05-Jul-05 INTEGER(I4B) i,status(0:60) !gp 11-Jan-05
-        !gp 25-Jun-09 INTEGER(I4B) i,status(0:93) !gp 05-Jul-05
-        INTEGER(I4B) i,status(0:97) !gp 25-Jun-09
+        !gp 05-Jul-05 INTEGER(i32) i,status(0:60) !gp 11-Jan-05
+        !gp 25-Jun-09 INTEGER(i32) i,status(0:93) !gp 05-Jul-05
+        INTEGER(i32) i,status(0:97) !gp 25-Jun-09
 
         !gp 17-Nov-04
         TYPE(SystemParams) sys
-        INTEGER(I4B) nsteps
+        INTEGER(i32) nsteps
         IF (sys%Imeth == "Adaptive step") THEN
             nsteps = 2400
         ELSE
@@ -310,19 +313,19 @@ CONTAINS
         TYPE(rates_t) Rates
         TYPE(SystemParams) system
 
-        INTEGER(I4B), INTENT(IN) :: nr
-        !gp INTEGER(I4B) i, j, nrp
-        INTEGER(I4B) i, j, nrp, k !gp
-        REAL(DP) TOC, TKN, TSS, TP, TN, BottomAlgae, DOSat, NH3
-        REAL(DP) kawind, ka
+        INTEGER(i32), INTENT(IN) :: nr
+        !gp INTEGER(i32) i, j, nrp
+        INTEGER(i32) i, j, nrp, k !gp
+        REAL(r64) TOC, TKN, TSS, TP, TN, BottomAlgae, DOSat, NH3
+        REAL(r64) kawind, ka
         CHARACTER(LEN=30) reaFormular
-        INTEGER(I4B) ihour
-        REAL(DP) t, pH, CBODu, tdy
+        INTEGER(i32) ihour
+        REAL(r64) t, pH, CBODu, tdy
         !gp output of hydraulics
         !Sheets("Hydraulics Summary")
 
         !calculate ka(0) for output, not used in calculations
-        !kawind = 0.728_dp * Uw(0) ** 0.5_dp - 0.317_dp * Uw(0) + 0.0372_dp * Uw(0) ** 2
+        !kawind = 0.728_r64 * Uw(0) ** 0.5_r64 - 0.317_r64 * Uw(0) + 0.0372_r64 * Uw(0) ** 2
         !ka(0) = kau(0) + kawind / depth(0)
         WRITE(8,*) '** Hydraulics Summary **'
         WRITE (8,'(A9, 9A12, A25)')'Downstream', 'Hydraulics', "E'", 'H', 'B', 'Ac', 'U', 'trav time', &
@@ -365,7 +368,7 @@ CONTAINS
         IF (npt /= 0 .OR. ndiff /= 0) THEN
             ! rlab2(0) = rlab1(1)
             DO ihour = 0, 23 !loop through output of hourly sources
-                t = ihour / 24.0_dp !current output time in days
+                t = ihour / 24.0_r64 !current output time in days
                 !evaluate sine functions and distribute loads to reaches at time t
                 CALL SourcesCalc(t, nr, Hydrau%flag)
 
@@ -723,8 +726,8 @@ CONTAINS
                     !gp TN = pr%cpr(nrp, 11, i) * Rates%ana + pr%cpr(nrp, 6, i) + &
                     !gp pr%cpr(nrp, 7, i) + pr%cpr(nrp, 8, i)
                     !gp DOSat = oxsat(pr%Tepr(nrp, i, 1), hydrau%reach(nrp)%elev)
-                    !gp NH3 = 1.0_dp/(1 + 10.0_dp ** (-pr%pHpr(nrp, i))/10.0_dp** -(0.09018_dp + 2729.92_dp / &
-                    !gp (pr%Tepr(nrp, i, 1) + 273.15_dp))) * pr%cpr(nrp, 7, i)
+                    !gp NH3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%pHpr(nrp, i))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
+                    !gp (pr%Tepr(nrp, i, 1) + 273.15_r64))) * pr%cpr(nrp, 7, i)
                     !gp WRITE(8, '(32F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, 1), pr%Tepr(nrp, i, 2), &
                     !gp (pr%cpr(nrp, j, i), j=1, nv-2), pr%pHpr(nrp, i), &
                     !gp pr%cpr(nrp, nv, i)* Rates%mgA / Rates%mgD * 1000, & !SCC 08/09/2004
@@ -743,8 +746,8 @@ CONTAINS
                     TN = pr%cpr(nrp, 11, i, j) * Rates%ana + pr%cpr(nrp, 6, i, j) + &
                         pr%cpr(nrp, 7, i, j) + pr%cpr(nrp, 8, i, j)
                     DOSat = oxsat(pr%Tepr(nrp, i, j), hydrau%reach(nrp)%elev)
-                    NH3 = 1.0_dp/(1 + 10.0_dp ** (-pr%pHpr(nrp, i, j))/10.0_dp** -(0.09018_dp + 2729.92_dp / &
-                        (pr%Tepr(nrp, i, j) + 273.15_dp))) * pr%cpr(nrp, 7, i, j)
+                    NH3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%pHpr(nrp, i, j))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
+                        (pr%Tepr(nrp, i, j) + 273.15_r64))) * pr%cpr(nrp, 7, i, j)
 
                     !gp 01-Nov-04 WRITE(8, '(32F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, 1), pr%Tepr(nrp, i, 2), &
                     !gp 05-Jul-05 WRITE(8, '(33F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, j), &
@@ -796,8 +799,8 @@ CONTAINS
                             pr%cpr(nrp, 10, i, j)
                         TN = pr%cpr(nrp, 11, i, j) * Rates%ana + pr%cpr(nrp, 6, i, j) + &
                             pr%cpr(nrp, 7, i, j) + pr%cpr(nrp, 8, i, j)
-                        NH3 = 1.0_dp/(1 + 10.0_dp ** (-pr%pHpr(nrp, i, j))/10.0_dp** -(0.09018_dp + 2729.92_dp / &
-                            (pr%Tepr(nrp, i, j) + 273.15_dp))) * pr%cpr(nrp, 7, i, j)
+                        NH3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%pHpr(nrp, i, j))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
+                            (pr%Tepr(nrp, i, j) + 273.15_r64))) * pr%cpr(nrp, 7, i, j)
                         DOSat = oxsat(pr%Tepr(nrp, i, j), hydrau%reach(nrp)%elev)
                         WRITE(8, '(41F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, j), &
                             (pr%cpr(nrp, k, i, j), k=1, nv-2), pr%pHpr(nrp, i, j), &
