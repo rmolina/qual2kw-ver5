@@ -142,7 +142,7 @@ contains
         type(riverhydraulics_type), intent(in) :: hydrau
         type(system_params_t), intent(in) :: system
 
-        integer(i32) i, j
+        integer(i32) i
 
         do i=1, nr
             if ((system%tday>= solar%sunrs(i)/24.0_r64 - 0.01_r64).and. &
