@@ -255,7 +255,6 @@ CONTAINS
         IMPLICIT NONE
         REAL(DP) calcSunEqOfCenter
         REAL(DP), INTENT(IN) :: t
-        REAL(DP) e0
         REAL(DP) m, mrad, sinm, sin2m, sin3m
         REAL(DP) c
 
@@ -289,7 +288,6 @@ CONTAINS
         IMPLICIT NONE
         REAL(DP) calcSunTrueLong
         REAL(DP), INTENT(IN) :: t
-        REAL(DP) e0
 
         REAL(DP) l0, c, O
 
@@ -317,7 +315,6 @@ CONTAINS
         IMPLICIT NONE
         REAL(DP) calcSunTrueAnomaly
         REAL(DP), INTENT(IN) :: t
-        REAL(DP) e0
 
         REAL(DP) m, c, v
 
@@ -587,7 +584,6 @@ CONTAINS
         IMPLICIT NONE
         REAL(DP) calcHourAngleSunset
         REAL(DP), INTENT(IN) :: lat, SolarDec
-        REAL(DP) e0
 
         REAL(DP) latrad, sdRad, HAarg, HA
 
@@ -777,7 +773,7 @@ CONTAINS
         REAL(DP) riseTimeGMT, riseTimeLST
 
         ! change sign convention for longitude from negative to positive in western hemisphere
-        longitude = lon * -1
+        longitude = lon * (-1)
         Latitude = lat
         If (Latitude > 89.8_dp) Then
             Latitude = 89.8_dp
@@ -833,7 +829,7 @@ CONTAINS
         REAL(DP) solarNoonDec, solNoonUTC
 
         ! change sign convention for longitude from negative to positive in western hemisphere
-        longitude = lon * -1
+        longitude = lon * (-1)
         Latitude = lat
         If (Latitude > 89.8) Then
             Latitude = 89.8
@@ -897,7 +893,7 @@ CONTAINS
         REAL(DP) setTimeGMT, setTimeLST
 
         ! change sign convention for longitude from negative to positive in western hemisphere
-        longitude = lon * -1
+        longitude = lon * (-1)
         Latitude = lat
         If (Latitude > 89.8) Then
             Latitude = 89.8
@@ -956,7 +952,7 @@ CONTAINS
         REAL(DP) refractionCorrection, Te, solarzen
 
         ! change sign convention for longitude from negative to positive in western hemisphere
-        longitude = lon * -1
+        longitude = lon * (-1)
         Latitude = lat
         If (Latitude > 89.8) Then
             Latitude = 89.8
@@ -965,7 +961,7 @@ CONTAINS
         END IF
 
         !change time zone to ppositive hours in western hemisphere
-        Zone = timezone * -1
+        Zone = timezone * (-1)
         daySavings = dlstime * 60
         hh = hours - (daySavings / 60.0_dp)
         mm = minutes
@@ -1146,13 +1142,13 @@ CONTAINS
         REAL(DP) refractionCorrection, Te, solarzen
 
         ! change sign convention for longitude from negative to positive in western hemisphere
-        longitude = lon * -1
+        longitude = lon * (-1)
         Latitude = lat
         If (Latitude > 89.8) Latitude = 89.8
         If (Latitude < -89.8) Latitude = -89.8
 
         !change time zone to ppositive hours in western hemisphere
-        Zone = timezone * -1
+        Zone = timezone * (-1)
         daySavings = dlstime * 60.0
         hh = hours - (daySavings / 60.0)
         mm = minutes
@@ -1339,7 +1335,7 @@ CONTAINS
         REAL(DP) refractionCorrection, Te, solarzen
 
         ! change sign convention for longitude from negative to positive in western hemisphere
-        longitude = lon * -1
+        longitude = lon * (-1)
         Latitude = lat
         If (Latitude > 89.8) Then
             Latitude = 89.8
@@ -1349,7 +1345,7 @@ CONTAINS
 
 
         !change time zone to ppositive hours in western hemisphere
-        Zone = timezone * -1
+        Zone = timezone * (-1)
         daySavings = dlstime * 60
         hh = hours - (daySavings / 60)
         mm = minutes
