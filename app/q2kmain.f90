@@ -48,7 +48,7 @@ program q2kmain
     use m_rates
     use class_solarcalc
 ! use class_rivertopo
-    use class_readfile
+    use m_readfile
     use class_integration
     use m_output, only: outdata_t, output
 

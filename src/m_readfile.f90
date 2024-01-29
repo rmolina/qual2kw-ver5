@@ -1,4 +1,4 @@
-module class_readfile
+module m_readfile
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: lgt, hrsday, nv
     use class_systemparams, only: systemparams, SystemParams_
@@ -808,5 +808,5 @@ contains
     end subroutine readinputfile
 
 
-end module class_readfile
+end module m_readfile
 
