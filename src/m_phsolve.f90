@@ -1,4 +1,4 @@
-module class_phsolve
+module m_phsolve
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_constants, only: e, es, imax
     implicit none
@@ -415,4 +415,4 @@ contains
 
     end function
 
-end module class_phsolve
+end module m_phsolve

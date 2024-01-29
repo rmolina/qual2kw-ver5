@@ -15,7 +15,7 @@ module m_derivs
         saveco2fluxbotalgresp, saveco2fluxbotalgphoto, saveco2fluxsod, hypofluxdo, hypofluxcbod, hypofluxnh4, &
         hypofluxno3, hypofluxsrp, hypofluxic
     use m_light_heat, only: lightheat, heatbalance, lightextinction
-    use class_phsolve, only: chemrates, modfp2, ph_solver, ct
+    use m_phsolve, only: chemrates, modfp2, ph_solver, ct
     use class_solarcalc, only: solar_type, solarcalc
     use m_sourcein, only: load, sourcescalc
     use m_system_params, only: system_params_t
