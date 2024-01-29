@@ -3,7 +3,7 @@ module m_downstream_boundary
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_constants, only: LGT, nv
     use m_water_quality, only: water_quality_t
-    use m_phsolve, only: ct
+    use m_phsolve, only: ct_function
     implicit none
     private
     public :: downstream_boundary_t, instanteousdownstreamboundary
@@ -78,7 +78,7 @@ contains
             ph = db%dat(t0_hr)%ph + (t_hr - t0_hr) * (db%dat(t1_hr)%ph - db%dat(t0_hr)%ph)
 
             !c(nv-1)=ct(ph, c(nv-2), te, c(1))
-            c(nv - 1) = ct(ph, c(nv - 2), te, c(1))
+            c(nv - 1) = ct_function(ph, c(nv - 2), te, c(1))
 
         else !same as last reach's
             te=lastte

@@ -3,7 +3,7 @@ module m_phsolve
     use m_constants, only: e, es, imax
     implicit none
     private
-    public :: ct, ph_solver, chemrates, modfp2
+    public :: ct_function, ph_solver, chemrates, modfp2
 
 contains
 
@@ -314,9 +314,9 @@ contains
     end subroutine chemrates
 
 
-    function ct(ph, alk, te, cond)
+    function ct_function(ph, alk, te, cond)
 
-        real(r64) ct
+        real(r64) ct_function
         real(r64), intent(in) :: ph, alk, te, cond
         real(r64) k1, k2, kw, kh
         real(r64) hh, oh, alke, f1, f2
@@ -331,7 +331,7 @@ contains
 
         f1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
         f2 = k1 * k2 / (hh ** 2 + k1 * hh + k1 * k2)
-        ct = (alke - oh + hh) / (f1 + 2 * f2)
+        ct_function = (alke - oh + hh) / (f1 + 2 * f2)
 
     end function
 

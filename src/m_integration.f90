@@ -16,7 +16,7 @@ module m_integration
         saveco2fluxbotalgresp, saveco2fluxbotalgphoto, saveco2fluxsod, hypofluxdo, hypofluxcbod, hypofluxnh4, &
         hypofluxno3, hypofluxsrp, hypofluxic
     use m_light_heat, only: lightheat, heatbalance, lightextinction
-    use m_phsolve, only: chemrates, modfp2, ph_solver, ct
+    use m_phsolve, only: chemrates, modfp2, ph_solver, ct_function
     use class_solarcalc, only: solar_type, solarcalc
     use m_sourcein, only: load, sourcescalc
     use m_system_params, only: system_params_t
@@ -206,7 +206,7 @@ contains
                 if (hydrau%reach(i)%ph_ini < 0) then
                     intg%c(i, nv-1, j) = intg%c(0, nv-1, 1)
                 else
-                    intg%c(i, nv-1, j) = ct(hydrau%reach(i)%ph_ini, intg%c(i, nv-2, j), intg%te(i, j), intg%c(i, 1, j))
+                    intg%c(i, nv-1, j) = ct_function(hydrau%reach(i)%ph_ini, intg%c(i, nv-2, j), intg%te(i, j), intg%c(i, 1, j))
                 end if
 
             end do

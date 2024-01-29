@@ -2,7 +2,7 @@ module m_upstream_boundary
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_constants, only: nv
     use m_water_quality, only: water_quality_t
-    use m_phsolve, only: ct
+    use m_phsolve, only: ct_function
     implicit none
     private
     public :: upstream_boundary_t, instanteousheadwater
@@ -67,7 +67,7 @@ contains
         c = hw%dat(t0_hr)%c + (t_hr - t0_hr) * (hw%dat(t1_hr)%c - hw%dat(t0_hr)%c)
         ph = hw%dat(t0_hr)%ph + (t_hr - t0_hr) * (hw%dat(t1_hr)%ph - hw%dat(t0_hr)%ph)
         !solve total carbon concentration
-        c(nv-1)=ct(ph, c(nv-2), te, c(1))
+        c(nv-1)=ct_function(ph, c(nv-2), te, c(1))
 
         !gp 12-jan-06
         !write(10,'(4f13.4)') te, c, ph, c(nv-1)

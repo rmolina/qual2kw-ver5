@@ -4,7 +4,7 @@ module m_sourcein
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_constants, only: nv, pii, cpw, rhow
     use m_rivertopo, only: t_rivertopo
-    use m_phsolve, only: ct
+    use m_phsolve, only: ct_function
     use m_water_quality, only: water_quality_t
     use m_hydraulics, only: riverhydraulics_type
     implicit none
@@ -196,7 +196,7 @@ contains
                     diffu(i)%ph = phind(i)
                 end if
                 !total inorganic carbon
-                diffu(i)%c(nv - 1) = ct(diffu(i)%ph, diffu(i)%c(nv - 2), tedif(i), diffu(i)%c(1))
+                diffu(i)%c(nv - 1) = ct_function(diffu(i)%ph, diffu(i)%c(nv - 2), tedif(i), diffu(i)%c(1))
                 !distribute nonpoint flows to elements for hydraulics
 
                 qd = diffu(i)%q / (xddn(i) - xdup(i)) * flag
@@ -287,7 +287,7 @@ contains
                 end if
 
                 if (point(i)%phmean == 0) ptt%ph = 7.0_r64
-                ptt%c(nv - 1) = ct(ptt%ph, ptt%c(nv - 2), ptt%te, ptt%c(1))
+                ptt%c(nv - 1) = ct_function(ptt%ph, ptt%c(nv - 2), ptt%te, ptt%c(1))
 
                 j=point(i)%beginrch
                 if (point(i)%q <= 0) then !abstraction
