@@ -1,1143 +1,1144 @@
-MODULE Class_ReadFile
+module class_readfile
 
 contains
-    SUBROUTINE ReadInputfile(system, hydrau, siteMeteo, HW, DB, stochRate, topo, siteSolar)
-        USE nrtype
-        USE Class_SystemParams !, ONLY: SystemParams, SystemParams_
-        USE m_rivertopo, only: t_rivertopo
-        USE m_hydraulics
-        USE m_meteorology, only: meteorology_t
+    subroutine readinputfile(system, hydrau, sitemeteo, hw, db, stochrate, topo, sitesolar)
+        use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+        use nrtype
+        use class_systemparams !, only: systemparams, systemparams_
+        use m_rivertopo, only: t_rivertopo
+        use m_hydraulics
+        use m_meteorology, only: meteorology_t
 
-        USE Class_LightHeat
-        USE Class_SourceIn
-        USE m_rates, only: rates_t
-        USE m_water_quality, ONLY:water_quality_t
-        USE m_upstream_boundary, ONLY: upstream_boundary_t
-        USE m_downstream_boundary
-        USE Class_SolarCalc
+        use class_lightheat
+        use class_sourcein
+        use m_rates, only: rates_t
+        use m_water_quality, only:water_quality_t
+        use m_upstream_boundary, only: upstream_boundary_t
+        use m_downstream_boundary
+        use class_solarcalc
 
-        IMPLICIT NONE
+        implicit none
 
-        TYPE(SystemParams), INTENT(OUT) :: system
-        TYPE(RiverHydraulics_type), INTENT(OUT) :: hydrau
-        TYPE(meteorology_t), INTENT(OUT) :: siteMeteo
-        TYPE(upstream_boundary_t) HW
-        TYPE(downstream_boundary_t) DB
-        TYPE(rates_t) stochRate !stoch, reaction, temperature rate
-        TYPE(t_rivertopo) Topo !river topology
-        TYPE(solar_type) :: siteSolar !solar radiation
+        type(systemparams), intent(out) :: system
+        type(riverhydraulics_type), intent(out) :: hydrau
+        type(meteorology_t), intent(out) :: sitemeteo
+        type(upstream_boundary_t) hw
+        type(downstream_boundary_t) db
+        type(rates_t) stochrate !stoch, reaction, temperature rate
+        type(t_rivertopo) topo !river topology
+        type(solar_type) :: sitesolar !solar radiation
 
-        !gp 16-Jul-08
-        !gp 21-Nov-06
-        !gp 07-Feb-06
-        !gp 28-Oct-04 INTEGER(I4B) i, j, k, status(32)
-        !INTEGER(I4B) i, j, k, status(39) !gp 11-Jan-05
-        !INTEGER(I4B) i, j, k, status(92) !gp 11-Jan-05
-        !INTEGER(I4B) i, j, k, status(112) !gp 21-Nov-06
-        !INTEGER(I4B) i, j, k, status(113) !gp 03-Apr-08
-        INTEGER(I4B) i, j, k, status(114) !gp 16-Jul-08
+        !gp 16-jul-08
+        !gp 21-nov-06
+        !gp 07-feb-06
+        !gp 28-oct-04 integer(i32) i, j, k, status(32)
+        !integer(i32) i, j, k, status(39) !gp 11-jan-05
+        !integer(i32) i, j, k, status(92) !gp 11-jan-05
+        !integer(i32) i, j, k, status(112) !gp 21-nov-06
+        !integer(i32) i, j, k, status(113) !gp 03-apr-08
+        integer(i32) i, j, k, status(114) !gp 16-jul-08
 
-        INTEGER(I4B) nRch, nElem !number of reach, num of element
-        INTEGER(I4B) nptIn, ndiffIn !num of point load/src, num of non-point
+        integer(i32) nrch, nelem !number of reach, num of element
+        integer(i32) nptin, ndiffin !num of point load/src, num of non-point
         !system parameters
 
-        !GP 23-Nov-09
-        !CHARACTER(LEN=30) BASINNAME, FILENAME, PATH, TITLE, timezone
-        CHARACTER(LEN=30) BASINNAME, FILENAME, PATH, TITLE
-        REAL(DP) timezone
+        !gp 23-nov-09
+        !character(len=30) basinname, filename, path, title, timezone
+        character(len=30) basinname, filename, path, title
+        real(r64) timezone
 
-        CHARACTER(LEN=30) :: IMeth !Integration method
-        CHARACTER(LEN=30) :: IMethpH !pH method
-        CHARACTER(LEN=30) :: simHyporheicWQ !gp 28-Oct-04 Yes or No to simulate hyporheic water quality and flux
-        CHARACTER(LEN=30) :: showDielResults !gp 03-Feb-05 Yes or No (only used in Excel VBA)
-        CHARACTER(LEN=30) :: stateVariables !gp 03-Feb-05 All or only Temperature
+        character(len=30) :: imeth !integration method
+        character(len=30) :: imethph !ph method
+        character(len=30) :: simhyporheicwq !gp 28-oct-04 yes or no to simulate hyporheic water quality and flux
+        character(len=30) :: showdielresults !gp 03-feb-05 yes or no (only used in excel vba)
+        character(len=30) :: statevariables !gp 03-feb-05 all or only temperature
 
-        !gp 11-Jan-06
-        CHARACTER(LEN=30) :: calcSedFlux !gp 11-Jan-06 Yes or No
+        !gp 11-jan-06
+        character(len=30) :: calcsedflux !gp 11-jan-06 yes or no
 
-        !gp 11-Jan-06
-        CHARACTER(LEN=30) :: simAlk !gp 26-Oct-07 Yes or No
+        !gp 11-jan-06
+        character(len=30) :: simalk !gp 26-oct-07 yes or no
 
-        !gp 24-Jun-09
-        CHARACTER(LEN=30) :: writeDynamic !Yes or No
+        !gp 24-jun-09
+        character(len=30) :: writedynamic !yes or no
 
-        REAL(DP) year, month, day
-        REAL(DP) dtuser, tf
+        real(r64) year, month, day
+        real(r64) dtuser, tf
 
         !reach data
-        CHARACTER(LEN=30) :: geoMethod !gp 17-Nov-04 Depth or Width for coeff/exponents in col T and U of 'Reach' sheet
-        REAL(DP), ALLOCATABLE :: xrdn(:), elev1(:), elev2(:), latd(:), latm(:)
+        character(len=30) :: geomethod !gp 17-nov-04 depth or width for coeff/exponents in col t and u of 'reach' sheet
+        real(r64), allocatable :: xrdn(:), elev1(:), elev2(:), latd(:), latm(:)
 
-        !gp 07-Feb-07
-        !REAL(DP), ALLOCATABLE :: lats(:), lond(:), lonm(:), lons(:), Q(:), BB(:), &
-        ! SS1(:), SS2(:), s(:), nm(:) , alp1(:), bet1(:), &
-        ! alp2(:), bet2(:), Ediff(:), kaaa(:), Frsed(:), &
-        ! Frsod(:), SODspec(:), JCH4spec(:), JNH4spec(:), &
-        ! JSRPspec(:), Hweir(:), Bweir(:), &
-        ! sedThermCond(:), sedThermDiff(:), HsedCM(:), &
-        ! HypoExchFrac(:), porosity(:), rhoCpSed(:), botalg0(:) !gp 11-Jan-05
+        !gp 07-feb-07
+        !real(r64), allocatable :: lats(:), lond(:), lonm(:), lons(:), q(:), bb(:), &
+        ! ss1(:), ss2(:), s(:), nm(:) , alp1(:), bet1(:), &
+        ! alp2(:), bet2(:), ediff(:), kaaa(:), frsed(:), &
+        ! frsod(:), sodspec(:), jch4spec(:), jnh4spec(:), &
+        ! jsrpspec(:), hweir(:), bweir(:), &
+        ! sedthermcond(:), sedthermdiff(:), hsedcm(:), &
+        ! hypoexchfrac(:), porosity(:), rhocpsed(:), botalg0(:) !gp 11-jan-05
 
-        !gp 03-Apr-08
-        !REAL(DP), ALLOCATABLE :: lats(:), lond(:), lonm(:), lons(:), Q(:), BB(:), &
-        ! SS1(:), SS2(:), s(:), nm(:) , alp1(:), bet1(:), &
-        ! alp2(:), bet2(:), Ediff(:), Frsed(:), &
-        ! Frsod(:), SODspec(:), JCH4spec(:), JNH4spec(:), &
-        ! JSRPspec(:), Hweir(:), Bweir(:), &
-        ! sedThermCond(:), sedThermDiff(:), HsedCM(:), &
-        ! HypoExchFrac(:), porosity(:), rhoCpSed(:), &
+        !gp 03-apr-08
+        !real(r64), allocatable :: lats(:), lond(:), lonm(:), lons(:), q(:), bb(:), &
+        ! ss1(:), ss2(:), s(:), nm(:) , alp1(:), bet1(:), &
+        ! alp2(:), bet2(:), ediff(:), frsed(:), &
+        ! frsod(:), sodspec(:), jch4spec(:), jnh4spec(:), &
+        ! jsrpspec(:), hweir(:), bweir(:), &
+        ! sedthermcond(:), sedthermdiff(:), hsedcm(:), &
+        ! hypoexchfrac(:), porosity(:), rhocpsed(:), &
         ! kaaa(:), vss_rch(:), khc_rch(:), &
         ! kdcs_rch(:), kdc_rch(:), khn_rch(:), &
         ! von_rch(:), kn_rch(:) , ki_rch(:) , &
         ! vdi_rch(:), khp_rch(:), vop_rch(:), &
         ! vip_rch(:), kga_rch(:), krea_rch(:), &
         ! kdea_rch(:), ksn_rch(:), ksp_rch(:), &
-        ! Isat_rch(:), khnx_rch(:), va_rch(:), &
-        ! botalg0(:), kgaF_rch(:), abmax_rch(:), &
-        ! kreaF_rch(:), kexaF_rch(:), kdeaF_rch(:), &
-        ! ksnF_rch(:), kspF_rch(:), IsatF_rch(:), &
-        ! khnxF_rch(:), NINbmin_rch(:), NIPbmin_rch(:), &
-        ! NINbupmax_rch(:), NIPbupmax_rch(:), KqN_rch(:), &
-        ! KqP_rch(:), NUpWCfrac_rch(:), PUpWCfrac_rch(:), &
+        ! isat_rch(:), khnx_rch(:), va_rch(:), &
+        ! botalg0(:), kgaf_rch(:), abmax_rch(:), &
+        ! kreaf_rch(:), kexaf_rch(:), kdeaf_rch(:), &
+        ! ksnf_rch(:), kspf_rch(:), isatf_rch(:), &
+        ! khnxf_rch(:), ninbmin_rch(:), nipbmin_rch(:), &
+        ! ninbupmax_rch(:), nipbupmax_rch(:), kqn_rch(:), &
+        ! kqp_rch(:), nupwcfrac_rch(:), pupwcfrac_rch(:), &
         ! kdt_rch(:), vdt_rch(:), kpath_rch(:), &
-        ! vpath_rch(:), apath_rch(:), kgaH_rch(:), &
-        ! kscH_rch(:), kinhcH_rch(:), kreaH_rch(:), &
-        ! kdeaH_rch(:), ksnH_rch(:), kspH_rch(:), &
-        ! khnxH_rch(:), ahmax_rch(:), &
+        ! vpath_rch(:), apath_rch(:), kgah_rch(:), &
+        ! ksch_rch(:), kinhch_rch(:), kreah_rch(:), &
+        ! kdeah_rch(:), ksnh_rch(:), ksph_rch(:), &
+        ! khnxh_rch(:), ahmax_rch(:), &
 
-        !gp 16-Jul-08
-        !REAL(DP), ALLOCATABLE :: lats(:), lond(:), lonm(:), lons(:), Q(:), BB(:), &
-        ! SS1(:), SS2(:), s(:), nm(:) , alp1(:), bet1(:), &
-        ! alp2(:), bet2(:), Ediff(:), Frsed(:), &
-        ! Frsod(:), SODspec(:), JCH4spec(:), JNH4spec(:), &
-        ! JSRPspec(:), Hweir(:), Bweir(:), &
-        ! sedThermCond(:), sedThermDiff(:), HsedCM(:), &
-        ! HypoExchFrac(:), porosity(:), rhoCpSed(:), &
+        !gp 16-jul-08
+        !real(r64), allocatable :: lats(:), lond(:), lonm(:), lons(:), q(:), bb(:), &
+        ! ss1(:), ss2(:), s(:), nm(:) , alp1(:), bet1(:), &
+        ! alp2(:), bet2(:), ediff(:), frsed(:), &
+        ! frsod(:), sodspec(:), jch4spec(:), jnh4spec(:), &
+        ! jsrpspec(:), hweir(:), bweir(:), &
+        ! sedthermcond(:), sedthermdiff(:), hsedcm(:), &
+        ! hypoexchfrac(:), porosity(:), rhocpsed(:), &
         ! kaaa(:), vss_rch(:), khc_rch(:), &
         ! kdcs_rch(:), kdc_rch(:), khn_rch(:), &
         ! von_rch(:), kn_rch(:) , ki_rch(:) , &
         ! vdi_rch(:), khp_rch(:), vop_rch(:), &
         ! vip_rch(:), kga_rch(:), krea_rch(:), &
         ! kdea_rch(:), ksn_rch(:), ksp_rch(:), &
-        ! Isat_rch(:), khnx_rch(:), va_rch(:), &
-        ! botalg0(:), kgaF_rch(:), abmax_rch(:), &
-        ! krea1F_rch(:), krea2F_rch(:), kexaF_rch(:), kdeaF_rch(:), &
-        ! ksnF_rch(:), kspF_rch(:), IsatF_rch(:), &
-        ! khnxF_rch(:), NINbmin_rch(:), NIPbmin_rch(:), &
-        ! NINbupmax_rch(:), NIPbupmax_rch(:), KqN_rch(:), &
-        ! KqP_rch(:), NUpWCfrac_rch(:), PUpWCfrac_rch(:), &
+        ! isat_rch(:), khnx_rch(:), va_rch(:), &
+        ! botalg0(:), kgaf_rch(:), abmax_rch(:), &
+        ! krea1f_rch(:), krea2f_rch(:), kexaf_rch(:), kdeaf_rch(:), &
+        ! ksnf_rch(:), kspf_rch(:), isatf_rch(:), &
+        ! khnxf_rch(:), ninbmin_rch(:), nipbmin_rch(:), &
+        ! ninbupmax_rch(:), nipbupmax_rch(:), kqn_rch(:), &
+        ! kqp_rch(:), nupwcfrac_rch(:), pupwcfrac_rch(:), &
         ! kdt_rch(:), vdt_rch(:), kpath_rch(:), &
-        ! vpath_rch(:), apath_rch(:), kgaH_rch(:), &
-        ! kscH_rch(:), kinhcH_rch(:), kreaH_rch(:), &
-        ! kdeaH_rch(:), ksnH_rch(:), kspH_rch(:), &
-        ! khnxH_rch(:), ahmax_rch(:), &
+        ! vpath_rch(:), apath_rch(:), kgah_rch(:), &
+        ! ksch_rch(:), kinhch_rch(:), kreah_rch(:), &
+        ! kdeah_rch(:), ksnh_rch(:), ksph_rch(:), &
+        ! khnxh_rch(:), ahmax_rch(:), &
         !
-        ! !gp 21-Nov-06
+        ! !gp 21-nov-06
         ! !kgen_rch(:), vgen_rch(:)
         ! kgen_rch(:), vgen_rch(:), &
-        ! Te_ini(:), c01_ini(:), c02_ini(:), c03_ini(:), &
+        ! te_ini(:), c01_ini(:), c02_ini(:), c03_ini(:), &
         ! c04_ini(:), c05_ini(:), c06_ini(:), &
         ! c07_ini(:), c08_ini(:), c09_ini(:), &
         ! c10_ini(:), c11_ini(:), c12_ini(:), &
         ! c13_ini(:), c14_ini(:), c15_ini(:), &
-        ! pH_ini(:), c17_ini(:), NINb_ini(:), NIPb_ini(:)
-        REAL(DP), ALLOCATABLE :: lats(:), lond(:), lonm(:), lons(:), Q(:), BB(:), &
-            SS1(:), SS2(:), s(:), nm(:) , alp1(:), bet1(:), &
-            alp2(:), bet2(:), Ediff(:), Frsed(:), &
-            Frsod(:), SODspec(:), JCH4spec(:), JNH4spec(:), &
-            JSRPspec(:), Hweir(:), Bweir(:), &
-            sedThermCond(:), sedThermDiff(:), HsedCM(:), &
-            HypoExchFrac(:), porosity(:), rhoCpSed(:), SKOP(:), &
+        ! ph_ini(:), c17_ini(:), ninb_ini(:), nipb_ini(:)
+        real(r64), allocatable :: lats(:), lond(:), lonm(:), lons(:), q(:), bb(:), &
+            ss1(:), ss2(:), s(:), nm(:) , alp1(:), bet1(:), &
+            alp2(:), bet2(:), ediff(:), frsed(:), &
+            frsod(:), sodspec(:), jch4spec(:), jnh4spec(:), &
+            jsrpspec(:), hweir(:), bweir(:), &
+            sedthermcond(:), sedthermdiff(:), hsedcm(:), &
+            hypoexchfrac(:), porosity(:), rhocpsed(:), skop(:), &
             kaaa(:), vss_rch(:), khc_rch(:), &
             kdcs_rch(:), kdc_rch(:), khn_rch(:), &
             von_rch(:), kn_rch(:) , ki_rch(:) , &
             vdi_rch(:), khp_rch(:), vop_rch(:), &
             vip_rch(:), kga_rch(:), krea_rch(:), &
             kdea_rch(:), ksn_rch(:), ksp_rch(:), &
-            Isat_rch(:), khnx_rch(:), va_rch(:), &
-            botalg0(:), kgaF_rch(:), abmax_rch(:), &
-            krea1F_rch(:), krea2F_rch(:), kexaF_rch(:), kdeaF_rch(:), &
-            ksnF_rch(:), kspF_rch(:), IsatF_rch(:), &
-            khnxF_rch(:), NINbmin_rch(:), NIPbmin_rch(:), &
-            NINbupmax_rch(:), NIPbupmax_rch(:), KqN_rch(:), &
-            KqP_rch(:), NUpWCfrac_rch(:), PUpWCfrac_rch(:), &
+            isat_rch(:), khnx_rch(:), va_rch(:), &
+            botalg0(:), kgaf_rch(:), abmax_rch(:), &
+            krea1f_rch(:), krea2f_rch(:), kexaf_rch(:), kdeaf_rch(:), &
+            ksnf_rch(:), kspf_rch(:), isatf_rch(:), &
+            khnxf_rch(:), ninbmin_rch(:), nipbmin_rch(:), &
+            ninbupmax_rch(:), nipbupmax_rch(:), kqn_rch(:), &
+            kqp_rch(:), nupwcfrac_rch(:), pupwcfrac_rch(:), &
             kdt_rch(:), vdt_rch(:), kpath_rch(:), &
-            vpath_rch(:), apath_rch(:), kgaH_rch(:), &
-            kscH_rch(:), kinhcH_rch(:), kreaH_rch(:), &
-            kdeaH_rch(:), ksnH_rch(:), kspH_rch(:), &
-            khnxH_rch(:), ahmax_rch(:), &
+            vpath_rch(:), apath_rch(:), kgah_rch(:), &
+            ksch_rch(:), kinhch_rch(:), kreah_rch(:), &
+            kdeah_rch(:), ksnh_rch(:), ksph_rch(:), &
+            khnxh_rch(:), ahmax_rch(:), &
             kgen_rch(:), vgen_rch(:), &
-            Te_ini(:), c01_ini(:), c02_ini(:), c03_ini(:), &
+            te_ini(:), c01_ini(:), c02_ini(:), c03_ini(:), &
             c04_ini(:), c05_ini(:), c06_ini(:), &
             c07_ini(:), c08_ini(:), c09_ini(:), &
             c10_ini(:), c11_ini(:), c12_ini(:), &
             c13_ini(:), c14_ini(:), c15_ini(:), &
-            pH_ini(:), c17_ini(:), NINb_ini(:), NIPb_ini(:)
+            ph_ini(:), c17_ini(:), ninb_ini(:), nipb_ini(:)
 
-        CHARACTER(LEN=30), ALLOCATABLE :: rlab1(:), rlab2(:), rname(:)
+        character(len=30), allocatable :: rlab1(:), rlab2(:), rname(:)
 
-        !gp 13-Feb-06
-        !REAL(DP) PAR, kep, kela, kenla, kess, kepom, nfacBras, atcRyanStolz
+        !gp 13-feb-06
+        !real(r64) par, kep, kela, kenla, kess, kepom, nfacbras, atcryanstolz
 
-        !gp 24-Jun-09
-        !gp 16-Jul-08
-        !REAL(DP) PAR, kep, kela, kenla, kess, kepom, kemac, nfacBras, atcRyanStolz
-        !REAL(DP) PAR, kep, kela, kenla, kess, kepom, kemac, nfacBras, atcRyanStolz, kbrut
-        REAL(DP) PAR, kep, kela, kenla, kess, kepom, kemac, nfacBras, atcRyanStolz, kbrut, KCL1, KCL2
+        !gp 24-jun-09
+        !gp 16-jul-08
+        !real(r64) par, kep, kela, kenla, kess, kepom, kemac, nfacbras, atcryanstolz
+        !real(r64) par, kep, kela, kenla, kess, kepom, kemac, nfacbras, atcryanstolz, kbrut
+        real(r64) par, kep, kela, kenla, kess, kepom, kemac, nfacbras, atcryanstolz, kbrut, kcl1, kcl2
 
-        CHARACTER(LEN=30) solarMethod, longatMethod, fUwMethod
+        character(len=30) solarmethod, longatmethod, fuwmethod
 
         !point load/source
-        CHARACTER(LEN=30), ALLOCATABLE :: PtName(:)
-        REAL(DP), ALLOCATABLE :: xptt(:), Qptta(:), Qptt(:), TepttMean(:), TepttAmp(:), TepttMaxTime(:)
-        REAL(DP), ALLOCATABLE :: cpttMean(:, :), cpttAmp(:, :), cpttMaxTime(:, :)
-        REAL(DP), ALLOCATABLE :: phpttMean(:), phpttAmp(:), phpttMaxTime(:)
+        character(len=30), allocatable :: ptname(:)
+        real(r64), allocatable :: xptt(:), qptta(:), qptt(:), tepttmean(:), tepttamp(:), tepttmaxtime(:)
+        real(r64), allocatable :: cpttmean(:, :), cpttamp(:, :), cpttmaxtime(:, :)
+        real(r64), allocatable :: phpttmean(:), phpttamp(:), phpttmaxtime(:)
         !diffusion load/source
-        REAL(DP), ALLOCATABLE :: xdup(:), xddn(:), Qdifa(:), Qdif(:), pHind(:), Tedif(:), cdif(:,:)
-        CHARACTER(LEN=30), ALLOCATABLE :: DiffName(:)
-        !Rates
-        REAL(DP) vss, mgC, mgN, mgP, mgD, mgA
-        REAL(DP) tka, roc, ron
-        REAL(DP) Ksocf, Ksona, Ksodn, Ksop, Ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von
-        REAL(DP) kn, tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi
-        REAL(DP) kga, tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, Isat
+        real(r64), allocatable :: xdup(:), xddn(:), qdifa(:), qdif(:), phind(:), tedif(:), cdif(:,:)
+        character(len=30), allocatable :: diffname(:)
+        !rates
+        real(r64) vss, mgc, mgn, mgp, mgd, mga
+        real(r64) tka, roc, ron
+        real(r64) ksocf, ksona, ksodn, ksop, ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von
+        real(r64) kn, tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi
+        real(r64) kga, tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, isat
 
-        !gp 03-Apr-08
-        !REAL(DP) khnx, va, kgaF, tkgaF, kreaF, tkreaF, kexaF, tkexaF, kdeaF, abmax
-        REAL(DP) khnx, va, kgaF, tkgaF, krea1F, krea2F, tkreaF, kexaF, tkexaF, kdeaF, abmax
+        !gp 03-apr-08
+        !real(r64) khnx, va, kgaf, tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, abmax
+        real(r64) khnx, va, kgaf, tkgaf, krea1f, krea2f, tkreaf, kexaf, tkexaf, kdeaf, abmax
 
-        REAL(DP) tkdeaF, ksnF, kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt
+        real(r64) tkdeaf, ksnf, kspf, kscf, isatf, khnxf, kdt, tkdt, vdt
 
-        !gp 10-Jan-05 REAL(DP) NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqN, KqP
-        REAL(DP) NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqN, KqP, KqNratio, KqPratio
+        !gp 10-jan-05 real(r64) ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp
+        real(r64) ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp, kqnratio, kqpratio
 
-        !gp 26-Jan-06
-        REAL(DP) NUpWCfrac, PUpWCfrac
+        !gp 26-jan-06
+        real(r64) nupwcfrac, pupwcfrac
 
-        REAL(DP) kpath, tkpath, vpath
+        real(r64) kpath, tkpath, vpath
 
-        !gp 30-Nov-04
-        REAL(DP) apath, kgen, tkgen, vgen !gp 30-Nov-04 new params for pathogen and generic constituent
+        !gp 30-nov-04
+        real(r64) apath, kgen, tkgen, vgen !gp 30-nov-04 new params for pathogen and generic constituent
 
-        !gp 08-Dec-04
-        CHARACTER(LEN=30) useGenericAsCOD
+        !gp 08-dec-04
+        character(len=30) usegenericascod
 
-        REAL(DP) pco2
-        !org C, N inhition model, Denitrification enhance model, Algae light model, perihyte light model
-        CHARACTER(LEN=30) xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, typeF
-        CHARACTER(LEN=30) kawindmethod !Reaeartion wind effect
-        !DATA
-        INTEGER(I4B) kk, nteda, nhydda, nwqd(3), nrp, nwqdiur
-        REAL(DP) junk !Junk data
-        CHARACTER(LEN=30) xxx, shtnam(3) !Junk string,
+        real(r64) pco2
+        !org c, n inhition model, denitrification enhance model, algae light model, perihyte light model
+        character(len=30) xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7, kai, typef
+        character(len=30) kawindmethod !reaeartion wind effect
+        !data
+        integer(i32) kk, nteda, nhydda, nwqd(3), nrp, nwqdiur
+        real(r64) junk !junk data
+        character(len=30) xxx, shtnam(3) !junk string,
 
-        !GP 23-Nov-09
-        !INTEGER(I4B) dlstime
-        REAL(DP) dlstime
+        !gp 23-nov-09
+        !integer(i32) dlstime
+        real(r64) dlstime
 
-        LOGICAL(LGT) downstreamBoundary
+        logical(lgt) downstreamboundary
 
-        !gp 03-Nov-04 hyporheic biofilm rates
-        CHARACTER(LEN=30) typeH, xdum8
-        REAL(DP) kgaH, tkgaH, kscH, kinhcH
+        !gp 03-nov-04 hyporheic biofilm rates
+        character(len=30) typeh, xdum8
+        real(r64) kgah, tkgah, ksch, kinhch
 
-        !gp 15-Nov-04 HCO3- use by phytoplankton and bottom algae
-        CHARACTER(LEN=30) hco3use, hco3useF
+        !gp 15-nov-04 hco3- use by phytoplankton and bottom algae
+        character(len=30) hco3use, hco3usef
 
-        !gp 15-Nov-04 level 2 hyporheic biofilm rates
-        REAL(DP) kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax
+        !gp 15-nov-04 level 2 hyporheic biofilm rates
+        real(r64) kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax
 
-        TYPE(water_quality_t), DIMENSION(:), ALLOCATABLE :: HwIn !HEADWATERS
-        TYPE(water_quality_t), DIMENSION(:), POINTER :: DBin !Downstream bondary
+        type(water_quality_t), dimension(:), allocatable :: hwin !headwaters
+        type(water_quality_t), dimension(:), pointer :: dbin !downstream bondary
 
-        !METEOROLOGY DATA
+        !meteorology data
 
-        !gp 16-Jul-08
-        !REAL(DP), ALLOCATABLE :: shadeHH(:,:), TaHH(:,:), TdHH(:,:), UwHH(:,:), ccHH(:,:)
-        REAL(DP), ALLOCATABLE :: shadeHH(:,:), TaHH(:,:), TdHH(:,:), UwHH(:,:), ccHH(:,:), solarHH(:,:)
+        !gp 16-jul-08
+        !real(r64), allocatable :: shadehh(:,:), tahh(:,:), tdhh(:,:), uwhh(:,:), cchh(:,:)
+        real(r64), allocatable :: shadehh(:,:), tahh(:,:), tdhh(:,:), uwhh(:,:), cchh(:,:), solarhh(:,:)
 
-        !/* Read in input file */
-        READ(8,*) BASINNAME, FILENAME, PATH, TITLE
-        READ (8,*) month, day, year
-        !gp 28-Oct-04 READ(8,*) timezone, pco2, dtuser, tf, IMeth, IMethpH
+        !/* read in input file */
+        read(8,*) basinname, filename, path, title
+        read (8,*) month, day, year
+        !gp 28-oct-04 read(8,*) timezone, pco2, dtuser, tf, imeth, imethph
 
-        !gp 24-Jun-09
-        !READ(8,*) timezone, pco2, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, showDielResults, stateVariables, calcSedFlux, simAlk !gp 26-Oct-07
-        READ(8,*) timezone, pco2, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, showDielResults, &
-            stateVariables, calcSedFlux, simAlk, writeDynamic
+        !gp 24-jun-09
+        !read(8,*) timezone, pco2, dtuser, tf, imeth, imethph, simhyporheicwq, showdielresults, statevariables, calcsedflux, simalk !gp 26-oct-07
+        read(8,*) timezone, pco2, dtuser, tf, imeth, imethph, simhyporheicwq, showdielresults, &
+            statevariables, calcsedflux, simalk, writedynamic
 
-        !READ(8,*) IMeth, IMethpH
+        !read(8,*) imeth, imethph
 
-        !gp 24-Jun-09
-        !gp 17-Nov-04 system= SystemParams_(BASINNAME, FILENAME, PATH, TITLE, year, month, day, &
-        !gp timezone, dtuser, tf, IMeth, IMethpH)
-        !system= SystemParams_(BASINNAME, FILENAME, PATH, TITLE, year, month, day, &
-        ! timezone, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, &
-        ! showDielResults, stateVariables, calcSedFlux, simAlk) !gp 26-Oct-07
-        system= SystemParams_(BASINNAME, FILENAME, PATH, TITLE, year, month, day, &
-            timezone, dtuser, tf, IMeth, IMethpH, simHyporheicWQ, &
-            showDielResults, stateVariables, calcSedFlux, simAlk, writeDynamic)
+        !gp 24-jun-09
+        !gp 17-nov-04 system= systemparams_(basinname, filename, path, title, year, month, day, &
+        !gp timezone, dtuser, tf, imeth, imethph)
+        !system= systemparams_(basinname, filename, path, title, year, month, day, &
+        ! timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
+        ! showdielresults, statevariables, calcsedflux, simalk) !gp 26-oct-07
+        system= systemparams_(basinname, filename, path, title, year, month, day, &
+            timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
+            showdielresults, statevariables, calcsedflux, simalk, writedynamic)
 
         !reach data
-        !gp 17-Nov-04 READ(8,*) nRch !total reach number
-        READ(8,*) nRch, geoMethod !gp 17,Nov-04 number of reaches and Depth or Width for col T and U
+        !gp 17-nov-04 read(8,*) nrch !total reach number
+        read(8,*) nrch, geomethod !gp 17,nov-04 number of reaches and depth or width for col t and u
 
-        ALLOCATE (xrdn(0:nRch+1), STAT=status(1)); ALLOCATE (elev1(0:nRch+1), STAT=status(2))
-        ALLOCATE (elev2(0:nRch+1), STAT=status(3)); ALLOCATE (latd(0:nRch+1), STAT=status(4))
-        ALLOCATE (latm(0:nRch+1), STAT=status(5)); ALLOCATE (lats(0:nRch+1), STAT=status(6))
-        ALLOCATE (lond(0:nRch+1), STAT=status(7)); ALLOCATE (lonm(0:nRch+1), STAT=status(8))
-        ALLOCATE (lons(0:nRch+1), STAT=status(9)); ALLOCATE (Q(0:nRch+1), STAT=status(10))
-        ALLOCATE (BB(0:nRch+1), STAT=status(11)); ALLOCATE (SS1(0:nRch+1), STAT=status(12))
-        ALLOCATE (SS2(0:nRch+1), STAT=status(13)); ALLOCATE (s(0:nRch+1), STAT=status(14))
-        ALLOCATE (nm(0:nRch+1), STAT=status(15)); ALLOCATE (alp1(0:nRch+1), STAT=status(16))
-        ALLOCATE (bet1(0:nRch+1), STAT=status(17)); ALLOCATE (alp2(0:nRch+1), STAT=status(18))
-        ALLOCATE (bet2(0:nRch+1), STAT=status(19)); ALLOCATE (Ediff(0:nRch+1), STAT=status(20))
-        ALLOCATE (kaaa(0:nRch+1), STAT=status(21)); ALLOCATE (Frsed(0:nRch+1), STAT=status(22))
-        ALLOCATE (Frsod(0:nRch+1), STAT=status(23));ALLOCATE (SODspec(0:nRch+1), STAT=status(24))
-        ALLOCATE (JCH4spec(0:nRch+1), STAT=status(25)); ALLOCATE (JNH4spec(0:nRch+1), STAT=status(26))
-        ALLOCATE (JSRPspec(0:nRch+1), STAT=status(27)); ALLOCATE (Hweir(0:nRch+1), STAT=status(28))
-        ALLOCATE (rlab1(0:nRch+1), STAT=status(29)); ALLOCATE (rlab2(0:nRch+1), STAT=status(30))
-        ALLOCATE (rname(0:nRch+1), STAT=status(31));ALLOCATE (Bweir(0:nRch+1), STAT=status(32))
-        ALLOCATE (sedThermCond(0:nRch+1), STAT=status(33));ALLOCATE (sedThermDiff(0:nRch+1), STAT=status(34)) !gp 20-Oct-04
-        ALLOCATE (HsedCM(0:nRch+1), STAT=status(35));ALLOCATE (HypoExchFrac(0:nRch+1), STAT=status(36)) !gp 20-Oct-04
-        ALLOCATE (porosity(0:nRch+1), STAT=status(37));ALLOCATE (rhoCpSed(0:nRch+1), STAT=status(38)) !gp 20-Oct-04
+        allocate (xrdn(0:nrch+1), stat=status(1)); allocate (elev1(0:nrch+1), stat=status(2))
+        allocate (elev2(0:nrch+1), stat=status(3)); allocate (latd(0:nrch+1), stat=status(4))
+        allocate (latm(0:nrch+1), stat=status(5)); allocate (lats(0:nrch+1), stat=status(6))
+        allocate (lond(0:nrch+1), stat=status(7)); allocate (lonm(0:nrch+1), stat=status(8))
+        allocate (lons(0:nrch+1), stat=status(9)); allocate (q(0:nrch+1), stat=status(10))
+        allocate (bb(0:nrch+1), stat=status(11)); allocate (ss1(0:nrch+1), stat=status(12))
+        allocate (ss2(0:nrch+1), stat=status(13)); allocate (s(0:nrch+1), stat=status(14))
+        allocate (nm(0:nrch+1), stat=status(15)); allocate (alp1(0:nrch+1), stat=status(16))
+        allocate (bet1(0:nrch+1), stat=status(17)); allocate (alp2(0:nrch+1), stat=status(18))
+        allocate (bet2(0:nrch+1), stat=status(19)); allocate (ediff(0:nrch+1), stat=status(20))
+        allocate (kaaa(0:nrch+1), stat=status(21)); allocate (frsed(0:nrch+1), stat=status(22))
+        allocate (frsod(0:nrch+1), stat=status(23));allocate (sodspec(0:nrch+1), stat=status(24))
+        allocate (jch4spec(0:nrch+1), stat=status(25)); allocate (jnh4spec(0:nrch+1), stat=status(26))
+        allocate (jsrpspec(0:nrch+1), stat=status(27)); allocate (hweir(0:nrch+1), stat=status(28))
+        allocate (rlab1(0:nrch+1), stat=status(29)); allocate (rlab2(0:nrch+1), stat=status(30))
+        allocate (rname(0:nrch+1), stat=status(31));allocate (bweir(0:nrch+1), stat=status(32))
+        allocate (sedthermcond(0:nrch+1), stat=status(33));allocate (sedthermdiff(0:nrch+1), stat=status(34)) !gp 20-oct-04
+        allocate (hsedcm(0:nrch+1), stat=status(35));allocate (hypoexchfrac(0:nrch+1), stat=status(36)) !gp 20-oct-04
+        allocate (porosity(0:nrch+1), stat=status(37));allocate (rhocpsed(0:nrch+1), stat=status(38)) !gp 20-oct-04
 
-        !gp 16-Jul-08
-        ALLOCATE (SKOP(0:nRch+1), STAT=status(114)) !gp 11-Jan-05
+        !gp 16-jul-08
+        allocate (skop(0:nrch+1), stat=status(114)) !gp 11-jan-05
 
-        ALLOCATE (botalg0(0:nRch+1), STAT=status(39)) !gp 11-Jan-05
+        allocate (botalg0(0:nrch+1), stat=status(39)) !gp 11-jan-05
 
-        !gp 07-Feb-07
-        !ALLOCATE (kaaa(0:nRch+1), STAT=status(39))
-        ALLOCATE (vss_rch(0:nRch+1), STAT=status(40)) !inorganic suspended solids settling vol
-        ALLOCATE (khc_rch(0:nRch+1), STAT=status(41)) !slow CBOD hydrolysis rate
-        ALLOCATE (kdcs_rch(0:nRch+1), STAT=status(42)) !slow CBOD oxidation rate
-        ALLOCATE (kdc_rch(0:nRch+1), STAT=status(43)) !fast CBOD oxidation rate
-        ALLOCATE (khn_rch(0:nRch+1), STAT=status(44)) !organic N hydrolysis rate
-        ALLOCATE (von_rch(0:nRch+1), STAT=status(45)) !Organic N settling velocity
-        ALLOCATE (kn_rch(0:nRch+1), STAT=status(46)) !Ammonium nitrification rate
-        ALLOCATE (ki_rch(0:nRch+1), STAT=status(47)) !Nitrate denitrification
-        ALLOCATE (vdi_rch(0:nRch+1), STAT=status(48)) !Nitrate sed denitrification transfer coeff
-        ALLOCATE (khp_rch(0:nRch+1), STAT=status(49)) !organic P hydrolysis
-        ALLOCATE (vop_rch(0:nRch+1), STAT=status(50)) !organic P settling velocity
-        ALLOCATE (vip_rch(0:nRch+1), STAT=status(51)) !inorganic P settling velocity
-        ALLOCATE (kga_rch(0:nRch+1), STAT=status(52)) !Phytoplankton MAX growth rate
-        ALLOCATE (krea_rch(0:nRch+1), STAT=status(53)) !Phytoplankton respiration rate
-        ALLOCATE (kdea_rch(0:nRch+1), STAT=status(54)) !Phytoplankton death rate
-        ALLOCATE (ksn_rch(0:nRch+1), STAT=status(55)) !Phytoplankton N half-sat
-        ALLOCATE (ksp_rch(0:nRch+1), STAT=status(56)) !Phytoplankton P half-sat
-        ALLOCATE (Isat_rch(0:nRch+1), STAT=status(57)) !Phytoplankton light sat
-        ALLOCATE (khnx_rch(0:nRch+1), STAT=status(58)) !Phytoplankton ammonia preference
-        ALLOCATE (va_rch(0:nRch+1), STAT=status(59)) !Phytoplankton settling velocity
-        !ALLOCATE (botalg0(0:nRch+1), STAT=status(39)) !Bottom plant initial bionass
-        ALLOCATE (kgaF_rch(0:nRch+1), STAT=status(60)) !Bottom plant MAX growth rate
-        ALLOCATE (abmax_rch(0:nRch+1), STAT=status(61)) !Bottom plant first-order carrying capacity
+        !gp 07-feb-07
+        !allocate (kaaa(0:nrch+1), stat=status(39))
+        allocate (vss_rch(0:nrch+1), stat=status(40)) !inorganic suspended solids settling vol
+        allocate (khc_rch(0:nrch+1), stat=status(41)) !slow cbod hydrolysis rate
+        allocate (kdcs_rch(0:nrch+1), stat=status(42)) !slow cbod oxidation rate
+        allocate (kdc_rch(0:nrch+1), stat=status(43)) !fast cbod oxidation rate
+        allocate (khn_rch(0:nrch+1), stat=status(44)) !organic n hydrolysis rate
+        allocate (von_rch(0:nrch+1), stat=status(45)) !organic n settling velocity
+        allocate (kn_rch(0:nrch+1), stat=status(46)) !ammonium nitrification rate
+        allocate (ki_rch(0:nrch+1), stat=status(47)) !nitrate denitrification
+        allocate (vdi_rch(0:nrch+1), stat=status(48)) !nitrate sed denitrification transfer coeff
+        allocate (khp_rch(0:nrch+1), stat=status(49)) !organic p hydrolysis
+        allocate (vop_rch(0:nrch+1), stat=status(50)) !organic p settling velocity
+        allocate (vip_rch(0:nrch+1), stat=status(51)) !inorganic p settling velocity
+        allocate (kga_rch(0:nrch+1), stat=status(52)) !phytoplankton max growth rate
+        allocate (krea_rch(0:nrch+1), stat=status(53)) !phytoplankton respiration rate
+        allocate (kdea_rch(0:nrch+1), stat=status(54)) !phytoplankton death rate
+        allocate (ksn_rch(0:nrch+1), stat=status(55)) !phytoplankton n half-sat
+        allocate (ksp_rch(0:nrch+1), stat=status(56)) !phytoplankton p half-sat
+        allocate (isat_rch(0:nrch+1), stat=status(57)) !phytoplankton light sat
+        allocate (khnx_rch(0:nrch+1), stat=status(58)) !phytoplankton ammonia preference
+        allocate (va_rch(0:nrch+1), stat=status(59)) !phytoplankton settling velocity
+        !allocate (botalg0(0:nrch+1), stat=status(39)) !bottom plant initial bionass
+        allocate (kgaf_rch(0:nrch+1), stat=status(60)) !bottom plant max growth rate
+        allocate (abmax_rch(0:nrch+1), stat=status(61)) !bottom plant first-order carrying capacity
 
-        !gp 03-Apr-08
-        !ALLOCATE (kreaF_rch(0:nRch+1), STAT=status(62)) !Bottom plant respiration rate
-        ALLOCATE (krea1F_rch(0:nRch+1), STAT=status(62)) !Bottom plant basal respiration rate
-        ALLOCATE (krea2F_rch(0:nRch+1), STAT=status(113)) !Bottom plant photo respiration rate
+        !gp 03-apr-08
+        !allocate (kreaf_rch(0:nrch+1), stat=status(62)) !bottom plant respiration rate
+        allocate (krea1f_rch(0:nrch+1), stat=status(62)) !bottom plant basal respiration rate
+        allocate (krea2f_rch(0:nrch+1), stat=status(113)) !bottom plant photo respiration rate
 
-        ALLOCATE (kexaF_rch(0:nRch+1), STAT=status(63)) !Bottom plant excretion rate
-        ALLOCATE (kdeaF_rch(0:nRch+1), STAT=status(64)) !Bottom plant death rate
-        ALLOCATE (ksnF_rch(0:nRch+1), STAT=status(65)) !Bottom plant external N half-sat
-        ALLOCATE (kspF_rch(0:nRch+1), STAT=status(66)) !Bottom plant external P half-sat
-        ALLOCATE (IsatF_rch(0:nRch+1), STAT=status(67)) !Bottom plant light sat
-        ALLOCATE (khnxF_rch(0:nRch+1), STAT=status(68)) !Bottom plant ammonia preference
-        ALLOCATE (NINbmin_rch(0:nRch+1), STAT=status(69)) !Bottom plant subistence quota for N
-        ALLOCATE (NIPbmin_rch(0:nRch+1), STAT=status(70)) !Bottom plant subistence quota for P
-        ALLOCATE (NINbupmax_rch(0:nRch+1), STAT=status(71)) !Bottom plant max uptake rate for N
-        ALLOCATE (NIPbupmax_rch(0:nRch+1), STAT=status(72)) !Bottom plant max uptake rate for P
-        ALLOCATE (KqN_rch(0:nRch+1), STAT=status(73)) !Bottom plant internal N half-sat
-        ALLOCATE (KqP_rch(0:nRch+1), STAT=status(74)) !Bottom plant internal P half-sat
-        ALLOCATE (NUpWCfrac_rch(0:nRch+1), STAT=status(75)) !Bottom plant N uptake fraction from water column
-        ALLOCATE (PUpWCfrac_rch(0:nRch+1), STAT=status(76)) !Bottom plant P uptake fraction from water column
-        ALLOCATE (kdt_rch(0:nRch+1), STAT=status(77)) !POM dissolution rate
-        ALLOCATE (vdt_rch(0:nRch+1), STAT=status(78)) !POM settling velocity
-        ALLOCATE (kpath_rch(0:nRch+1), STAT=status(79)) !pathogen dieoff rate
-        ALLOCATE (vpath_rch(0:nRch+1), STAT=status(80)) !pathogen settling velocity
-        ALLOCATE (apath_rch(0:nRch+1), STAT=status(81)) !pathogen light alpha
-        ALLOCATE (kgaH_rch(0:nRch+1), STAT=status(82)) !Hyporheic heterotrophs MAX growth rate
-        ALLOCATE (kscH_rch(0:nRch+1), STAT=status(83)) !Hyporheic heterotrophs CBOD half-sat
-        ALLOCATE (kinhcH_rch(0:nRch+1), STAT=status(84)) !Hyporheic heterotrophs O2 inhibition
-        ALLOCATE (kreaH_rch(0:nRch+1), STAT=status(85)) !Hyporheic heterotrophs respiration rate
-        ALLOCATE (kdeaH_rch(0:nRch+1), STAT=status(86)) !Hyporheic heterotrophs death rate
-        ALLOCATE (ksnH_rch(0:nRch+1), STAT=status(87)) !Hyporheic heterotrophs N half-sat
-        ALLOCATE (kspH_rch(0:nRch+1), STAT=status(88)) !Hyporheic heterotrophs P half-sat
-        ALLOCATE (khnxH_rch(0:nRch+1), STAT=status(89)) !Hyporheic heterotrophs ammonia preference
-        ALLOCATE (ahmax_rch(0:nRch+1), STAT=status(90)) !Hyporheic heterotrophs first-order carrying capacity
-        ALLOCATE (kgen_rch(0:nRch+1), STAT=status(91)) !generic constituent dissolution rate
-        ALLOCATE (vgen_rch(0:nRch+1), STAT=status(92)) !generic constituent settling velocity
+        allocate (kexaf_rch(0:nrch+1), stat=status(63)) !bottom plant excretion rate
+        allocate (kdeaf_rch(0:nrch+1), stat=status(64)) !bottom plant death rate
+        allocate (ksnf_rch(0:nrch+1), stat=status(65)) !bottom plant external n half-sat
+        allocate (kspf_rch(0:nrch+1), stat=status(66)) !bottom plant external p half-sat
+        allocate (isatf_rch(0:nrch+1), stat=status(67)) !bottom plant light sat
+        allocate (khnxf_rch(0:nrch+1), stat=status(68)) !bottom plant ammonia preference
+        allocate (ninbmin_rch(0:nrch+1), stat=status(69)) !bottom plant subistence quota for n
+        allocate (nipbmin_rch(0:nrch+1), stat=status(70)) !bottom plant subistence quota for p
+        allocate (ninbupmax_rch(0:nrch+1), stat=status(71)) !bottom plant max uptake rate for n
+        allocate (nipbupmax_rch(0:nrch+1), stat=status(72)) !bottom plant max uptake rate for p
+        allocate (kqn_rch(0:nrch+1), stat=status(73)) !bottom plant internal n half-sat
+        allocate (kqp_rch(0:nrch+1), stat=status(74)) !bottom plant internal p half-sat
+        allocate (nupwcfrac_rch(0:nrch+1), stat=status(75)) !bottom plant n uptake fraction from water column
+        allocate (pupwcfrac_rch(0:nrch+1), stat=status(76)) !bottom plant p uptake fraction from water column
+        allocate (kdt_rch(0:nrch+1), stat=status(77)) !pom dissolution rate
+        allocate (vdt_rch(0:nrch+1), stat=status(78)) !pom settling velocity
+        allocate (kpath_rch(0:nrch+1), stat=status(79)) !pathogen dieoff rate
+        allocate (vpath_rch(0:nrch+1), stat=status(80)) !pathogen settling velocity
+        allocate (apath_rch(0:nrch+1), stat=status(81)) !pathogen light alpha
+        allocate (kgah_rch(0:nrch+1), stat=status(82)) !hyporheic heterotrophs max growth rate
+        allocate (ksch_rch(0:nrch+1), stat=status(83)) !hyporheic heterotrophs cbod half-sat
+        allocate (kinhch_rch(0:nrch+1), stat=status(84)) !hyporheic heterotrophs o2 inhibition
+        allocate (kreah_rch(0:nrch+1), stat=status(85)) !hyporheic heterotrophs respiration rate
+        allocate (kdeah_rch(0:nrch+1), stat=status(86)) !hyporheic heterotrophs death rate
+        allocate (ksnh_rch(0:nrch+1), stat=status(87)) !hyporheic heterotrophs n half-sat
+        allocate (ksph_rch(0:nrch+1), stat=status(88)) !hyporheic heterotrophs p half-sat
+        allocate (khnxh_rch(0:nrch+1), stat=status(89)) !hyporheic heterotrophs ammonia preference
+        allocate (ahmax_rch(0:nrch+1), stat=status(90)) !hyporheic heterotrophs first-order carrying capacity
+        allocate (kgen_rch(0:nrch+1), stat=status(91)) !generic constituent dissolution rate
+        allocate (vgen_rch(0:nrch+1), stat=status(92)) !generic constituent settling velocity
 
-        !gp 21-Nov-06 initial conditions of state variables
-        ALLOCATE (Te_ini(0:nRch+1), STAT=status(93))
-        ALLOCATE (c01_ini(0:nRch+1), STAT=status(94))
-        ALLOCATE (c02_ini(0:nRch+1), STAT=status(95))
-        ALLOCATE (c03_ini(0:nRch+1), STAT=status(96))
-        ALLOCATE (c04_ini(0:nRch+1), STAT=status(97))
-        ALLOCATE (c05_ini(0:nRch+1), STAT=status(98))
-        ALLOCATE (c06_ini(0:nRch+1), STAT=status(99))
-        ALLOCATE (c07_ini(0:nRch+1), STAT=status(100))
-        ALLOCATE (c08_ini(0:nRch+1), STAT=status(101))
-        ALLOCATE (c09_ini(0:nRch+1), STAT=status(102))
-        ALLOCATE (c10_ini(0:nRch+1), STAT=status(103))
-        ALLOCATE (c11_ini(0:nRch+1), STAT=status(104))
-        ALLOCATE (c12_ini(0:nRch+1), STAT=status(105))
-        ALLOCATE (c13_ini(0:nRch+1), STAT=status(106))
-        ALLOCATE (c14_ini(0:nRch+1), STAT=status(107))
-        ALLOCATE (c15_ini(0:nRch+1), STAT=status(108))
-        ALLOCATE (pH_ini(0:nRch+1), STAT=status(109))
-        ALLOCATE (c17_ini(0:nRch+1), STAT=status(110))
-        ALLOCATE (NINb_ini(0:nRch+1), STAT=status(111))
-        ALLOCATE (NIPb_ini(0:nRch+1), STAT=status(112))
-        !gp 03-Apr-08 status(113) is used above for krea2F
-        !gp 16-Jul-08 status(114) is used above for SKOP
+        !gp 21-nov-06 initial conditions of state variables
+        allocate (te_ini(0:nrch+1), stat=status(93))
+        allocate (c01_ini(0:nrch+1), stat=status(94))
+        allocate (c02_ini(0:nrch+1), stat=status(95))
+        allocate (c03_ini(0:nrch+1), stat=status(96))
+        allocate (c04_ini(0:nrch+1), stat=status(97))
+        allocate (c05_ini(0:nrch+1), stat=status(98))
+        allocate (c06_ini(0:nrch+1), stat=status(99))
+        allocate (c07_ini(0:nrch+1), stat=status(100))
+        allocate (c08_ini(0:nrch+1), stat=status(101))
+        allocate (c09_ini(0:nrch+1), stat=status(102))
+        allocate (c10_ini(0:nrch+1), stat=status(103))
+        allocate (c11_ini(0:nrch+1), stat=status(104))
+        allocate (c12_ini(0:nrch+1), stat=status(105))
+        allocate (c13_ini(0:nrch+1), stat=status(106))
+        allocate (c14_ini(0:nrch+1), stat=status(107))
+        allocate (c15_ini(0:nrch+1), stat=status(108))
+        allocate (ph_ini(0:nrch+1), stat=status(109))
+        allocate (c17_ini(0:nrch+1), stat=status(110))
+        allocate (ninb_ini(0:nrch+1), stat=status(111))
+        allocate (nipb_ini(0:nrch+1), stat=status(112))
+        !gp 03-apr-08 status(113) is used above for krea2f
+        !gp 16-jul-08 status(114) is used above for skop
 
         !classriver module
 
-        !gp 07-Feb-06
-        !DO i = 0, nRch + 1
-        ! READ(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
-        ! lats(i), lond(i), lonm(i), lons(i), Q(i), BB(i), SS1(i), SS2(i), s(i), nm(i), &
-        ! alp1(i), bet1(i), alp2(i), bet2(i), Ediff(i), kaaa(i), Frsed(i), Frsod(i), &
-        ! SODspec(i), JCH4spec(i), JNH4spec(i), JSRPspec(i), Hweir(i), Bweir(i), &
-        ! sedThermCond(i), sedThermDiff(i), HsedCM(i), &
-        ! HypoExchFrac(i), porosity(i), rhoCpSed(i), botalg0(i) !gp 11-Jan-05
+        !gp 07-feb-06
+        !do i = 0, nrch + 1
+        ! read(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
+        ! lats(i), lond(i), lonm(i), lons(i), q(i), bb(i), ss1(i), ss2(i), s(i), nm(i), &
+        ! alp1(i), bet1(i), alp2(i), bet2(i), ediff(i), kaaa(i), frsed(i), frsod(i), &
+        ! sodspec(i), jch4spec(i), jnh4spec(i), jsrpspec(i), hweir(i), bweir(i), &
+        ! sedthermcond(i), sedthermdiff(i), hsedcm(i), &
+        ! hypoexchfrac(i), porosity(i), rhocpsed(i), botalg0(i) !gp 11-jan-05
         !
-        !END DO
+        !end do
 
-        !gp 16-Jul-06
-        !DO i = 0, nRch + 1
-        ! READ(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
-        ! lats(i), lond(i), lonm(i), lons(i), Q(i), BB(i), SS1(i), SS2(i), s(i), nm(i), &
-        ! alp1(i), bet1(i), alp2(i), bet2(i), Ediff(i), Frsed(i), Frsod(i), &
-        ! SODspec(i), JCH4spec(i), JNH4spec(i), JSRPspec(i), Hweir(i), Bweir(i), &
-        ! sedThermCond(i), sedThermDiff(i), HsedCM(i), &
-        ! HypoExchFrac(i), porosity(i), rhoCpSed(i)
-        !END DO
-        DO i = 0, nRch + 1
-            READ(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
-                lats(i), lond(i), lonm(i), lons(i), Q(i), BB(i), SS1(i), SS2(i), s(i), nm(i), &
-                alp1(i), bet1(i), alp2(i), bet2(i), Ediff(i), Frsed(i), Frsod(i), &
-                SODspec(i), JCH4spec(i), JNH4spec(i), JSRPspec(i), Hweir(i), Bweir(i), &
-                sedThermCond(i), sedThermDiff(i), HsedCM(i), &
-                HypoExchFrac(i), porosity(i), rhoCpSed(i), SKOP(i)
-        END DO
+        !gp 16-jul-06
+        !do i = 0, nrch + 1
+        ! read(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
+        ! lats(i), lond(i), lonm(i), lons(i), q(i), bb(i), ss1(i), ss2(i), s(i), nm(i), &
+        ! alp1(i), bet1(i), alp2(i), bet2(i), ediff(i), frsed(i), frsod(i), &
+        ! sodspec(i), jch4spec(i), jnh4spec(i), jsrpspec(i), hweir(i), bweir(i), &
+        ! sedthermcond(i), sedthermdiff(i), hsedcm(i), &
+        ! hypoexchfrac(i), porosity(i), rhocpsed(i)
+        !end do
+        do i = 0, nrch + 1
+            read(8,*) rlab1(i), rlab2(i), rname(i), xrdn(i), elev1(i), elev2(i), latd(i), latm(i), &
+                lats(i), lond(i), lonm(i), lons(i), q(i), bb(i), ss1(i), ss2(i), s(i), nm(i), &
+                alp1(i), bet1(i), alp2(i), bet2(i), ediff(i), frsed(i), frsod(i), &
+                sodspec(i), jch4spec(i), jnh4spec(i), jsrpspec(i), hweir(i), bweir(i), &
+                sedthermcond(i), sedthermdiff(i), hsedcm(i), &
+                hypoexchfrac(i), porosity(i), rhocpsed(i), skop(i)
+        end do
 
-        !gp 21-Nov-06
-        !WRITE(10,*) 'done thru classreadfile ALLOCATE'
-        !DO i=1, nRch
-        ! READ(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
+        !gp 21-nov-06
+        !write(10,*) 'done thru classreadfile allocate'
+        !do i=1, nrch
+        ! read(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
         ! kdcs_rch(i), kdc_rch(i), khn_rch(i), &
         ! von_rch(i), kn_rch(i) , ki_rch(i) , &
         ! vdi_rch(i), khp_rch(i), vop_rch(i), &
         ! vip_rch(i), kga_rch(i), krea_rch(i), &
         ! kdea_rch(i), ksn_rch(i), ksp_rch(i), &
-        ! Isat_rch(i), khnx_rch(i), va_rch(i), &
-        ! botalg0(i), kgaF_rch(i), abmax_rch(i), &
-        ! kreaF_rch(i), kexaF_rch(i), kdeaF_rch(i), &
-        ! ksnF_rch(i), kspF_rch(i), IsatF_rch(i), &
-        ! khnxF_rch(i), NINbmin_rch(i), NIPbmin_rch(i), &
-        ! NINbupmax_rch(i), NIPbupmax_rch(i), KqN_rch(i), &
-        ! KqP_rch(i), NUpWCfrac_rch(i), PUpWCfrac_rch(i), &
+        ! isat_rch(i), khnx_rch(i), va_rch(i), &
+        ! botalg0(i), kgaf_rch(i), abmax_rch(i), &
+        ! kreaf_rch(i), kexaf_rch(i), kdeaf_rch(i), &
+        ! ksnf_rch(i), kspf_rch(i), isatf_rch(i), &
+        ! khnxf_rch(i), ninbmin_rch(i), nipbmin_rch(i), &
+        ! ninbupmax_rch(i), nipbupmax_rch(i), kqn_rch(i), &
+        ! kqp_rch(i), nupwcfrac_rch(i), pupwcfrac_rch(i), &
         ! kdt_rch(i), vdt_rch(i), kpath_rch(i), &
-        ! vpath_rch(i), apath_rch(i), kgaH_rch(i), &
-        ! kscH_rch(i), kinhcH_rch(i), kreaH_rch(i), &
-        ! kdeaH_rch(i), ksnH_rch(i), kspH_rch(i), &
-        ! khnxH_rch(i), ahmax_rch(i), &
+        ! vpath_rch(i), apath_rch(i), kgah_rch(i), &
+        ! ksch_rch(i), kinhch_rch(i), kreah_rch(i), &
+        ! kdeah_rch(i), ksnh_rch(i), ksph_rch(i), &
+        ! khnxh_rch(i), ahmax_rch(i), &
         ! kgen_rch(i), vgen_rch(i)
-        !END DO
-        DO i=1, nRch
+        !end do
+        do i=1, nrch
 
-            !gp 03-Apr-08
-            !READ(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
+            !gp 03-apr-08
+            !read(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
             ! kdcs_rch(i), kdc_rch(i), khn_rch(i), &
             ! von_rch(i), kn_rch(i) , ki_rch(i) , &
             ! vdi_rch(i), khp_rch(i), vop_rch(i), &
             ! vip_rch(i), kga_rch(i), krea_rch(i), &
             ! kdea_rch(i), ksn_rch(i), ksp_rch(i), &
-            ! Isat_rch(i), khnx_rch(i), va_rch(i), &
-            ! kgaF_rch(i), abmax_rch(i), &
-            ! kreaF_rch(i), kexaF_rch(i), kdeaF_rch(i), &
-            ! ksnF_rch(i), kspF_rch(i), IsatF_rch(i), &
-            ! khnxF_rch(i), NINbmin_rch(i), NIPbmin_rch(i), &
-            ! NINbupmax_rch(i), NIPbupmax_rch(i), KqN_rch(i), &
-            ! KqP_rch(i), NUpWCfrac_rch(i), PUpWCfrac_rch(i), &
+            ! isat_rch(i), khnx_rch(i), va_rch(i), &
+            ! kgaf_rch(i), abmax_rch(i), &
+            ! kreaf_rch(i), kexaf_rch(i), kdeaf_rch(i), &
+            ! ksnf_rch(i), kspf_rch(i), isatf_rch(i), &
+            ! khnxf_rch(i), ninbmin_rch(i), nipbmin_rch(i), &
+            ! ninbupmax_rch(i), nipbupmax_rch(i), kqn_rch(i), &
+            ! kqp_rch(i), nupwcfrac_rch(i), pupwcfrac_rch(i), &
             ! kdt_rch(i), vdt_rch(i), kpath_rch(i), &
-            ! vpath_rch(i), apath_rch(i), kgaH_rch(i), &
-            ! kscH_rch(i), kinhcH_rch(i), kreaH_rch(i), &
-            ! kdeaH_rch(i), ksnH_rch(i), kspH_rch(i), &
-            ! khnxH_rch(i), ahmax_rch(i), &
+            ! vpath_rch(i), apath_rch(i), kgah_rch(i), &
+            ! ksch_rch(i), kinhch_rch(i), kreah_rch(i), &
+            ! kdeah_rch(i), ksnh_rch(i), ksph_rch(i), &
+            ! khnxh_rch(i), ahmax_rch(i), &
             ! kgen_rch(i), vgen_rch(i)
-            READ(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
+            read(8,*) kaaa(i), vss_rch(i), khc_rch(i), &
                 kdcs_rch(i), kdc_rch(i), khn_rch(i), &
                 von_rch(i), kn_rch(i) , ki_rch(i) , &
                 vdi_rch(i), khp_rch(i), vop_rch(i), &
                 vip_rch(i), kga_rch(i), krea_rch(i), &
                 kdea_rch(i), ksn_rch(i), ksp_rch(i), &
-                Isat_rch(i), khnx_rch(i), va_rch(i), &
-                kgaF_rch(i), abmax_rch(i), &
-                krea1F_rch(i), krea2F_rch(i), kexaF_rch(i), kdeaF_rch(i), &
-                ksnF_rch(i), kspF_rch(i), IsatF_rch(i), &
-                khnxF_rch(i), NINbmin_rch(i), NIPbmin_rch(i), &
-                NINbupmax_rch(i), NIPbupmax_rch(i), KqN_rch(i), &
-                KqP_rch(i), NUpWCfrac_rch(i), PUpWCfrac_rch(i), &
+                isat_rch(i), khnx_rch(i), va_rch(i), &
+                kgaf_rch(i), abmax_rch(i), &
+                krea1f_rch(i), krea2f_rch(i), kexaf_rch(i), kdeaf_rch(i), &
+                ksnf_rch(i), kspf_rch(i), isatf_rch(i), &
+                khnxf_rch(i), ninbmin_rch(i), nipbmin_rch(i), &
+                ninbupmax_rch(i), nipbupmax_rch(i), kqn_rch(i), &
+                kqp_rch(i), nupwcfrac_rch(i), pupwcfrac_rch(i), &
                 kdt_rch(i), vdt_rch(i), kpath_rch(i), &
-                vpath_rch(i), apath_rch(i), kgaH_rch(i), &
-                kscH_rch(i), kinhcH_rch(i), kreaH_rch(i), &
-                kdeaH_rch(i), ksnH_rch(i), kspH_rch(i), &
-                khnxH_rch(i), ahmax_rch(i), &
+                vpath_rch(i), apath_rch(i), kgah_rch(i), &
+                ksch_rch(i), kinhch_rch(i), kreah_rch(i), &
+                kdeah_rch(i), ksnh_rch(i), ksph_rch(i), &
+                khnxh_rch(i), ahmax_rch(i), &
                 kgen_rch(i), vgen_rch(i)
 
-            ! WRITE(10,'(I5, 4F10.3)') i, kaaa(i), vss_rch(i), kgen_rch(i), vgen_rch(i)
-        END DO
-        DO i=1, nRch
-            READ(8,*) Te_ini(i), pH_ini(i), c17_ini(i), NINb_ini(i), NIPb_ini(i)
-            ! WRITE(10,'(I5, 4F10.3)') i, Te_ini(i), c17_ini(i), NINb_ini(i), NIPb_ini(i)
-        END DO
-        DO i=1, nRch
-            READ(8,*) c01_ini(i), c02_ini(i), &
+            ! write(10,'(i5, 4f10.3)') i, kaaa(i), vss_rch(i), kgen_rch(i), vgen_rch(i)
+        end do
+        do i=1, nrch
+            read(8,*) te_ini(i), ph_ini(i), c17_ini(i), ninb_ini(i), nipb_ini(i)
+            ! write(10,'(i5, 4f10.3)') i, te_ini(i), c17_ini(i), ninb_ini(i), nipb_ini(i)
+        end do
+        do i=1, nrch
+            read(8,*) c01_ini(i), c02_ini(i), &
                 c03_ini(i), c04_ini(i), c05_ini(i), &
                 c06_ini(i), c07_ini(i), c08_ini(i), &
                 c09_ini(i), c10_ini(i), c11_ini(i), &
                 c12_ini(i), c13_ini(i), c14_ini(i), &
                 c15_ini(i)
-            ! WRITE(10,'(I5, 4F10.3)') i, c01_ini(i), c02_ini(i), c14_ini(i), c15_ini(i)
-        END DO
-        !WRITE(10,*) 'done thru classreadfile reading new init cond'
+            ! write(10,'(i5, 4f10.3)') i, c01_ini(i), c02_ini(i), c14_ini(i), c15_ini(i)
+        end do
+        !write(10,*) 'done thru classreadfile reading new init cond'
 
-        !gp 20-Oct-04 note units for new inputs:
-        ! sedThermCond = (cal/s) per (cm degC)
-        ! sedThermDiff = cm^2/sec
-        ! HsedCM = cm
-        ! HypoExchFrac = unitless fraction of streamflow
+        !gp 20-oct-04 note units for new inputs:
+        ! sedthermcond = (cal/s) per (cm degc)
+        ! sedthermdiff = cm^2/sec
+        ! hsedcm = cm
+        ! hypoexchfrac = unitless fraction of streamflow
         ! porosity = unitless fraction of volume
-        ! rhoCpSed = cal/(cm^3 deg C)
+        ! rhocpsed = cal/(cm^3 deg c)
 
-        !gp 17-Nov-04 Topo= RiverTopo_(nRch, rlab2, rname, xrdn)
-        Topo= t_rivertopo(nRch, rlab2, rname, xrdn, geoMethod) !gp 17-Nov-04
+        !gp 17-nov-04 topo= rivertopo_(nrch, rlab2, rname, xrdn)
+        topo= t_rivertopo(nrch, rlab2, rname, xrdn, geomethod) !gp 17-nov-04
 
-        !gp 07-Feb-06
-        !hydrau= hydraulics_(nRch, xrdn, elev1, elev2, latd, latm, lats, &
-        ! lond, lonm, lons, Q, BB, SS1, SS2, s, nm, alp1, bet1, alp2, bet2, &
-        ! Ediff, kaaa, Frsed, Frsod, SODspec, JCH4spec, JNH4spec, JSRPspec, Hweir, &
-        ! Bweir, &
-        ! sedThermCond, sedThermDiff, HsedCM, &
-        ! HypoExchFrac, porosity, rhoCpSed, botalg0) !gp 11-Jan-05
+        !gp 07-feb-06
+        !hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
+        ! lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
+        ! ediff, kaaa, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, hweir, &
+        ! bweir, &
+        ! sedthermcond, sedthermdiff, hsedcm, &
+        ! hypoexchfrac, porosity, rhocpsed, botalg0) !gp 11-jan-05
 
-        !gp 21-Nov-06
-        !hydrau= hydraulics_(nRch, xrdn, elev1, elev2, latd, latm, lats, &
-        ! lond, lonm, lons, Q, BB, SS1, SS2, s, nm, alp1, bet1, alp2, bet2, &
-        ! Ediff, Frsed, Frsod, SODspec, JCH4spec, JNH4spec, JSRPspec, &
-        ! Hweir, Bweir, &
-        ! sedThermCond, sedThermDiff, HsedCM, &
-        ! HypoExchFrac, porosity, rhoCpSed, &
+        !gp 21-nov-06
+        !hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
+        ! lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
+        ! ediff, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, &
+        ! hweir, bweir, &
+        ! sedthermcond, sedthermdiff, hsedcm, &
+        ! hypoexchfrac, porosity, rhocpsed, &
         ! kaaa, vss_rch, khc_rch, &
         ! kdcs_rch, kdc_rch, khn_rch, &
         ! von_rch, kn_rch, ki_rch, &
         ! vdi_rch, khp_rch, vop_rch, &
         ! vip_rch, kga_rch, krea_rch, &
         ! kdea_rch, ksn_rch, ksp_rch, &
-        ! Isat_rch, khnx_rch, va_rch, &
-        ! botalg0, kgaF_rch, abmax_rch, &
-        ! kreaF_rch, kexaF_rch, kdeaF_rch, &
-        ! ksnF_rch, kspF_rch, IsatF_rch, &
-        ! khnxF_rch, NINbmin_rch, NIPbmin_rch, &
-        ! NINbupmax_rch, NIPbupmax_rch, KqN_rch, &
-        ! KqP_rch, NUpWCfrac_rch, PUpWCfrac_rch, &
+        ! isat_rch, khnx_rch, va_rch, &
+        ! botalg0, kgaf_rch, abmax_rch, &
+        ! kreaf_rch, kexaf_rch, kdeaf_rch, &
+        ! ksnf_rch, kspf_rch, isatf_rch, &
+        ! khnxf_rch, ninbmin_rch, nipbmin_rch, &
+        ! ninbupmax_rch, nipbupmax_rch, kqn_rch, &
+        ! kqp_rch, nupwcfrac_rch, pupwcfrac_rch, &
         ! kdt_rch, vdt_rch, kpath_rch, &
-        ! vpath_rch, apath_rch, kgaH_rch, &
-        ! kscH_rch, kinhcH_rch, kreaH_rch, &
-        ! kdeaH_rch, ksnH_rch, kspH_rch, &
-        ! khnxH_rch, ahmax_rch, &
+        ! vpath_rch, apath_rch, kgah_rch, &
+        ! ksch_rch, kinhch_rch, kreah_rch, &
+        ! kdeah_rch, ksnh_rch, ksph_rch, &
+        ! khnxh_rch, ahmax_rch, &
         ! kgen_rch, vgen_rch)
 
-        !gp 03-Apr-08
-        !hydrau= hydraulics_(nRch, xrdn, elev1, elev2, latd, latm, lats, &
-        ! lond, lonm, lons, Q, BB, SS1, SS2, s, nm, alp1, bet1, alp2, bet2, &
-        ! Ediff, Frsed, Frsod, SODspec, JCH4spec, JNH4spec, JSRPspec, &
-        ! Hweir, Bweir, &
-        ! sedThermCond, sedThermDiff, HsedCM, &
-        ! HypoExchFrac, porosity, rhoCpSed, &
+        !gp 03-apr-08
+        !hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
+        ! lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
+        ! ediff, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, &
+        ! hweir, bweir, &
+        ! sedthermcond, sedthermdiff, hsedcm, &
+        ! hypoexchfrac, porosity, rhocpsed, &
         ! kaaa, vss_rch, khc_rch, &
         ! kdcs_rch, kdc_rch, khn_rch, &
         ! von_rch, kn_rch, ki_rch, &
         ! vdi_rch, khp_rch, vop_rch, &
         ! vip_rch, kga_rch, krea_rch, &
         ! kdea_rch, ksn_rch, ksp_rch, &
-        ! Isat_rch, khnx_rch, va_rch, &
-        ! kgaF_rch, abmax_rch, &
-        ! kreaF_rch, kexaF_rch, kdeaF_rch, &
-        ! ksnF_rch, kspF_rch, IsatF_rch, &
-        ! khnxF_rch, NINbmin_rch, NIPbmin_rch, &
-        ! NINbupmax_rch, NIPbupmax_rch, KqN_rch, &
-        ! KqP_rch, NUpWCfrac_rch, PUpWCfrac_rch, &
+        ! isat_rch, khnx_rch, va_rch, &
+        ! kgaf_rch, abmax_rch, &
+        ! kreaf_rch, kexaf_rch, kdeaf_rch, &
+        ! ksnf_rch, kspf_rch, isatf_rch, &
+        ! khnxf_rch, ninbmin_rch, nipbmin_rch, &
+        ! ninbupmax_rch, nipbupmax_rch, kqn_rch, &
+        ! kqp_rch, nupwcfrac_rch, pupwcfrac_rch, &
         ! kdt_rch, vdt_rch, kpath_rch, &
-        ! vpath_rch, apath_rch, kgaH_rch, &
-        ! kscH_rch, kinhcH_rch, kreaH_rch, &
-        ! kdeaH_rch, ksnH_rch, kspH_rch, &
-        ! khnxH_rch, ahmax_rch, &
+        ! vpath_rch, apath_rch, kgah_rch, &
+        ! ksch_rch, kinhch_rch, kreah_rch, &
+        ! kdeah_rch, ksnh_rch, ksph_rch, &
+        ! khnxh_rch, ahmax_rch, &
         ! kgen_rch, vgen_rch, &
-        ! Te_ini, c01_ini, c02_ini, c03_ini, &
+        ! te_ini, c01_ini, c02_ini, c03_ini, &
         ! c04_ini, c05_ini, c06_ini, &
         ! c07_ini, c08_ini, c09_ini, &
         ! c10_ini, c11_ini, c12_ini, &
         ! c13_ini, c14_ini, c15_ini, &
-        ! pH_ini, c17_ini, NINb_ini, NIPb_ini)
+        ! ph_ini, c17_ini, ninb_ini, nipb_ini)
 
-        !gp 16-Jul-08
-        !hydrau= hydraulics_(nRch, xrdn, elev1, elev2, latd, latm, lats, &
-        ! lond, lonm, lons, Q, BB, SS1, SS2, s, nm, alp1, bet1, alp2, bet2, &
-        ! Ediff, Frsed, Frsod, SODspec, JCH4spec, JNH4spec, JSRPspec, &
-        ! Hweir, Bweir, &
-        ! sedThermCond, sedThermDiff, HsedCM, &
-        ! HypoExchFrac, porosity, rhoCpSed, &
+        !gp 16-jul-08
+        !hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
+        ! lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
+        ! ediff, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, &
+        ! hweir, bweir, &
+        ! sedthermcond, sedthermdiff, hsedcm, &
+        ! hypoexchfrac, porosity, rhocpsed, &
         ! kaaa, vss_rch, khc_rch, &
         ! kdcs_rch, kdc_rch, khn_rch, &
         ! von_rch, kn_rch, ki_rch, &
         ! vdi_rch, khp_rch, vop_rch, &
         ! vip_rch, kga_rch, krea_rch, &
         ! kdea_rch, ksn_rch, ksp_rch, &
-        ! Isat_rch, khnx_rch, va_rch, &
-        ! kgaF_rch, abmax_rch, &
-        ! krea1F_rch, krea2F_rch, kexaF_rch, kdeaF_rch, &
-        ! ksnF_rch, kspF_rch, IsatF_rch, &
-        ! khnxF_rch, NINbmin_rch, NIPbmin_rch, &
-        ! NINbupmax_rch, NIPbupmax_rch, KqN_rch, &
-        ! KqP_rch, NUpWCfrac_rch, PUpWCfrac_rch, &
+        ! isat_rch, khnx_rch, va_rch, &
+        ! kgaf_rch, abmax_rch, &
+        ! krea1f_rch, krea2f_rch, kexaf_rch, kdeaf_rch, &
+        ! ksnf_rch, kspf_rch, isatf_rch, &
+        ! khnxf_rch, ninbmin_rch, nipbmin_rch, &
+        ! ninbupmax_rch, nipbupmax_rch, kqn_rch, &
+        ! kqp_rch, nupwcfrac_rch, pupwcfrac_rch, &
         ! kdt_rch, vdt_rch, kpath_rch, &
-        ! vpath_rch, apath_rch, kgaH_rch, &
-        ! kscH_rch, kinhcH_rch, kreaH_rch, &
-        ! kdeaH_rch, ksnH_rch, kspH_rch, &
-        ! khnxH_rch, ahmax_rch, &
+        ! vpath_rch, apath_rch, kgah_rch, &
+        ! ksch_rch, kinhch_rch, kreah_rch, &
+        ! kdeah_rch, ksnh_rch, ksph_rch, &
+        ! khnxh_rch, ahmax_rch, &
         ! kgen_rch, vgen_rch, &
-        ! Te_ini, c01_ini, c02_ini, c03_ini, &
+        ! te_ini, c01_ini, c02_ini, c03_ini, &
         ! c04_ini, c05_ini, c06_ini, &
         ! c07_ini, c08_ini, c09_ini, &
         ! c10_ini, c11_ini, c12_ini, &
         ! c13_ini, c14_ini, c15_ini, &
-        ! pH_ini, c17_ini, NINb_ini, NIPb_ini)
-        hydrau= hydraulics_(nRch, xrdn, elev1, elev2, latd, latm, lats, &
-            lond, lonm, lons, Q, BB, SS1, SS2, s, nm, alp1, bet1, alp2, bet2, &
-            Ediff, Frsed, Frsod, SODspec, JCH4spec, JNH4spec, JSRPspec, &
-            Hweir, Bweir, &
-            sedThermCond, sedThermDiff, HsedCM, &
-            HypoExchFrac, porosity, rhoCpSed, SKOP, &
+        ! ph_ini, c17_ini, ninb_ini, nipb_ini)
+        hydrau= hydraulics_(nrch, xrdn, elev1, elev2, latd, latm, lats, &
+            lond, lonm, lons, q, bb, ss1, ss2, s, nm, alp1, bet1, alp2, bet2, &
+            ediff, frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, &
+            hweir, bweir, &
+            sedthermcond, sedthermdiff, hsedcm, &
+            hypoexchfrac, porosity, rhocpsed, skop, &
             kaaa, vss_rch, khc_rch, &
             kdcs_rch, kdc_rch, khn_rch, &
             von_rch, kn_rch, ki_rch, &
             vdi_rch, khp_rch, vop_rch, &
             vip_rch, kga_rch, krea_rch, &
             kdea_rch, ksn_rch, ksp_rch, &
-            Isat_rch, khnx_rch, va_rch, &
-            kgaF_rch, abmax_rch, &
-            krea1F_rch, krea2F_rch, kexaF_rch, kdeaF_rch, &
-            ksnF_rch, kspF_rch, IsatF_rch, &
-            khnxF_rch, NINbmin_rch, NIPbmin_rch, &
-            NINbupmax_rch, NIPbupmax_rch, KqN_rch, &
-            KqP_rch, NUpWCfrac_rch, PUpWCfrac_rch, &
+            isat_rch, khnx_rch, va_rch, &
+            kgaf_rch, abmax_rch, &
+            krea1f_rch, krea2f_rch, kexaf_rch, kdeaf_rch, &
+            ksnf_rch, kspf_rch, isatf_rch, &
+            khnxf_rch, ninbmin_rch, nipbmin_rch, &
+            ninbupmax_rch, nipbupmax_rch, kqn_rch, &
+            kqp_rch, nupwcfrac_rch, pupwcfrac_rch, &
             kdt_rch, vdt_rch, kpath_rch, &
-            vpath_rch, apath_rch, kgaH_rch, &
-            kscH_rch, kinhcH_rch, kreaH_rch, &
-            kdeaH_rch, ksnH_rch, kspH_rch, &
-            khnxH_rch, ahmax_rch, &
+            vpath_rch, apath_rch, kgah_rch, &
+            ksch_rch, kinhch_rch, kreah_rch, &
+            kdeah_rch, ksnh_rch, ksph_rch, &
+            khnxh_rch, ahmax_rch, &
             kgen_rch, vgen_rch, &
-            Te_ini, c01_ini, c02_ini, c03_ini, &
+            te_ini, c01_ini, c02_ini, c03_ini, &
             c04_ini, c05_ini, c06_ini, &
             c07_ini, c08_ini, c09_ini, &
             c10_ini, c11_ini, c12_ini, &
             c13_ini, c14_ini, c15_ini, &
-            pH_ini, c17_ini, NINb_ini, NIPb_ini)
+            ph_ini, c17_ini, ninb_ini, nipb_ini)
 
-        !gp 21-Nov-06
-        !WRITE(10,*) 'done thru classreadfile hydrau'
+        !gp 21-nov-06
+        !write(10,*) 'done thru classreadfile hydrau'
 
-        DEALLOCATE (botalg0, STAT=status(39)) !gp 11-Jan-05
-        DEALLOCATE (rhoCpSed, STAT=status(38)) !gp 20-Oct-04
+        deallocate (botalg0, stat=status(39)) !gp 11-jan-05
+        deallocate (rhocpsed, stat=status(38)) !gp 20-oct-04
 
-        !gp 16-Jul-08
-        DEALLOCATE (SKOP, STAT=status(114)) !gp 20-Oct-04
+        !gp 16-jul-08
+        deallocate (skop, stat=status(114)) !gp 20-oct-04
 
-        DEALLOCATE (porosity, STAT=status(37)) !gp 20-Oct-04
-        DEALLOCATE (HypoExchFrac, STAT=status(36)) !gp 20-Oct-04
-        DEALLOCATE (HsedCM, STAT=status(35)) !gp 20-Oct-04
-        DEALLOCATE (sedThermDiff, STAT=status(34)) !gp 20-Oct-04
-        DEALLOCATE (sedThermCond, STAT=status(33)) !gp 20-Oct-04
-        DEALLOCATE (Bweir, STAT=status(32)) !gp 20-Oct-04 (missing from original code)
-        DEALLOCATE (rname, STAT=status(31))
-        DEALLOCATE (rlab2, STAT=status(30))
-        DEALLOCATE (rlab1, STAT=status(29))
-        DEALLOCATE (Hweir, STAT=status(28))
-        DEALLOCATE (JSRPspec, STAT=status(27))
-        DEALLOCATE (JNH4spec, STAT=status(26))
-        DEALLOCATE (JCH4spec, STAT=status(25))
-        DEALLOCATE (SODspec, STAT=status(24))
-        DEALLOCATE (Frsod, STAT=status(23))
-        DEALLOCATE (Frsed, STAT=status(22))
-        DEALLOCATE (kaaa, STAT=status(21))
-        DEALLOCATE (Ediff, STAT=status(20))
-        DEALLOCATE (bet2, STAT=status(19))
-        DEALLOCATE (alp2, STAT=status(18))
-        DEALLOCATE (bet1, STAT=status(17))
-        DEALLOCATE (alp1, STAT=status(16))
-        DEALLOCATE (nm, STAT=status(15))
-        DEALLOCATE (s, STAT=status(14))
-        DEALLOCATE (SS2, STAT=status(13))
-        DEALLOCATE (SS1, STAT=status(12))
-        DEALLOCATE (BB, STAT=status(11))
-        DEALLOCATE (Q, STAT=status(10))
-        DEALLOCATE (lons, STAT=status(9))
-        DEALLOCATE (lonm, STAT=status(8))
-        DEALLOCATE (lond, STAT=status(7))
-        DEALLOCATE (lats, STAT=status(6))
-        DEALLOCATE (latm, STAT=status(5))
-        DEALLOCATE (latd, STAT=status(4))
-        DEALLOCATE (elev2, STAT=status(3))
-        DEALLOCATE (elev1, STAT=status(2))
-        DEALLOCATE (xrdn, STAT=status(1))
+        deallocate (porosity, stat=status(37)) !gp 20-oct-04
+        deallocate (hypoexchfrac, stat=status(36)) !gp 20-oct-04
+        deallocate (hsedcm, stat=status(35)) !gp 20-oct-04
+        deallocate (sedthermdiff, stat=status(34)) !gp 20-oct-04
+        deallocate (sedthermcond, stat=status(33)) !gp 20-oct-04
+        deallocate (bweir, stat=status(32)) !gp 20-oct-04 (missing from original code)
+        deallocate (rname, stat=status(31))
+        deallocate (rlab2, stat=status(30))
+        deallocate (rlab1, stat=status(29))
+        deallocate (hweir, stat=status(28))
+        deallocate (jsrpspec, stat=status(27))
+        deallocate (jnh4spec, stat=status(26))
+        deallocate (jch4spec, stat=status(25))
+        deallocate (sodspec, stat=status(24))
+        deallocate (frsod, stat=status(23))
+        deallocate (frsed, stat=status(22))
+        deallocate (kaaa, stat=status(21))
+        deallocate (ediff, stat=status(20))
+        deallocate (bet2, stat=status(19))
+        deallocate (alp2, stat=status(18))
+        deallocate (bet1, stat=status(17))
+        deallocate (alp1, stat=status(16))
+        deallocate (nm, stat=status(15))
+        deallocate (s, stat=status(14))
+        deallocate (ss2, stat=status(13))
+        deallocate (ss1, stat=status(12))
+        deallocate (bb, stat=status(11))
+        deallocate (q, stat=status(10))
+        deallocate (lons, stat=status(9))
+        deallocate (lonm, stat=status(8))
+        deallocate (lond, stat=status(7))
+        deallocate (lats, stat=status(6))
+        deallocate (latm, stat=status(5))
+        deallocate (latd, stat=status(4))
+        deallocate (elev2, stat=status(3))
+        deallocate (elev1, stat=status(2))
+        deallocate (xrdn, stat=status(1))
 
-        !gp 07-Feb-07
-        !DEALLOCATE (kaaa, STAT=status(39))
-        DEALLOCATE (vss_rch, STAT=status(40)) !inorganic suspended solids settling vol
-        DEALLOCATE (khc_rch, STAT=status(41)) !slow CBOD hydrolysis rate
-        DEALLOCATE (kdcs_rch, STAT=status(42)) !slow CBOD oxidation rate
-        DEALLOCATE (kdc_rch, STAT=status(43)) !fast CBOD oxidation rate
-        DEALLOCATE (khn_rch, STAT=status(44)) !organic N hydrolysis rate
-        DEALLOCATE (von_rch, STAT=status(45)) !Organic N settling velocity
-        DEALLOCATE (kn_rch, STAT=status(46)) !Ammonium nitrification rate
-        DEALLOCATE (ki_rch, STAT=status(47)) !Nitrate denitrification
-        DEALLOCATE (vdi_rch, STAT=status(48)) !Nitrate sed denitrification transfer coeff
-        DEALLOCATE (khp_rch, STAT=status(49)) !organic P hydrolysis
-        DEALLOCATE (vop_rch, STAT=status(50)) !organic P settling velocity
-        DEALLOCATE (vip_rch, STAT=status(51)) !inorganic P settling velocity
-        DEALLOCATE (kga_rch, STAT=status(52)) !Phytoplankton MAX growth rate
-        DEALLOCATE (krea_rch, STAT=status(53)) !Phytoplankton respiration rate
-        DEALLOCATE (kdea_rch, STAT=status(54)) !Phytoplankton death rate
-        DEALLOCATE (ksn_rch, STAT=status(55)) !Phytoplankton N half-sat
-        DEALLOCATE (ksp_rch, STAT=status(56)) !Phytoplankton P half-sat
-        DEALLOCATE (Isat_rch, STAT=status(57)) !Phytoplankton light sat
-        DEALLOCATE (khnx_rch, STAT=status(58)) !Phytoplankton ammonia preference
-        DEALLOCATE (va_rch, STAT=status(59)) !Phytoplankton settling velocity
-        !DEALLOCATE (botalg0, STAT=status(39)) !Bottom plant initial bionass
-        DEALLOCATE (kgaF_rch, STAT=status(60)) !Bottom plant MAX growth rate
-        DEALLOCATE (abmax_rch, STAT=status(61)) !Bottom plant first-order carrying capacity
+        !gp 07-feb-07
+        !deallocate (kaaa, stat=status(39))
+        deallocate (vss_rch, stat=status(40)) !inorganic suspended solids settling vol
+        deallocate (khc_rch, stat=status(41)) !slow cbod hydrolysis rate
+        deallocate (kdcs_rch, stat=status(42)) !slow cbod oxidation rate
+        deallocate (kdc_rch, stat=status(43)) !fast cbod oxidation rate
+        deallocate (khn_rch, stat=status(44)) !organic n hydrolysis rate
+        deallocate (von_rch, stat=status(45)) !organic n settling velocity
+        deallocate (kn_rch, stat=status(46)) !ammonium nitrification rate
+        deallocate (ki_rch, stat=status(47)) !nitrate denitrification
+        deallocate (vdi_rch, stat=status(48)) !nitrate sed denitrification transfer coeff
+        deallocate (khp_rch, stat=status(49)) !organic p hydrolysis
+        deallocate (vop_rch, stat=status(50)) !organic p settling velocity
+        deallocate (vip_rch, stat=status(51)) !inorganic p settling velocity
+        deallocate (kga_rch, stat=status(52)) !phytoplankton max growth rate
+        deallocate (krea_rch, stat=status(53)) !phytoplankton respiration rate
+        deallocate (kdea_rch, stat=status(54)) !phytoplankton death rate
+        deallocate (ksn_rch, stat=status(55)) !phytoplankton n half-sat
+        deallocate (ksp_rch, stat=status(56)) !phytoplankton p half-sat
+        deallocate (isat_rch, stat=status(57)) !phytoplankton light sat
+        deallocate (khnx_rch, stat=status(58)) !phytoplankton ammonia preference
+        deallocate (va_rch, stat=status(59)) !phytoplankton settling velocity
+        !deallocate (botalg0, stat=status(39)) !bottom plant initial bionass
+        deallocate (kgaf_rch, stat=status(60)) !bottom plant max growth rate
+        deallocate (abmax_rch, stat=status(61)) !bottom plant first-order carrying capacity
 
-        !gp 03-Apr-08
-        !DEALLOCATE (kreaF_rch, STAT=status(62)) !Bottom plant respiration rate
-        DEALLOCATE (krea1F_rch, STAT=status(62)) !Bottom plant basal respiration rate
-        DEALLOCATE (krea2F_rch, STAT=status(113)) !Bottom plant photo respiration rate
+        !gp 03-apr-08
+        !deallocate (kreaf_rch, stat=status(62)) !bottom plant respiration rate
+        deallocate (krea1f_rch, stat=status(62)) !bottom plant basal respiration rate
+        deallocate (krea2f_rch, stat=status(113)) !bottom plant photo respiration rate
 
-        DEALLOCATE (kexaF_rch, STAT=status(63)) !Bottom plant excretion rate
-        DEALLOCATE (kdeaF_rch, STAT=status(64)) !Bottom plant death rate
-        DEALLOCATE (ksnF_rch, STAT=status(65)) !Bottom plant external N half-sat
-        DEALLOCATE (kspF_rch, STAT=status(66)) !Bottom plant external P half-sat
-        DEALLOCATE (IsatF_rch, STAT=status(67)) !Bottom plant light sat
-        DEALLOCATE (khnxF_rch, STAT=status(68)) !Bottom plant ammonia preference
-        DEALLOCATE (NINbmin_rch, STAT=status(69)) !Bottom plant subistence quota for N
-        DEALLOCATE (NIPbmin_rch, STAT=status(70)) !Bottom plant subistence quota for P
-        DEALLOCATE (NINbupmax_rch, STAT=status(71)) !Bottom plant max uptake rate for N
-        DEALLOCATE (NIPbupmax_rch, STAT=status(72)) !Bottom plant max uptake rate for P
-        DEALLOCATE (KqN_rch, STAT=status(73)) !Bottom plant internal N half-sat
-        DEALLOCATE (KqP_rch, STAT=status(74)) !Bottom plant internal P half-sat
-        DEALLOCATE (NUpWCfrac_rch, STAT=status(75)) !Bottom plant N uptake fraction from water column
-        DEALLOCATE (PUpWCfrac_rch, STAT=status(76)) !Bottom plant P uptake fraction from water column
-        DEALLOCATE (kdt_rch, STAT=status(77)) !POM dissolution rate
-        DEALLOCATE (vdt_rch, STAT=status(78)) !POM settling velocity
-        DEALLOCATE (kpath_rch, STAT=status(79)) !pathogen dieoff rate
-        DEALLOCATE (vpath_rch, STAT=status(80)) !pathogen settling velocity
-        DEALLOCATE (apath_rch, STAT=status(81)) !pathogen light alpha
-        DEALLOCATE (kgaH_rch, STAT=status(82)) !Hyporheic heterotrophs MAX growth rate
-        DEALLOCATE (kscH_rch, STAT=status(83)) !Hyporheic heterotrophs CBOD half-sat
-        DEALLOCATE (kinhcH_rch, STAT=status(84)) !Hyporheic heterotrophs O2 inhibition
-        DEALLOCATE (kreaH_rch, STAT=status(85)) !Hyporheic heterotrophs respiration rate
-        DEALLOCATE (kdeaH_rch, STAT=status(86)) !Hyporheic heterotrophs death rate
-        DEALLOCATE (ksnH_rch, STAT=status(87)) !Hyporheic heterotrophs N half-sat
-        DEALLOCATE (kspH_rch, STAT=status(88)) !Hyporheic heterotrophs P half-sat
-        DEALLOCATE (khnxH_rch, STAT=status(89)) !Hyporheic heterotrophs ammonia preference
-        DEALLOCATE (ahmax_rch, STAT=status(90)) !Hyporheic heterotrophs first-order carrying capacity
-        DEALLOCATE (kgen_rch, STAT=status(91)) !generic constituent dissolution rate
-        DEALLOCATE (vgen_rch, STAT=status(92)) !generic constituent settling velocity
+        deallocate (kexaf_rch, stat=status(63)) !bottom plant excretion rate
+        deallocate (kdeaf_rch, stat=status(64)) !bottom plant death rate
+        deallocate (ksnf_rch, stat=status(65)) !bottom plant external n half-sat
+        deallocate (kspf_rch, stat=status(66)) !bottom plant external p half-sat
+        deallocate (isatf_rch, stat=status(67)) !bottom plant light sat
+        deallocate (khnxf_rch, stat=status(68)) !bottom plant ammonia preference
+        deallocate (ninbmin_rch, stat=status(69)) !bottom plant subistence quota for n
+        deallocate (nipbmin_rch, stat=status(70)) !bottom plant subistence quota for p
+        deallocate (ninbupmax_rch, stat=status(71)) !bottom plant max uptake rate for n
+        deallocate (nipbupmax_rch, stat=status(72)) !bottom plant max uptake rate for p
+        deallocate (kqn_rch, stat=status(73)) !bottom plant internal n half-sat
+        deallocate (kqp_rch, stat=status(74)) !bottom plant internal p half-sat
+        deallocate (nupwcfrac_rch, stat=status(75)) !bottom plant n uptake fraction from water column
+        deallocate (pupwcfrac_rch, stat=status(76)) !bottom plant p uptake fraction from water column
+        deallocate (kdt_rch, stat=status(77)) !pom dissolution rate
+        deallocate (vdt_rch, stat=status(78)) !pom settling velocity
+        deallocate (kpath_rch, stat=status(79)) !pathogen dieoff rate
+        deallocate (vpath_rch, stat=status(80)) !pathogen settling velocity
+        deallocate (apath_rch, stat=status(81)) !pathogen light alpha
+        deallocate (kgah_rch, stat=status(82)) !hyporheic heterotrophs max growth rate
+        deallocate (ksch_rch, stat=status(83)) !hyporheic heterotrophs cbod half-sat
+        deallocate (kinhch_rch, stat=status(84)) !hyporheic heterotrophs o2 inhibition
+        deallocate (kreah_rch, stat=status(85)) !hyporheic heterotrophs respiration rate
+        deallocate (kdeah_rch, stat=status(86)) !hyporheic heterotrophs death rate
+        deallocate (ksnh_rch, stat=status(87)) !hyporheic heterotrophs n half-sat
+        deallocate (ksph_rch, stat=status(88)) !hyporheic heterotrophs p half-sat
+        deallocate (khnxh_rch, stat=status(89)) !hyporheic heterotrophs ammonia preference
+        deallocate (ahmax_rch, stat=status(90)) !hyporheic heterotrophs first-order carrying capacity
+        deallocate (kgen_rch, stat=status(91)) !generic constituent dissolution rate
+        deallocate (vgen_rch, stat=status(92)) !generic constituent settling velocity
 
-        !gp 21-Nov-06 initial conditions of state variables
-        DEALLOCATE (Te_ini, STAT=status(93))
-        DEALLOCATE (c01_ini, STAT=status(94))
-        DEALLOCATE (c02_ini, STAT=status(95))
-        DEALLOCATE (c03_ini, STAT=status(96))
-        DEALLOCATE (c04_ini, STAT=status(97))
-        DEALLOCATE (c05_ini, STAT=status(98))
-        DEALLOCATE (c06_ini, STAT=status(99))
-        DEALLOCATE (c07_ini, STAT=status(100))
-        DEALLOCATE (c08_ini, STAT=status(101))
-        DEALLOCATE (c09_ini, STAT=status(102))
-        DEALLOCATE (c10_ini, STAT=status(103))
-        DEALLOCATE (c11_ini, STAT=status(104))
-        DEALLOCATE (c12_ini, STAT=status(105))
-        DEALLOCATE (c13_ini, STAT=status(106))
-        DEALLOCATE (c14_ini, STAT=status(107))
-        DEALLOCATE (c15_ini, STAT=status(108))
-        DEALLOCATE (pH_ini, STAT=status(109))
-        DEALLOCATE (c17_ini, STAT=status(110))
-        DEALLOCATE (NINb_ini, STAT=status(111))
-        DEALLOCATE (NIPb_ini, STAT=status(112))
-        !gp 03-Apr-08 status(113) is used abouve for krea2F
+        !gp 21-nov-06 initial conditions of state variables
+        deallocate (te_ini, stat=status(93))
+        deallocate (c01_ini, stat=status(94))
+        deallocate (c02_ini, stat=status(95))
+        deallocate (c03_ini, stat=status(96))
+        deallocate (c04_ini, stat=status(97))
+        deallocate (c05_ini, stat=status(98))
+        deallocate (c06_ini, stat=status(99))
+        deallocate (c07_ini, stat=status(100))
+        deallocate (c08_ini, stat=status(101))
+        deallocate (c09_ini, stat=status(102))
+        deallocate (c10_ini, stat=status(103))
+        deallocate (c11_ini, stat=status(104))
+        deallocate (c12_ini, stat=status(105))
+        deallocate (c13_ini, stat=status(106))
+        deallocate (c14_ini, stat=status(107))
+        deallocate (c15_ini, stat=status(108))
+        deallocate (ph_ini, stat=status(109))
+        deallocate (c17_ini, stat=status(110))
+        deallocate (ninb_ini, stat=status(111))
+        deallocate (nipb_ini, stat=status(112))
+        !gp 03-apr-08 status(113) is used abouve for krea2f
 
-        !gp 21-Nov-06
-        !WRITE(10,*) 'done thru classreadfile DEALLOCATE'
+        !gp 21-nov-06
+        !write(10,*) 'done thru classreadfile deallocate'
 
         !light data
 
-        !gp 13-Feb-06
-        !READ(8,*) PAR, kep, kela, kenla, kess, kepom
-        READ(8,*) PAR, kep, kela, kenla, kess, kepom, kemac
+        !gp 13-feb-06
+        !read(8,*) par, kep, kela, kenla, kess, kepom
+        read(8,*) par, kep, kela, kenla, kess, kepom, kemac
 
-        !gp 24-Jun-09
-        !gp 16-Jul-08
-        !READ(8,*) solarMethod, nfacBras, atcRyanStolz, longatMethod, fUwMethod
-        !READ(8,*) solarMethod, nfacBras, atcRyanStolz, longatMethod, kbrut, fUwMethod
-        READ(8,*) solarMethod, nfacBras, atcRyanStolz, longatMethod, kbrut, fUwMethod, KCL1, KCL2
+        !gp 24-jun-09
+        !gp 16-jul-08
+        !read(8,*) solarmethod, nfacbras, atcryanstolz, longatmethod, fuwmethod
+        !read(8,*) solarmethod, nfacbras, atcryanstolz, longatmethod, kbrut, fuwmethod
+        read(8,*) solarmethod, nfacbras, atcryanstolz, longatmethod, kbrut, fuwmethod, kcl1, kcl2
 
         !light and heat module
 
-        !gp 13-Feb-06
-        !CALL Light_(PAR, kep, kela, kenla, kess, kepom, longatMethod, fUwMethod)
+        !gp 13-feb-06
+        !call light_(par, kep, kela, kenla, kess, kepom, longatmethod, fuwmethod)
 
-        !gp 24-Jun-09
-        !gp 16-Jul-08
-        !CALL Light_(PAR, kep, kela, kenla, kess, kepom, kemac, longatMethod, fUwMethod)
-        !CALL Light_(PAR, kep, kela, kenla, kess, kepom, kemac, longatMethod, kbrut, fUwMethod)
-        CALL Light_(PAR, kep, kela, kenla, kess, kepom, kemac, longatMethod, kbrut, fUwMethod, KCL1, KCL2)
+        !gp 24-jun-09
+        !gp 16-jul-08
+        !call light_(par, kep, kela, kenla, kess, kepom, kemac, longatmethod, fuwmethod)
+        !call light_(par, kep, kela, kenla, kess, kepom, kemac, longatmethod, kbrut, fuwmethod)
+        call light_(par, kep, kela, kenla, kess, kepom, kemac, longatmethod, kbrut, fuwmethod, kcl1, kcl2)
 
-        READ(8,*) nptIn
+        read(8,*) nptin
 
-        IF (nptIn>=1) THEN !if any point load/source
-            ALLOCATE (PtName(nptIn), STAT=status(1)); ALLOCATE (xptt(nptIn), STAT=status(2))
-            ALLOCATE (Qptta(nptIn), STAT=status(3)); ALLOCATE (Qptt(nptIn), STAT=status(4))
-            ALLOCATE (TepttMean(nptIn), STAT=status(5));ALLOCATE (TepttAmp(nptIn), STAT=status(6))
-            ALLOCATE (TepttMaxTime(nptIn), STAT=status(7))
-            ALLOCATE (cpttMean(nptIn, nv-2), STAT=status(8)); ALLOCATE(cpttAmp(nptIn, nv-2), STAT=status(9))
-            ALLOCATE(cpttMaxTime(nptIn, nv-2), STAT=status(10)); ALLOCATE (phpttMean(nptIn), STAT=status(11))
-            ALLOCATE (phpttAmp(nptIn), STAT=status(12));ALLOCATE(phpttMaxTime(nptIn), STAT=status(13))
-            !Point sources
+        if (nptin>=1) then !if any point load/source
+            allocate (ptname(nptin), stat=status(1)); allocate (xptt(nptin), stat=status(2))
+            allocate (qptta(nptin), stat=status(3)); allocate (qptt(nptin), stat=status(4))
+            allocate (tepttmean(nptin), stat=status(5));allocate (tepttamp(nptin), stat=status(6))
+            allocate (tepttmaxtime(nptin), stat=status(7))
+            allocate (cpttmean(nptin, nv-2), stat=status(8)); allocate(cpttamp(nptin, nv-2), stat=status(9))
+            allocate(cpttmaxtime(nptin, nv-2), stat=status(10)); allocate (phpttmean(nptin), stat=status(11))
+            allocate (phpttamp(nptin), stat=status(12));allocate(phpttmaxtime(nptin), stat=status(13))
+            !point sources
 
-            DO i=1 , 13
+            do i=1 , 13
 
-                IF (status(i)==1) THEN
-                    STOP 'Class_ReadFile:ReadInputfile. dynamic memory allocation failed!'
-                END IF
-            END DO
-            DO i = 1, nptIn
-                READ(8,*) PtName(i), xptt(i), Qptta(i), Qptt(i), TepttMean(i), TepttAmp(i), TepttMaxTime(i)
-                DO k = 1, nv - 2
-                    READ(8,*) cpttMean(i, k), cpttAmp(i, k), cpttMaxTime(i, k)
-                END DO
-                READ(8,*) phpttMean(i), phpttAmp(i), phpttMaxTime(i)
-            END DO
+                if (status(i)==1) then
+                    stop 'Class_ReadFile:ReadInputfile. dynamic memory allocation failed!'
+                end if
+            end do
+            do i = 1, nptin
+                read(8,*) ptname(i), xptt(i), qptta(i), qptt(i), tepttmean(i), tepttamp(i), tepttmaxtime(i)
+                do k = 1, nv - 2
+                    read(8,*) cpttmean(i, k), cpttamp(i, k), cpttmaxtime(i, k)
+                end do
+                read(8,*) phpttmean(i), phpttamp(i), phpttmaxtime(i)
+            end do
 
-        END IF
+        end if
 
 
-        !Diffuse sources
-        READ(8,*) ndiffIn
-        IF (ndiffIn>=1) THEN !if any nonpoint load/source
-            ALLOCATE (xdup(ndiffIn), STAT=status(1)); ALLOCATE(xddn(ndiffIn), STAT=status(2))
-            ALLOCATE(Qdifa(ndiffIn), STAT=status(3)); ALLOCATE (Qdif(ndiffIn), STAT=status(4))
-            ALLOCATE(Tedif(ndiffIn), STAT=status(5)); ALLOCATE(DiffName(ndiffIn), STAT=status(6))
-            ALLOCATE(pHind(ndiffIn), STAT=status(7)); ALLOCATE(cdif(ndiffIn, nv-2), STAT=status(8))
-            DO i=1, 8
-                IF (status(i)==1) THEN
-                    STOP 'Class_ReadFile:ReadInputfile. dynamic memory allocation failed!'
-                END IF
-            END DO
-            DO i = 1, ndiffIn
-                READ(8,*) DiffName(i), xdup(i), xddn(i), Qdifa(i), Qdif(i), Tedif(i)
-                DO k = 1, nv - 2
-                    READ(8,*) cdif(i, k)
-                END DO
-                READ(8,*) pHind(i)
-            END DO
-        END IF
-        CALL sourceIn_(nRch, nptIn, ndiffIn, hydrau%flag, Topo, hydrau, PtName, xptt, Qptta, Qptt, TepttMean, &
-            TepttAmp, TepttMaxTime, cpttMean, cpttAmp, cpttMaxTime, phpttMean, &
-            phpttAmp, phpttMaxTime, DiffName, xdup, xddn, Qdifa, Qdif, Tedif, cdif, pHind)
+        !diffuse sources
+        read(8,*) ndiffin
+        if (ndiffin>=1) then !if any nonpoint load/source
+            allocate (xdup(ndiffin), stat=status(1)); allocate(xddn(ndiffin), stat=status(2))
+            allocate(qdifa(ndiffin), stat=status(3)); allocate (qdif(ndiffin), stat=status(4))
+            allocate(tedif(ndiffin), stat=status(5)); allocate(diffname(ndiffin), stat=status(6))
+            allocate(phind(ndiffin), stat=status(7)); allocate(cdif(ndiffin, nv-2), stat=status(8))
+            do i=1, 8
+                if (status(i)==1) then
+                    stop 'Class_ReadFile:ReadInputfile. dynamic memory allocation failed!'
+                end if
+            end do
+            do i = 1, ndiffin
+                read(8,*) diffname(i), xdup(i), xddn(i), qdifa(i), qdif(i), tedif(i)
+                do k = 1, nv - 2
+                    read(8,*) cdif(i, k)
+                end do
+                read(8,*) phind(i)
+            end do
+        end if
+        call sourcein_(nrch, nptin, ndiffin, hydrau%flag, topo, hydrau, ptname, xptt, qptta, qptt, tepttmean, &
+            tepttamp, tepttmaxtime, cpttmean, cpttamp, cpttmaxtime, phpttmean, &
+            phpttamp, phpttmaxtime, diffname, xdup, xddn, qdifa, qdif, tedif, cdif, phind)
 
-        IF (ndiffIn>=1) THEN
-            DEALLOCATE(pHind, STAT=status(1)); DEALLOCATE(DiffName, STAT=status(2));
-            DEALLOCATE(Tedif, STAT=status(3)); DEALLOCATE (Qdif, STAT=status(4));
-            DEALLOCATE(Qdifa, STAT=status(5)); DEALLOCATE(xddn, STAT=status(6))
-            DEALLOCATE(xdup, STAT=status(7))
-        END IF
-        IF (nptIn>=1) THEN
-            DEALLOCATE(phpttMaxTime, STAT=status(13)); DEALLOCATE (phpttAmp, STAT=status(12))
-            DEALLOCATE (phpttMean, STAT=status(11)); DEALLOCATE(cpttMaxTime, STAT=status(10))
-            DEALLOCATE(cpttAmp, STAT=status(9)); DEALLOCATE (cpttMean, STAT=status(8))
-            DEALLOCATE (TepttMaxTime, STAT=status(7)); DEALLOCATE (TepttAmp, STAT=status(6))
-            DEALLOCATE (TepttMean, STAT=status(5)); DEALLOCATE (Qptt, STAT=status(4))
-            DEALLOCATE (Qptta, STAT=status(3)); DEALLOCATE (xptt, STAT=status(2))
-            DEALLOCATE (PtName, STAT=status(1))
-        END IF
+        if (ndiffin>=1) then
+            deallocate(phind, stat=status(1)); deallocate(diffname, stat=status(2));
+            deallocate(tedif, stat=status(3)); deallocate (qdif, stat=status(4));
+            deallocate(qdifa, stat=status(5)); deallocate(xddn, stat=status(6))
+            deallocate(xdup, stat=status(7))
+        end if
+        if (nptin>=1) then
+            deallocate(phpttmaxtime, stat=status(13)); deallocate (phpttamp, stat=status(12))
+            deallocate (phpttmean, stat=status(11)); deallocate(cpttmaxtime, stat=status(10))
+            deallocate(cpttamp, stat=status(9)); deallocate (cpttmean, stat=status(8))
+            deallocate (tepttmaxtime, stat=status(7)); deallocate (tepttamp, stat=status(6))
+            deallocate (tepttmean, stat=status(5)); deallocate (qptt, stat=status(4))
+            deallocate (qptta, stat=status(3)); deallocate (xptt, stat=status(2))
+            deallocate (ptname, stat=status(1))
+        end if
 
-        !Rates
-        READ(8,*) vss, mgC, mgN, mgP, mgD, mgA
-        READ(8,*) tka, roc, ron
-        READ(8,*) Ksocf, Ksona, Ksodn, Ksop, Ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von
-        READ(8,*) kn, tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi
-        READ(8,*) kga, tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, Isat
+        !rates
+        read(8,*) vss, mgc, mgn, mgp, mgd, mga
+        read(8,*) tka, roc, ron
+        read(8,*) ksocf, ksona, ksodn, ksop, ksob, khc, tkhc, kdcs, tkdcs, kdc, tkdc, khn, tkhn, von
+        read(8,*) kn, tkn, ki, tki, vdi, tvdi, khp, tkhp, vop, vip, kspi
+        read(8,*) kga, tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, isat
 
-        !gp 03-Apr-08
-        !READ(8,*) khnx, va, typeF, kgaF, tkgaF, kreaF, tkreaF, kexaF, tkexaF, kdeaF, abmax
-        READ(8,*) khnx, va, typeF, kgaF, tkgaF, krea1F, krea2F, tkreaF, kexaF, tkexaF, kdeaF, abmax
+        !gp 03-apr-08
+        !read(8,*) khnx, va, typef, kgaf, tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, abmax
+        read(8,*) khnx, va, typef, kgaf, tkgaf, krea1f, krea2f, tkreaf, kexaf, tkexaf, kdeaf, abmax
 
-        READ(8,*) tkdeaF, ksnF, kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt
+        read(8,*) tkdeaf, ksnf, kspf, kscf, isatf, khnxf, kdt, tkdt, vdt
 
-        !gp 26-Jan-06
-        !gp 10-Jan-05 READ(8,*) NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqN, KqP
-        !READ(8,*) NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqNratio, KqPratio
-        READ(8,*) NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqNratio, KqPratio, NUpWCfrac, PUpWCfrac
+        !gp 26-jan-06
+        !gp 10-jan-05 read(8,*) ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp
+        !read(8,*) ninbmin, nipbmin, ninbupmax, nipbupmax, kqnratio, kqpratio
+        read(8,*) ninbmin, nipbmin, ninbupmax, nipbupmax, kqnratio, kqpratio, nupwcfrac, pupwcfrac
 
-        KqN = KqNratio * NINbmin
-        KqP = KqPratio * NIPbmin
+        kqn = kqnratio * ninbmin
+        kqp = kqpratio * nipbmin
 
-        !gp 30-Nov-04 READ(8,*) kpath, tkpath, vpath
-        READ(8,*) kpath, tkpath, vpath, apath, kgen, tkgen, vgen, useGenericAsCOD !gp 08-Dec-04
+        !gp 30-nov-04 read(8,*) kpath, tkpath, vpath
+        read(8,*) kpath, tkpath, vpath, apath, kgen, tkgen, vgen, usegenericascod !gp 08-dec-04
 
-        READ(8,*) xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7
+        read(8,*) xdum1, xdum2, xdum3, xdum4, xdum5, xdum6, xdum7
 
-        !gp 15-Nov-04 separate hyporheic rates from reaeration and add level 2 rates and HCO3- use
-        !gp 03-Nov-04 READ(8,*) kai, kawindmethod !oxygen reaeration option
-        !gp READ(8,*) kai, kawindmethod, typeH, kgaH, tkgaH, kscH, xdum8, kinhcH
-        READ(8,*) kai, kawindmethod
-        READ(8,*) hco3use, hco3useF
-        READ(8,*) typeH, kgaH, tkgaH, kscH, xdum8, kinhcH, kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax
+        !gp 15-nov-04 separate hyporheic rates from reaeration and add level 2 rates and hco3- use
+        !gp 03-nov-04 read(8,*) kai, kawindmethod !oxygen reaeration option
+        !gp read(8,*) kai, kawindmethod, typeh, kgah, tkgah, ksch, xdum8, kinhch
+        read(8,*) kai, kawindmethod
+        read(8,*) hco3use, hco3usef
+        read(8,*) typeh, kgah, tkgah, ksch, xdum8, kinhch, kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax
 
-        !gp 17-Jan-06
-        !gp 17-Nov-04 CALL MakeHydraulics(nRch, hydrau, downstreamBoundary, kai)
-        !CALL MakeHydraulics(nRch, hydrau, downstreamBoundary, kai, Topo%geoMethod)
+        !gp 17-jan-06
+        !gp 17-nov-04 call makehydraulics(nrch, hydrau, downstreamboundary, kai)
+        !call makehydraulics(nrch, hydrau, downstreamboundary, kai, topo%geomethod)
 
-        !gp 08-Feb-06
-        !stochRate= Rates_(mgC,mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, &
-        ! Ksodn, Ksop, Ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
+        !gp 08-feb-06
+        !stochrate= rates_(mgc,mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, &
+        ! ksodn, ksop, ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
         ! kn, tkn, ki, tki, vdi, tvdi, khp, tkhp,vop, vip, kspi, kga, &
-        ! tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, Isat, khnx, &
-        ! va, typeF, kgaF, tkgaF, kreaF, tkreaF, kexaF, tkexaF, kdeaF, &
-        ! abmax, tkdeaF, ksnF, kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt, &
-        ! NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqN, KqP, &
+        ! tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, &
+        ! va, typef, kgaf, tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, &
+        ! abmax, tkdeaf, ksnf, kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, &
+        ! ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp, &
         ! kpath, tkpath, vpath, pco2, xdum1, xdum2, xdum3, xdum4, xdum5, &
         ! xdum6,xdum7, kai, kawindmethod, &
-        ! hco3use, hco3useF, &
-        ! typeH, kgaH, tkgaH, kscH, xdum8, kinhcH, &
-        ! kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax, & !gp 15-Nov-04
-        ! apath, kgen, tkgen, vgen, useGenericAsCOD, & !gp 08-Dec-04
-        ! NUpWCfrac, PUpWCfrac) !gp 26-Jan-06
+        ! hco3use, hco3usef, &
+        ! typeh, kgah, tkgah, ksch, xdum8, kinhch, &
+        ! kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, & !gp 15-nov-04
+        ! apath, kgen, tkgen, vgen, usegenericascod, & !gp 08-dec-04
+        ! nupwcfrac, pupwcfrac) !gp 26-jan-06
 
-        !gp 03-Apr-08
-        !stochRate= Rates_(nRch, hydrau, mgC,mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, &
-        ! Ksodn, Ksop, Ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
+        !gp 03-apr-08
+        !stochrate= rates_(nrch, hydrau, mgc,mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, &
+        ! ksodn, ksop, ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
         ! kn, tkn, ki, tki, vdi, tvdi, khp, tkhp,vop, vip, kspi, kga, &
-        ! tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, Isat, khnx, &
-        ! va, typeF, kgaF, tkgaF, kreaF, tkreaF, kexaF, tkexaF, kdeaF, &
-        ! abmax, tkdeaF, ksnF, kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt, &
-        ! NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqN, KqP, &
+        ! tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, &
+        ! va, typef, kgaf, tkgaf, kreaf, tkreaf, kexaf, tkexaf, kdeaf, &
+        ! abmax, tkdeaf, ksnf, kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, &
+        ! ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp, &
         ! kpath, tkpath, vpath, pco2, xdum1, xdum2, xdum3, xdum4, xdum5, &
         ! xdum6,xdum7, kai, kawindmethod, &
-        ! hco3use, hco3useF, &
-        ! typeH, kgaH, tkgaH, kscH, xdum8, kinhcH, &
-        ! kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax, &
-        ! apath, kgen, tkgen, vgen, useGenericAsCOD, &
-        ! NUpWCfrac, PUpWCfrac)
-        stochRate= rates_t(nRch, hydrau, mgC,mgN, mgP, mgD, mgA, vss,tka, roc, ron, Ksocf, Ksona, &
-            Ksodn, Ksop, Ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
+        ! hco3use, hco3usef, &
+        ! typeh, kgah, tkgah, ksch, xdum8, kinhch, &
+        ! kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, &
+        ! apath, kgen, tkgen, vgen, usegenericascod, &
+        ! nupwcfrac, pupwcfrac)
+        stochrate= rates_t(nrch, hydrau, mgc,mgn, mgp, mgd, mga, vss,tka, roc, ron, ksocf, ksona, &
+            ksodn, ksop, ksob, khc, tkhc, kdcs, tkdcs,kdc, tkdc, khn, tkhn, von, &
             kn, tkn, ki, tki, vdi, tvdi, khp, tkhp,vop, vip, kspi, kga, &
-            tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, Isat, khnx, &
-            va, typeF, kgaF, tkgaF, krea1F, krea2F, tkreaF, kexaF, tkexaF, kdeaF, &
-            abmax, tkdeaF, ksnF, kspF, kscF, Isatf, khnxF, kdt, tkdt, vdt, &
-            NINbmin, NIPbmin, NINbupmax, NIPbupmax, KqN, KqP, &
+            tkga, krea, tkrea, kdea, tkdea, ksn, ksp, ksc, isat, khnx, &
+            va, typef, kgaf, tkgaf, krea1f, krea2f, tkreaf, kexaf, tkexaf, kdeaf, &
+            abmax, tkdeaf, ksnf, kspf, kscf, isatf, khnxf, kdt, tkdt, vdt, &
+            ninbmin, nipbmin, ninbupmax, nipbupmax, kqn, kqp, &
             kpath, tkpath, vpath, pco2, xdum1, xdum2, xdum3, xdum4, xdum5, &
             xdum6,xdum7, kai, kawindmethod, &
-            hco3use, hco3useF, &
-            typeH, kgaH, tkgaH, kscH, xdum8, kinhcH, &
-            kreaH, tkreaH, kdeaH, tkdeaH, ksnH, kspH, khnxH, ahmax, &
-            apath, kgen, tkgen, vgen, useGenericAsCOD, &
-            NUpWCfrac, PUpWCfrac)
+            hco3use, hco3usef, &
+            typeh, kgah, tkgah, ksch, xdum8, kinhch, &
+            kreah, tkreah, kdeah, tkdeah, ksnh, ksph, khnxh, ahmax, &
+            apath, kgen, tkgen, vgen, usegenericascod, &
+            nupwcfrac, pupwcfrac)
 
         !day saving time
-        READ(8,*) dlstime
-        siteSolar= sitesolar_(nRch, timezone, solarMethod, nfacBras, atcRyanStolz, dlstime)
+        read(8,*) dlstime
+        sitesolar= sitesolar_(nrch, timezone, solarmethod, nfacbras, atcryanstolz, dlstime)
         !calculate sun rise and set
-        CALL SunriseSunset(nRch, siteSolar, hydrau, system%today)
+        call sunrisesunset(nrch, sitesolar, hydrau, system%today)
 
-        !Boundary data
-        READ(8,*) downstreamBoundary !true/false
+        !boundary data
+        read(8,*) downstreamboundary !true/false
 
-        !gp 17-Jan-06
-        CALL MakeHydraulics(nRch, hydrau, downstreamBoundary, kai, Topo%geoMethod)
+        !gp 17-jan-06
+        call makehydraulics(nrch, hydrau, downstreamboundary, kai, topo%geomethod)
 
-        !gp 12-Jan-06
-        !WRITE(10,*) downstreamBoundary
-        !WRITE(10,*) system%steadystate
+        !gp 12-jan-06
+        !write(10,*) downstreamboundary
+        !write(10,*) system%steadystate
 
-        !HEADWATERS
-        IF (system%steadystate) THEN
-            ALLOCATE(HwIn(0:HRSDAY-1), STAT=status(1))
-            IF (status(1)==1) STOP 'Insufficient memory, dynamic allocation failed!'
-            READ(8,*) (HwIn(j)%Te, j=0, HRSDAY-1), xxx
-            DO j = 1, nv - 2
-                READ(8,*) (HwIn(k)%c(j), k=0, HRSDAY-1), xxx
-            END DO
-            !hourly pH parameters
-            READ(8,*) (HwIn(j)%pH, j=0, HRSDAY-1), xxx
-        ELSE
-            !DYNAMIC SIMULATION
-        END IF
+        !headwaters
+        if (system%steadystate) then
+            allocate(hwin(0:hrsday-1), stat=status(1))
+            if (status(1)==1) stop 'Insufficient memory, dynamic allocation failed!'
+            read(8,*) (hwin(j)%te, j=0, hrsday-1), xxx
+            do j = 1, nv - 2
+                read(8,*) (hwin(k)%c(j), k=0, hrsday-1), xxx
+            end do
+            !hourly ph parameters
+            read(8,*) (hwin(j)%ph, j=0, hrsday-1), xxx
+        else
+            !dynamic simulation
+        end if
 
-        !gp 11-Jan-06 re-write with downstream boundary read same as headwater
-        IF (downstreamBoundary) THEN
-            IF (system%steadystate) THEN
-                ALLOCATE(DBIn(0:HRSDAY-1), STAT=status(1))
-                IF (status(1)==1) STOP 'Insufficient memory, dynamic allocation failed!'
-                READ(8,*) (DBIn(j)%Te, j=0, HRSDAY-1), xxx
+        !gp 11-jan-06 re-write with downstream boundary read same as headwater
+        if (downstreamboundary) then
+            if (system%steadystate) then
+                allocate(dbin(0:hrsday-1), stat=status(1))
+                if (status(1)==1) stop 'Insufficient memory, dynamic allocation failed!'
+                read(8,*) (dbin(j)%te, j=0, hrsday-1), xxx
 
-                !gp 12-Jan-06
-                !WRITE(9,*) (DBIn(j)%Te, j=0, HRSDAY-1), xxx
+                !gp 12-jan-06
+                !write(9,*) (dbin(j)%te, j=0, hrsday-1), xxx
 
-                DO j = 1, nv - 2
-                    READ(8,*) (DBIn(k)%c(j), k=0, HRSDAY-1), xxx
+                do j = 1, nv - 2
+                    read(8,*) (dbin(k)%c(j), k=0, hrsday-1), xxx
 
-                    !gp 12-Jan-06
-                    !WRITE(10,*) (DBIn(k)%c(j), k=0, HRSDAY-1), xxx
+                    !gp 12-jan-06
+                    !write(10,*) (dbin(k)%c(j), k=0, hrsday-1), xxx
 
-                END DO
-                !hourly pH parameters
-                READ(8,*) (DBIn(j)%pH, j=0, HRSDAY-1), xxx
+                end do
+                !hourly ph parameters
+                read(8,*) (dbin(j)%ph, j=0, hrsday-1), xxx
 
-                !gp 12-Jan-06
-                !WRITE(10,*) (DBIn(j)%pH, j=0, HRSDAY-1), xxx
+                !gp 12-jan-06
+                !write(10,*) (dbin(j)%ph, j=0, hrsday-1), xxx
 
-            ELSE
-                !DYNAMIC SIMULATION
-            END IF
-            !ELSE !downstream boundary is not specified
-        END IF
+            else
+                !dynamic simulation
+            end if
+            !else !downstream boundary is not specified
+        end if
 
-        HW= upstream_boundary_t(HwIn)
-        DB= downstream_boundary_t(DBin,downstreamBoundary)
-        IF (downstreamBoundary) DEALLOCATE(DBin, STAT=status(1))
-        DEALLOCATE(HwIn, STAT=status(2))
+        hw= upstream_boundary_t(hwin)
+        db= downstream_boundary_t(dbin,downstreamboundary)
+        if (downstreamboundary) deallocate(dbin, stat=status(1))
+        deallocate(hwin, stat=status(2))
 
-        !gp 12-Jan-06
-        !WRITE(10,*) 'done thru read downstreamBoundary'
+        !gp 12-jan-06
+        !write(10,*) 'done thru read downstreamboundary'
 
-        !Met data
-        IF (system%steadystate) THEN
-            ALLOCATE(shadeHH(0:HRSDAY-1,nRch), STAT=status(1))
-            ALLOCATE(TaHH(0:HRSDAY-1,nRch), STAT=status(2))
-            ALLOCATE(TdHH(0:HRSDAY-1,nRch), STAT=status(3))
-            ALLOCATE(UwHH(0:HRSDAY-1,nRch), STAT=status(4))
-            ALLOCATE(ccHH(0:HRSDAY-1,nRch), STAT=status(5))
+        !met data
+        if (system%steadystate) then
+            allocate(shadehh(0:hrsday-1,nrch), stat=status(1))
+            allocate(tahh(0:hrsday-1,nrch), stat=status(2))
+            allocate(tdhh(0:hrsday-1,nrch), stat=status(3))
+            allocate(uwhh(0:hrsday-1,nrch), stat=status(4))
+            allocate(cchh(0:hrsday-1,nrch), stat=status(5))
 
-            !gp 16-Jul-08
-            ALLOCATE(solarHH(0:HRSDAY-1,nRch), STAT=status(6))
+            !gp 16-jul-08
+            allocate(solarhh(0:hrsday-1,nrch), stat=status(6))
 
-            DO i=1, 5
-                IF (status(i)==1) STOP 'Insufficient memory, dynamic allocation failed!'
-            END DO
+            do i=1, 5
+                if (status(i)==1) stop 'Insufficient memory, dynamic allocation failed!'
+            end do
 
-            DO i = 1, nRch
-                !DO j = 0, HRSDAY-1
-                READ(8,*) (shadeHH(j, i), j = 0, HRSDAY-1), xxx !Reach Hourly shade data
-                !END DO
-                !READ(8,*) xxx
-            END DO
-            DO i = 1, nRch
-                !DO j = 0, HRSDAY-1 !Reach Hourly Air temperature data
-                READ(8,*) (TaHH(j, i), j = 0, HRSDAY-1), xxx
-                !END DO
-                !READ(8,*) xxx
-            END DO
-            DO i = 1, nRch
-                !DO j = 0, HRSDAY-1
-                READ(8,*) (TdHH(j, i), j = 0, HRSDAY-1), xxx !Reach dew point Air temperature data
-                !END DO
-                !READ(8,*) xxx
-            END DO
-            DO i = 1, nRch
-                !DO j = 0, HRSDAY-1
-                READ(8,*) (UwHH(j, i), j = 0, HRSDAY-1), xxx !Reach wind speed data
-                !END DO
-                !READ(8,*) xxx
-            END DO
-            DO i = 1, nRch
-                !DO j = 0, HRSDAY-1
-                READ(8,*) (ccHH(j, i), j = 0, HRSDAY-1), xxx !Reach cloud cover data
-                !END DO
-                !READ(8,*) xxx
-            END DO
+            do i = 1, nrch
+                !do j = 0, hrsday-1
+                read(8,*) (shadehh(j, i), j = 0, hrsday-1), xxx !reach hourly shade data
+                !end do
+                !read(8,*) xxx
+            end do
+            do i = 1, nrch
+                !do j = 0, hrsday-1 !reach hourly air temperature data
+                read(8,*) (tahh(j, i), j = 0, hrsday-1), xxx
+                !end do
+                !read(8,*) xxx
+            end do
+            do i = 1, nrch
+                !do j = 0, hrsday-1
+                read(8,*) (tdhh(j, i), j = 0, hrsday-1), xxx !reach dew point air temperature data
+                !end do
+                !read(8,*) xxx
+            end do
+            do i = 1, nrch
+                !do j = 0, hrsday-1
+                read(8,*) (uwhh(j, i), j = 0, hrsday-1), xxx !reach wind speed data
+                !end do
+                !read(8,*) xxx
+            end do
+            do i = 1, nrch
+                !do j = 0, hrsday-1
+                read(8,*) (cchh(j, i), j = 0, hrsday-1), xxx !reach cloud cover data
+                !end do
+                !read(8,*) xxx
+            end do
 
-            !gp 16-Jul-08
-            DO i = 1, nRch
-                READ(8,*) (solarHH(j, i), j = 0, HRSDAY-1), xxx !Reach solar data
-            END DO
+            !gp 16-jul-08
+            do i = 1, nrch
+                read(8,*) (solarhh(j, i), j = 0, hrsday-1), xxx !reach solar data
+            end do
 
-        ELSE !dyanmic simulation
-        END IF
+        else !dyanmic simulation
+        end if
 
-        !gp 16-Jul-08
-        !siteMeteo = MeteoData_(nRch, shadeHH, TaHH, TdHH, UwHH, ccHH)
-        siteMeteo = meteorology_t(nRch, shadeHH, TaHH, TdHH, UwHH, ccHH, solarHH)
+        !gp 16-jul-08
+        !sitemeteo = meteodata_(nrch, shadehh, tahh, tdhh, uwhh, cchh)
+        sitemeteo = meteorology_t(nrch, shadehh, tahh, tdhh, uwhh, cchh, solarhh)
 
-        !gp 16-Jul-08
-        DEALLOCATE(solarHH, STAT=status(6))
+        !gp 16-jul-08
+        deallocate(solarhh, stat=status(6))
 
-        DEALLOCATE(ccHH, STAT=status(5))
-        DEALLOCATE(UwHH, STAT=status(4))
-        DEALLOCATE(TdHH, STAT=status(3))
-        DEALLOCATE(TaHH, STAT=status(2))
-        DEALLOCATE(shadeHH, STAT=status(1))
+        deallocate(cchh, stat=status(5))
+        deallocate(uwhh, stat=status(4))
+        deallocate(tdhh, stat=status(3))
+        deallocate(tahh, stat=status(2))
+        deallocate(shadehh, stat=status(1))
 
-        !Data
-! READ(8,*) nteda
-! DO i = 1, nteda
-! READ(8,*) junk, junk, junk, junk !xteda(i), tedaav(i), tedamn(i), tedamx(i)
-! END DO
+        !data
+! read(8,*) nteda
+! do i = 1, nteda
+! read(8,*) junk, junk, junk, junk !xteda(i), tedaav(i), tedamn(i), tedamx(i)
+! end do
 
-! READ(8,*) nhydda
-! DO i = 1, nhydda
-! READ(8,*) junk, junk, junk, junk, junk ! xhydda(i), Qdata(i), Hdata(i), Udata(i), Travdata(i)
-! END DO
+! read(8,*) nhydda
+! do i = 1, nhydda
+! read(8,*) junk, junk, junk, junk, junk ! xhydda(i), qdata(i), hdata(i), udata(i), travdata(i)
+! end do
 
-! DO kk = 1, 3
-! READ(8,*) shtnam(kk), nwqd(kk)
-! DO i = 1, nwqd(kk)
-! READ(8,*) junk !dist(i, kk)
-! READ(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
-! READ(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
-! READ(8,*) junk, junk, junk, junk, junk, junk, junk, junk
+! do kk = 1, 3
+! read(8,*) shtnam(kk), nwqd(kk)
+! do i = 1, nwqd(kk)
+! read(8,*) junk !dist(i, kk)
+! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
+! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
+! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk
 
         !cwqdat(i, 1, kk), cwqdat(i, 2, kk), cwqdat(i, 3, kk), cwqdat(i, 4, kk), cwqdat(i, 5, kk), _
         ! cwqdat(i, 6, kk), cwqdat(i, 7, kk), cwqdat(i, 8, kk), cwqdat(i, 9, kk), cwqdat(i, 10, kk)
-        !READ(8,*) , cwqdat(i, 11, kk), cwqdat(i, 12, kk), cwqdat(i, 13, kk), cwqdat(i, 14, kk), cwqdat(i, 15, kk), _
+        !read(8,*) , cwqdat(i, 11, kk), cwqdat(i, 12, kk), cwqdat(i, 13, kk), cwqdat(i, 14, kk), cwqdat(i, 15, kk), _
         ! cwqdat(i, 16, kk), cwqdat(i, 17, kk), cwqdat(i, 18, kk), cwqdat(i, 19, kk), cwqdat(i, 20, kk)
-        !READ(8,*) , cwqdat(i, 21, kk), cwqdat(i, 22, kk), cwqdat(i, 23, kk), cwqdat(i, 24, kk), cwqdat(i, 25, kk), _
+        !read(8,*) , cwqdat(i, 21, kk), cwqdat(i, 22, kk), cwqdat(i, 23, kk), cwqdat(i, 24, kk), cwqdat(i, 25, kk), _
         ! cwqdat(i, 26, kk), cwqdat(i, 27, kk), cwqdat(i, 28, kk)
-! END DO
-! END DO
+! end do
+! end do
 
-! READ(8,*) nrp
-! READ(8,*) nwqdiur
-! DO i = 1, nwqdiur
-! READ(8,*) junk !distdiur
-! READ(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
-! READ(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
-        !READ(8,*) , distdiur(i)
-        !READ(8,*) , cwqdatdiur(i, 1), cwqdatdiur(i, 2), cwqdatdiur(i, 3), cwqdatdiur(i, 4), cwqdatdiur(i, 5), _
+! read(8,*) nrp
+! read(8,*) nwqdiur
+! do i = 1, nwqdiur
+! read(8,*) junk !distdiur
+! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
+! read(8,*) junk, junk, junk, junk, junk, junk, junk, junk, junk, junk
+        !read(8,*) , distdiur(i)
+        !read(8,*) , cwqdatdiur(i, 1), cwqdatdiur(i, 2), cwqdatdiur(i, 3), cwqdatdiur(i, 4), cwqdatdiur(i, 5), _
         ! cwqdatdiur(i, 6), cwqdatdiur(i, 7), cwqdatdiur(i, 8), cwqdatdiur(i, 9), cwqdatdiur(i, 10), cwqdatdiur(i, 11)
-        !READ(8,*) , cwqdatdiur(i, 12), cwqdatdiur(i, 13), cwqdatdiur(i, 14), cwqdatdiur(i, 15), cwqdatdiur(i, 16), _
+        !read(8,*) , cwqdatdiur(i, 12), cwqdatdiur(i, 13), cwqdatdiur(i, 14), cwqdatdiur(i, 15), cwqdatdiur(i, 16), _
         ! cwqdatdiur(i, 17), cwqdatdiur(i, 18), cwqdatdiur(i, 19), cwqdatdiur(i, 20), cwqdatdiur(i, 21)
-! END DO
+! end do
 
-        !gp 21-Nov-06
-        !WRITE(10,*) 'done thru classreadfile SUB ReadInputFile'
+        !gp 21-nov-06
+        !write(10,*) 'done thru classreadfile sub readinputfile'
 
-    END SUBROUTINE ReadInputfile
+    end subroutine readinputfile
 
 
-END MODULE Class_ReadFile
+end module class_readfile
 
