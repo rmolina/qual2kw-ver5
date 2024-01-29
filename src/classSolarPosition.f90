@@ -1,9 +1,9 @@
-!  solarposition.f90
+! solarposition.f90
 !
 MODULE Class_SolarPosition
     USE nrtype
     IMPLICIT NONE
-    PRIVATE															!All private, unless declare public
+    PRIVATE !All private, unless declare public
     PUBLIC solarelevation, radToDeg, degToRad, sunrise, sunset, solarnoon, solarposition, calcJD
 
     !The sunrise/sunset and solar position functions are a VBA translation of
@@ -22,33 +22,33 @@ MODULE Class_SolarPosition
     !Five main functions are included for use from Excel worksheets or VBA programs:
     !
     !sunrise(lat, lon, year, month, day, timezone, dlstime)
-    !     calculates the local time of sunrise for a location and date
+    ! calculates the local time of sunrise for a location and date
     !
     !solarnoon(lat, lon, year, month, day, timezone, dlstime)
-    !     calculates the local time of solar noon for a location and date
-    !     (the time when the sun crosses the meridian)
+    ! calculates the local time of solar noon for a location and date
+    ! (the time when the sun crosses the meridian)
     !
     !sunset(lat, lon, year, month, day, timezone, dlstime)
-    !     calculates the local time of sunset for a location and date
+    ! calculates the local time of sunset for a location and date
     !
     !solarazimuth(lat, lon, year, month, day, hour, minute, second, timezone, dlstime)
-    !     calculates the solar azimuth for a location, date, and time
-    !     (degrees clockwise from north to the point on the horizon directly below the sun)
+    ! calculates the solar azimuth for a location, date, and time
+    ! (degrees clockwise from north to the point on the horizon directly below the sun)
     !
     !solarelevation(lat, lon, year, month, day, hour, minute, second, timezone, dlstime)
-    !     calculates the solar elevation for a location, date, and time
-    !     (degrees vertically from horizon to the sun)
+    ! calculates the solar elevation for a location, date, and time
+    ! (degrees vertically from horizon to the sun)
     !
     !A subroutine is also provided that calculates solar azimuth (az), solar elevation (el):
     !
     !solarposition(lat, lon, year, month, day, hour, minute, second, &
-    !                      timezone, dlstime, az, el, earthRadiusVector)
+    ! timezone, dlstime, az, el, earthRadiusVector)
     !
     !The sign convention for the main functions and subroutine is:
     !
-    !     positive latitude decimal degrees for northern hemisphere
-    !     negative longitude degrees for western hemisphere
-    !     negative time zone hours for western hemisphere
+    ! positive latitude decimal degrees for northern hemisphere
+    ! negative longitude degrees for western hemisphere
+    ! negative time zone hours for western hemisphere
     !
 CONTAINS
     PURE Function radToDeg(angleRad)
@@ -76,25 +76,25 @@ CONTAINS
 
 
     !***********************************************************************/
-    !* Name:    calcJD
-    !* Type:    Function
+    !* Name: calcJD
+    !* Type: Function
     !* Purpose: Julian day from calendar day
     !* Arguments:
-    !*   year : 4 digit year
-    !*   month: January = 1
-    !*   day  : 1 - 31
+    !* year : 4 digit year
+    !* month: January = 1
+    !* day : 1 - 31
     !* Return value:
-    !*   The Julian day corresponding to the date
+    !* The Julian day corresponding to the date
     !* Note:
-    !*   Number is returned for start of day.  Fractional days should be
-    !*   added later.
+    !* Number is returned for start of day. Fractional days should be
+    !* added later.
     !***********************************************************************/
     PURE Function calcJD(year, month, day)
         USE nrtype
         IMPLICIT NONE
         REAL(DP) calcJD
-        REAL(DP), INTENT(IN) ::  year, month, day
-        REAL(DP)  year1, month1
+        REAL(DP), INTENT(IN) :: year, month, day
+        REAL(DP) year1, month1
         REAL(DP) a, b, jd
 
         year1=year ; month1=month
@@ -117,19 +117,19 @@ CONTAINS
     PURE Function calcTimeJulianCent(jd)
 
         !***********************************************************************/
-        !* Name:    calcTimeJulianCent
-        !* Type:    Function
+        !* Name: calcTimeJulianCent
+        !* Type: Function
         !* Purpose: convert Julian Day to centuries since J2000.0.
         !* Arguments:
-        !*   jd : the Julian Day to convert
+        !* jd : the Julian Day to convert
         !* Return value:
-        !*   the T value corresponding to the Julian Day
+        !* the T value corresponding to the Julian Day
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
 
         REAL(DP) calcTimeJulianCent
-        REAL(DP), INTENT(IN) ::  jd
+        REAL(DP), INTENT(IN) :: jd
         REAL(DP) t
 
         t = (jd - 2451545.0_dp) / 36525.0_dp
@@ -140,18 +140,18 @@ CONTAINS
     PURE Function calcJDFromJulianCent(t)
 
         !***********************************************************************/
-        !* Name:    calcJDFromJulianCent
-        !* Type:    Function
+        !* Name: calcJDFromJulianCent
+        !* Type: Function
         !* Purpose: convert centuries since J2000.0 to Julian Day.
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   the Julian Day corresponding to the t value
+        !* the Julian Day corresponding to the t value
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
         REAL(DP) calcJDFromJulianCent
-        REAL(DP), INTENT(IN) ::  t
+        REAL(DP), INTENT(IN) :: t
         REAL(DP) jd
 
         jd = t * 36525.0_dp + 2451545.0_dp
@@ -163,18 +163,18 @@ CONTAINS
     PURE Function calcGeomMeanLongSun(t)
 
         !***********************************************************************/
-        !* Name:    calGeomMeanLongSun
-        !* Type:    Function
+        !* Name: calGeomMeanLongSun
+        !* Type: Function
         !* Purpose: calculate the Geometric Mean Longitude of the Sun
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   the Geometric Mean Longitude of the Sun in degrees
+        !* the Geometric Mean Longitude of the Sun in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
         REAL(DP) calcGeomMeanLongSun
-        REAL(DP), INTENT(IN) ::  t
+        REAL(DP), INTENT(IN) :: t
         REAL(DP) l0
 
         l0 = 280.46646_dp + t * (36000.76983_dp + 0.0003032_dp * t)
@@ -196,13 +196,13 @@ CONTAINS
     PURE Function calcGeomMeanAnomalySun(t)
 
         !***********************************************************************/
-        !* Name:    calGeomAnomalySun
-        !* Type:    Function
+        !* Name: calGeomAnomalySun
+        !* Type: Function
         !* Purpose: calculate the Geometric Mean Anomaly of the Sun
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   the Geometric Mean Anomaly of the Sun in degrees
+        !* the Geometric Mean Anomaly of the Sun in degrees
         !***********************************************************************/
         !USE nrtype
         !IMPLICIT NONE
@@ -219,13 +219,13 @@ CONTAINS
     PURE Function calcEccentricityEarthOrbit(t)
 
         !***********************************************************************/
-        !* Name:    calcEccentricityEarthOrbit
-        !* Type:    Function
+        !* Name: calcEccentricityEarthOrbit
+        !* Type: Function
         !* Purpose: calculate the eccentricity of earth!s orbit
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   the unitless eccentricity
+        !* the unitless eccentricity
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -243,13 +243,13 @@ CONTAINS
 
 
         !***********************************************************************/
-        !* Name:    calcSunEqOfCenter
-        !* Type:    Function
+        !* Name: calcSunEqOfCenter
+        !* Type: Function
         !* Purpose: calculate the equation of center for the sun
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   in degrees
+        !* in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -277,13 +277,13 @@ CONTAINS
     PURE Function calcSunTrueLong(t)
 
         !***********************************************************************/
-        !* Name:    calcSunTrueLong
-        !* Type:    Function
+        !* Name: calcSunTrueLong
+        !* Type: Function
         !* Purpose: calculate the true longitude of the sun
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   sun!s true longitude in degrees
+        !* sun!s true longitude in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -305,13 +305,13 @@ CONTAINS
     PURE Function calcSunTrueAnomaly(t)
 
         !***********************************************************************/
-        !* Name:    calcSunTrueAnomaly (not used by sunrise, solarnoon, sunset)
-        !* Type:    Function
+        !* Name: calcSunTrueAnomaly (not used by sunrise, solarnoon, sunset)
+        !* Type: Function
         !* Purpose: calculate the true anamoly of the sun
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   sun!s true anamoly in degrees
+        !* sun!s true anamoly in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -333,13 +333,13 @@ CONTAINS
     PURE Function calcSunRadVector(t)
 
         !***********************************************************************/
-        !* Name:    calcSunRadVector (not used by sunrise, solarnoon, sunset)
-        !* Type:    Function
+        !* Name: calcSunRadVector (not used by sunrise, solarnoon, sunset)
+        !* Type: Function
         !* Purpose: calculate the distance to the sun in AU
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   sun radius vector in AUs
+        !* sun radius vector in AUs
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -359,13 +359,13 @@ CONTAINS
     PURE Function calcSunApparentLong(t)
 
         !***********************************************************************/
-        !* Name:    calcSunApparentLong (not used by sunrise, solarnoon, sunset)
-        !* Type:    Function
+        !* Name: calcSunApparentLong (not used by sunrise, solarnoon, sunset)
+        !* Type: Function
         !* Purpose: calculate the apparent longitude of the sun
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   sun!s apparent longitude in degrees
+        !* sun!s apparent longitude in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -385,13 +385,13 @@ CONTAINS
     PURE Function calcMeanObliquityOfEcliptic(t)
 
         !***********************************************************************/
-        !* Name:    calcMeanObliquityOfEcliptic
-        !* Type:    Function
+        !* Name: calcMeanObliquityOfEcliptic
+        !* Type: Function
         !* Purpose: calculate the mean obliquity of the ecliptic
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   mean obliquity in degrees
+        !* mean obliquity in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -409,13 +409,13 @@ CONTAINS
     PURE Function calcObliquityCorrection(t)
 
         !***********************************************************************/
-        !* Name:    calcObliquityCorrection
-        !* Type:    Function
+        !* Name: calcObliquityCorrection
+        !* Type: Function
         !* Purpose: calculate the corrected obliquity of the ecliptic
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   corrected obliquity in degrees
+        !* corrected obliquity in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -435,13 +435,13 @@ CONTAINS
     PURE Function calcSunRtAscension(t)
 
         !***********************************************************************/
-        !* Name:    calcSunRtAscension (not used by sunrise, solarnoon, sunset)
-        !* Type:    Function
+        !* Name: calcSunRtAscension (not used by sunrise, solarnoon, sunset)
+        !* Type: Function
         !* Purpose: calculate the right ascension of the sun
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   sun!s right ascension in degrees
+        !* sun!s right ascension in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -456,8 +456,8 @@ CONTAINS
         tanadenom = (Cos(degToRad(lambda)))
 
         !original NOAA code using javascript Math.Atan2(y,x) convention:
-        !        var alpha = radToDeg(Math.atan2(tananum, tanadenom));
-        !        alpha = radToDeg(Atan2(tananum, tanadenom))
+        ! var alpha = radToDeg(Math.atan2(tananum, tanadenom));
+        ! alpha = radToDeg(Atan2(tananum, tanadenom))
 
         !translated using Excel VBA Atan2(x,y) convention:
         alpha = radToDeg(Atan2(tanadenom, tananum))
@@ -470,13 +470,13 @@ CONTAINS
     PURE Function calcSunDeclination(t)
 
         !***********************************************************************/
-        !* Name:    calcSunDeclination
-        !* Type:    Function
+        !* Name: calcSunDeclination
+        !* Type: Function
         !* Purpose: calculate the declination of the sun
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   sun!s declination in degrees
+        !* sun!s declination in degrees
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -497,14 +497,14 @@ CONTAINS
     PURE Function calcEquationOfTime(t)
 
         !***********************************************************************/
-        !* Name:    calcEquationOfTime
-        !* Type:    Function
+        !* Name: calcEquationOfTime
+        !* Type: Function
         !* Purpose: calculate the difference between true solar time and mean
-        !*     solar time
+        !* solar time
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
+        !* t : number of Julian centuries since J2000.0
         !* Return value:
-        !*   equation of time in minutes of time
+        !* equation of time in minutes of time
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -540,15 +540,15 @@ CONTAINS
     PURE Function calcHourAngleSunrise(lat, SolarDec)
 
         !***********************************************************************/
-        !* Name:    calcHourAngleSunrise
-        !* Type:    Function
+        !* Name: calcHourAngleSunrise
+        !* Type: Function
         !* Purpose: calculate the hour angle of the sun at sunrise for the
-        !*         latitude
+        !* latitude
         !* Arguments:
-        !*   lat : latitude of observer in degrees
+        !* lat : latitude of observer in degrees
         !* solarDec : declination angle of sun in degrees
         !* Return value:
-        !*   hour angle of sunrise in radians
+        !* hour angle of sunrise in radians
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -573,15 +573,15 @@ CONTAINS
     Function calcHourAngleSunset(lat, SolarDec)
 
         !***********************************************************************/
-        !* Name:    calcHourAngleSunset
-        !* Type:    Function
+        !* Name: calcHourAngleSunset
+        !* Type: Function
         !* Purpose: calculate the hour angle of the sun at sunset for the
-        !*         latitude
+        !* latitude
         !* Arguments:
-        !*   lat : latitude of observer in degrees
+        !* lat : latitude of observer in degrees
         !* solarDec : declination angle of sun in degrees
         !* Return value:
-        !*   hour angle of sunset in radians
+        !* hour angle of sunset in radians
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -607,16 +607,16 @@ CONTAINS
     Function calcSunriseUTC(jd, Latitude, longitude)
 
         !***********************************************************************/
-        !* Name:    calcSunriseUTC
-        !* Type:    Function
+        !* Name: calcSunriseUTC
+        !* Type: Function
         !* Purpose: calculate the Universal Coordinated Time (UTC) of sunrise
-        !*         for the given day at the given location on earth
+        !* for the given day at the given location on earth
         !* Arguments:
-        !*   JD  : julian day
-        !*   latitude : latitude of observer in degrees
-        !*   longitude : longitude of observer in degrees
+        !* JD : julian day
+        !* latitude : latitude of observer in degrees
+        !* longitude : longitude of observer in degrees
         !* Return value:
-        !*   time in minutes from zero Z
+        !* time in minutes from zero Z
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -629,7 +629,7 @@ CONTAINS
 
         t = calcTimeJulianCent(jd)
 
-        !        // *** First pass to approximate sunrise
+        ! // *** First pass to approximate sunrise
 
         eqtime = calcEquationOfTime(t)
         SolarDec = calcSunDeclination(t)
@@ -660,15 +660,15 @@ CONTAINS
     PURE Function calcSolNoonUTC(t, longitude)
 
         !***********************************************************************/
-        !* Name:    calcSolNoonUTC
-        !* Type:    Function
+        !* Name: calcSolNoonUTC
+        !* Type: Function
         !* Purpose: calculate the Universal Coordinated Time (UTC) of solar
-        !*     noon for the given day at the given location on earth
+        !* noon for the given day at the given location on earth
         !* Arguments:
-        !*   t : number of Julian centuries since J2000.0
-        !*   longitude : longitude of observer in degrees
+        !* t : number of Julian centuries since J2000.0
+        !* longitude : longitude of observer in degrees
         !* Return value:
-        !*   time in minutes from zero Z
+        !* time in minutes from zero Z
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -689,16 +689,16 @@ CONTAINS
     Function calcSunsetUTC(jd, Latitude, longitude)
 
         !***********************************************************************/
-        !* Name:    calcSunsetUTC
-        !* Type:    Function
+        !* Name: calcSunsetUTC
+        !* Type: Function
         !* Purpose: calculate the Universal Coordinated Time (UTC) of sunset
-        !*         for the given day at the given location on earth
+        !* for the given day at the given location on earth
         !* Arguments:
-        !*   JD  : julian day
-        !*   latitude : latitude of observer in degrees
-        !*   longitude : longitude of observer in degrees
+        !* JD : julian day
+        !* latitude : latitude of observer in degrees
+        !* longitude : longitude of observer in degrees
         !* Return value:
-        !*   time in minutes from zero Z
+        !* time in minutes from zero Z
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -710,7 +710,7 @@ CONTAINS
 
         t = calcTimeJulianCent(jd)
 
-        !        // First calculates sunrise and approx length of day
+        ! // First calculates sunrise and approx length of day
 
         eqtime = calcEquationOfTime(t)
         SolarDec = calcSunDeclination(t)
@@ -720,7 +720,7 @@ CONTAINS
         timeDiff = 4 * delta
         timeUTC = 720 + timeDiff - eqtime
 
-        !        // first pass used to include fractional day in gamma calc
+        ! // first pass used to include fractional day in gamma calc
 
         newt = calcTimeJulianCent(calcJDFromJulianCent(t) + timeUTC / 1440.0_dp)
         eqtime = calcEquationOfTime(newt)
@@ -730,7 +730,7 @@ CONTAINS
         delta = longitude - radToDeg(hourangle)
         timeDiff = 4 * delta
         timeUTC = 720 + timeDiff - eqtime
-        !        // in minutes
+        ! // in minutes
 
         calcSunsetUTC = timeUTC
 
@@ -740,29 +740,29 @@ CONTAINS
     Function sunrise(lat, lon, year, month, day, timezone, dlstime)
 
         !***********************************************************************/
-        !* Name:    sunrise
-        !* Type:    Main Function called by spreadsheet
-        !* Purpose: calculate time of sunrise  for the entered date
-        !*     and location.
+        !* Name: sunrise
+        !* Type: Main Function called by spreadsheet
+        !* Purpose: calculate time of sunrise for the entered date
+        !* and location.
         !* For latitudes greater than 72 degrees N and S, calculations are
         !* accurate to within 10 minutes. For latitudes less than +/- 72�
         !* accuracy is approximately one minute.
         !* Arguments:
-        !   latitude = latitude (decimal degrees)
-        !   longitude = longitude (decimal degrees)
-        !    NOTE: longitude is negative for western hemisphere for input cells
-        !          in the spreadsheet for calls to the functions named
-        !          sunrise, solarnoon, and sunset. Those functions convert the
-        !          longitude to positive for the western hemisphere for calls to
-        !          other functions using the original sign convention
-        !          from the NOAA javascript code.
-        !   year = year
-        !   month = month
-        !   day = day
-        !   timezone = time zone hours relative to GMT/UTC (hours)
-        !   dlstime = daylight savings time (0 = no, 1 = yes) (hours)
+        ! latitude = latitude (decimal degrees)
+        ! longitude = longitude (decimal degrees)
+        ! NOTE: longitude is negative for western hemisphere for input cells
+        ! in the spreadsheet for calls to the functions named
+        ! sunrise, solarnoon, and sunset. Those functions convert the
+        ! longitude to positive for the western hemisphere for calls to
+        ! other functions using the original sign convention
+        ! from the NOAA javascript code.
+        ! year = year
+        ! month = month
+        ! day = day
+        ! timezone = time zone hours relative to GMT/UTC (hours)
+        ! dlstime = daylight savings time (0 = no, 1 = yes) (hours)
         !* Return value:
-        !*   sunrise time in local time (days)
+        !* sunrise time in local time (days)
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -786,13 +786,13 @@ CONTAINS
         END IF
         jd = calcJD(year, month, day)
 
-        !            // Calculate sunrise for this date
+        ! // Calculate sunrise for this date
         riseTimeGMT = calcSunriseUTC(jd, Latitude, longitude)
 
-        !            //  adjust for time zone and daylight savings time in minutes
+        ! // adjust for time zone and daylight savings time in minutes
         riseTimeLST = riseTimeGMT + (60 * timezone) + (dlstime * 60)
 
-        !            //  convert to days
+        ! // convert to days
         sunrise = riseTimeLST / 1440.0_dp
 
     End Function
@@ -801,23 +801,23 @@ CONTAINS
     PURE Function solarnoon(lat, lon, year, month, day, timezone, dlstime)
 
         !***********************************************************************/
-        !* Name:    solarnoon
-        !* Type:    Main Function called by spreadsheet
+        !* Name: solarnoon
+        !* Type: Main Function called by spreadsheet
         !* Purpose: calculate the Universal Coordinated Time (UTC) of solar
-        !*     noon for the given day at the given location on earth
+        !* noon for the given day at the given location on earth
         !* Arguments:
-        !    year
-        !    month
-        !    day
-        !*   longitude : longitude of observer in degrees
-        !    NOTE: longitude is negative for western hemisphere for input cells
-        !          in the spreadsheet for calls to the functions named
-        !          sunrise, solarnoon, and sunset. Those functions convert the
-        !          longitude to positive for the western hemisphere for calls to
-        !          other functions using the original sign convention
-        !          from the NOAA javascript code.
+        ! year
+        ! month
+        ! day
+        !* longitude : longitude of observer in degrees
+        ! NOTE: longitude is negative for western hemisphere for input cells
+        ! in the spreadsheet for calls to the functions named
+        ! sunrise, solarnoon, and sunset. Those functions convert the
+        ! longitude to positive for the western hemisphere for calls to
+        ! other functions using the original sign convention
+        ! from the NOAA javascript code.
         !* Return value:
-        !*   time of solar noon in local time days
+        !* time of solar noon in local time days
         !***********************************************************************/
         USE nrtype
         IMPLICIT NONE
@@ -849,10 +849,10 @@ CONTAINS
         solarNoonDec = calcSunDeclination(newt)
         solNoonUTC = 720 + (longitude * 4) - eqtime
 
-!            //  adjust for time zone and daylight savings time in minutes
+! // adjust for time zone and daylight savings time in minutes
         solarnoon = solNoonUTC + (60 * timezone) + (dlstime * 60)
 
-!            //  convert to days
+! // convert to days
         solarnoon = solarnoon / 1440.0_dp
 
     End Function
@@ -861,29 +861,29 @@ CONTAINS
     Function sunset(lat, lon, year, month, day, timezone, dlstime)
 
         !***********************************************************************/
-        !* Name:    sunset
-        !* Type:    Main Function called by spreadsheet
+        !* Name: sunset
+        !* Type: Main Function called by spreadsheet
         !* Purpose: calculate time of sunrise and sunset for the entered date
-        !*     and location.
+        !* and location.
         !* For latitudes greater than 72 degrees N and S, calculations are
         !* accurate to within 10 minutes. For latitudes less than +/- 72�
         !* accuracy is approximately one minute.
         !* Arguments:
-        !   latitude = latitude (decimal degrees)
-        !   longitude = longitude (decimal degrees)
-        !    NOTE: longitude is negative for western hemisphere for input cells
-        !          in the spreadsheet for calls to the functions named
-        !          sunrise, solarnoon, and sunset. Those functions convert the
-        !          longitude to positive for the western hemisphere for calls to
-        !          other functions using the original sign convention
-        !          from the NOAA javascript code.
-        !   year = year
-        !   month = month
-        !   day = day
-        !   timezone = time zone hours relative to GMT/UTC (hours)
-        !   dlstime = daylight savings time (0 = no, 1 = yes) (hours)
+        ! latitude = latitude (decimal degrees)
+        ! longitude = longitude (decimal degrees)
+        ! NOTE: longitude is negative for western hemisphere for input cells
+        ! in the spreadsheet for calls to the functions named
+        ! sunrise, solarnoon, and sunset. Those functions convert the
+        ! longitude to positive for the western hemisphere for calls to
+        ! other functions using the original sign convention
+        ! from the NOAA javascript code.
+        ! year = year
+        ! month = month
+        ! day = day
+        ! timezone = time zone hours relative to GMT/UTC (hours)
+        ! dlstime = daylight savings time (0 = no, 1 = yes) (hours)
         !* Return value:
-        !*   sunset time in local time (days)
+        !* sunset time in local time (days)
         !***********************************************************************/
 
         REAL(DP) sunset
@@ -906,13 +906,13 @@ CONTAINS
         END IF
         jd = calcJD(year, month, day)
 
-        !           // Calculate sunset for this date
+        ! // Calculate sunset for this date
         setTimeGMT = calcSunsetUTC(jd, Latitude, longitude)
 
-        !            //  adjust for time zone and daylight savings time in minutes
+        ! // adjust for time zone and daylight savings time in minutes
         setTimeLST = setTimeGMT + (60 * timezone) + (dlstime * 60)
 
-        !            //  convert to days
+        ! // convert to days
         sunset = setTimeLST / 1440.0_dp
 
     End Function
@@ -922,20 +922,20 @@ CONTAINS
         hours, minutes, seconds, timezone, dlstime)
 
         !***********************************************************************/
-        !* Name:    solarazimuth
-        !* Type:    Main Function
+        !* Name: solarazimuth
+        !* Type: Main Function
         !* Purpose: calculate solar azimuth (deg from north) for the entered
-        !*          date, time and location. Returns -999999 if darker than twilight
+        !* date, time and location. Returns -999999 if darker than twilight
         !*
         !* Arguments:
-        !*   latitude, longitude, year, month, day, hour, minute, second,
-        !*   timezone, daylightsavingstime
+        !* latitude, longitude, year, month, day, hour, minute, second,
+        !* timezone, daylightsavingstime
         !* Return value:
-        !*   solar azimuth in degrees from north
+        !* solar azimuth in degrees from north
         !*
         !* Note: solarelevation and solarazimuth functions are identical
-        !*       and could be converted to a VBA subroutine that would return
-        !*       both values.
+        !* and could be converted to a VBA subroutine that would return
+        !* both values.
         !*
         !***********************************************************************/
         USE nrtype
@@ -971,7 +971,7 @@ CONTAINS
         mm = minutes
         ss = seconds
 
-        !//    timenow is GMT time for calculation in hours since 0Z
+        !// timenow is GMT time for calculation in hours since 0Z
         timenow = hh + mm / 60.0_dp + ss / 3600.0_dp + Zone
 
         jd = calcJD(year, month, day)
@@ -982,19 +982,19 @@ CONTAINS
         Etime = calcEquationOfTime(t)
 
         eqtime = Etime
-        SolarDec = theta !//    in degrees
+        SolarDec = theta !// in degrees
         earthRadVec = R
 
         solarTimeFix = eqtime - 4.0 * longitude + 60.0 * Zone
         trueSolarTime = hh * 60.0 + mm + ss / 60.0 + solarTimeFix
-        !//    in minutes
+        !// in minutes
 
         Do While (trueSolarTime > 1440)
             trueSolarTime = trueSolarTime - 1440
         END DO
 
         hourangle = trueSolarTime / 4.0 - 180.0
-        !//    Thanks to Louis Schwarzmayr for the next line:
+        !// Thanks to Louis Schwarzmayr for the next line:
         If (hourangle < -180) hourangle = hourangle + 360.0
 
         harad = degToRad(hourangle)
@@ -1045,23 +1045,23 @@ CONTAINS
         exoatmElevation = 90.0 - zenith
 
         !beginning of complex expression commented out
-        !            If (exoatmElevation > 85.0) Then
-        !                refractionCorrection = 0.0
-        !            Else
-        !                te = Tan(degToRad(exoatmElevation))
-        !                If (exoatmElevation > 5.0) Then
-        !                    refractionCorrection = 58.1 / te - 0.07 / (te * te * te) + &
-        !                        0.000086 / (te * te * te * te * te)
-        !                ElseIf (exoatmElevation > -0.575) Then
-        !                    refractionCorrection = 1735.0 + exoatmElevation * &
-        !                        (-518.2 + exoatmElevation * (103.4 + &
-        !                        exoatmElevation * (-12.79 + &
-        !                        exoatmElevation * 0.711)))
-        !                Else
-        !                    refractionCorrection = -20.774 / te
-        !                End If
-        !                refractionCorrection = refractionCorrection / 3600.0
-        !            End If
+        ! If (exoatmElevation > 85.0) Then
+        ! refractionCorrection = 0.0
+        ! Else
+        ! te = Tan(degToRad(exoatmElevation))
+        ! If (exoatmElevation > 5.0) Then
+        ! refractionCorrection = 58.1 / te - 0.07 / (te * te * te) + &
+        ! 0.000086 / (te * te * te * te * te)
+        ! ElseIf (exoatmElevation > -0.575) Then
+        ! refractionCorrection = 1735.0 + exoatmElevation * &
+        ! (-518.2 + exoatmElevation * (103.4 + &
+        ! exoatmElevation * (-12.79 + &
+        ! exoatmElevation * 0.711)))
+        ! Else
+        ! refractionCorrection = -20.774 / te
+        ! End If
+        ! refractionCorrection = refractionCorrection / 3600.0
+        ! End If
         !end of complex expression
 
         !beginning of simplified expression
@@ -1086,19 +1086,19 @@ CONTAINS
 
         solarzen = zenith - refractionCorrection
 
-        !            If (solarZen < 108.0) Then
+        ! If (solarZen < 108.0) Then
         solarazimuth = azimuth
-        !              solarelevation = 90.0 - solarZen
-        !              If (solarZen < 90.0) Then
-        !                coszen = Cos(degToRad(solarZen))
-        !              Else
-        !                coszen = 0.0
-        !              End If
-        !            Else    !// do not report az & el after astro twilight
-        !              solarazimuth = -999999
-        !              solarelevation = -999999
-        !              coszen = -999999
-        !            End If
+        ! solarelevation = 90.0 - solarZen
+        ! If (solarZen < 90.0) Then
+        ! coszen = Cos(degToRad(solarZen))
+        ! Else
+        ! coszen = 0.0
+        ! End If
+        ! Else !// do not report az & el after astro twilight
+        ! solarazimuth = -999999
+        ! solarelevation = -999999
+        ! coszen = -999999
+        ! End If
 
     End Function
 
@@ -1107,20 +1107,20 @@ CONTAINS
         hours, minutes, seconds, timezone, dlstime)
 
         !***********************************************************************/
-        !* Name:    solarazimuth
-        !* Type:    Main Function
+        !* Name: solarazimuth
+        !* Type: Main Function
         !* Purpose: calculate solar azimuth (deg from north) for the entered
-        !*          date, time and location. Returns -999999 if darker than twilight
+        !* date, time and location. Returns -999999 if darker than twilight
         !*
         !* Arguments:
-        !*   latitude, longitude, year, month, day, hour, minute, second,
-        !*   timezone, daylightsavingstime
+        !* latitude, longitude, year, month, day, hour, minute, second,
+        !* timezone, daylightsavingstime
         !* Return value:
-        !*   solar azimuth in degrees from north
+        !* solar azimuth in degrees from north
         !*
         !* Note: solarelevation and solarazimuth functions are identical
-        !*       and could converted to a VBA subroutine that would return
-        !*       both values.
+        !* and could converted to a VBA subroutine that would return
+        !* both values.
         !*
         !***********************************************************************/
         USE nrtype
@@ -1158,7 +1158,7 @@ CONTAINS
         mm = minutes
         ss = seconds
 
-        !//    timenow is GMT time for calculation in hours since 0Z
+        !// timenow is GMT time for calculation in hours since 0Z
         timenow = hh + mm / 60.0 + ss / 3600.0 + Zone
 
         jd = calcJD(year, month, day)
@@ -1169,19 +1169,19 @@ CONTAINS
         Etime = calcEquationOfTime(t)
 
         eqtime = Etime
-        SolarDec = theta !//    in degrees
+        SolarDec = theta !// in degrees
         earthRadVec = R
 
         solarTimeFix = eqtime - 4.0 * longitude + 60.0 * Zone
         trueSolarTime = hh * 60.0 + mm + ss / 60.0 + solarTimeFix
-        !//    in minutes
+        !// in minutes
 
         Do While (trueSolarTime > 1440)
             trueSolarTime = trueSolarTime - 1440
         END DO
 
         hourangle = trueSolarTime / 4.0 - 180.0
-        !//    Thanks to Louis Schwarzmayr for the next line:
+        !// Thanks to Louis Schwarzmayr for the next line:
         If (hourangle < -180) hourangle = hourangle + 360.0
 
         harad = degToRad(hourangle)
@@ -1232,23 +1232,23 @@ CONTAINS
         exoatmElevation = 90.0 - zenith
 
         !beginning of complex expression commented out
-        !            If (exoatmElevation > 85.0) Then
-        !                refractionCorrection = 0.0
-        !            Else
-        !                te = Tan(degToRad(exoatmElevation))
-        !                If (exoatmElevation > 5.0) Then
-        !                    refractionCorrection = 58.1 / te - 0.07 / (te * te * te) + &
-        !                        0.000086 / (te * te * te * te * te)
-        !                ElseIf (exoatmElevation > -0.575) Then
-        !                    refractionCorrection = 1735.0 + exoatmElevation * &
-        !                        (-518.2 + exoatmElevation * (103.4 + &
-        !                        exoatmElevation * (-12.79 + &
-        !                        exoatmElevation * 0.711)))
-        !                Else
-        !                    refractionCorrection = -20.774 / te
-        !                End If
-        !                refractionCorrection = refractionCorrection / 3600.0
-        !            End If
+        ! If (exoatmElevation > 85.0) Then
+        ! refractionCorrection = 0.0
+        ! Else
+        ! te = Tan(degToRad(exoatmElevation))
+        ! If (exoatmElevation > 5.0) Then
+        ! refractionCorrection = 58.1 / te - 0.07 / (te * te * te) + &
+        ! 0.000086 / (te * te * te * te * te)
+        ! ElseIf (exoatmElevation > -0.575) Then
+        ! refractionCorrection = 1735.0 + exoatmElevation * &
+        ! (-518.2 + exoatmElevation * (103.4 + &
+        ! exoatmElevation * (-12.79 + &
+        ! exoatmElevation * 0.711)))
+        ! Else
+        ! refractionCorrection = -20.774 / te
+        ! End If
+        ! refractionCorrection = refractionCorrection / 3600.0
+        ! End If
         !end of complex expression
 
         !beginning of simplified expression
@@ -1273,19 +1273,19 @@ CONTAINS
 
         solarzen = zenith - refractionCorrection
 
-        !            If (solarZen < 108.0) Then
-        !              solarazimuth = azimuth
+        ! If (solarZen < 108.0) Then
+        ! solarazimuth = azimuth
         solarelevation = 90.0 - solarzen
-        !              If (solarZen < 90.0) Then
-        !                coszen = Cos(degToRad(solarZen))
-        !              Else
-        !                coszen = 0.0
-        !              End If
-        !            Else    !// do not report az & el after astro twilight
-        !              solarazimuth = -999999
-        !              solarelevation = -999999
-        !              coszen = -999999
-        !            End If
+        ! If (solarZen < 90.0) Then
+        ! coszen = Cos(degToRad(solarZen))
+        ! Else
+        ! coszen = 0.0
+        ! End If
+        ! Else !// do not report az & el after astro twilight
+        ! solarazimuth = -999999
+        ! solarelevation = -999999
+        ! coszen = -999999
+        ! End If
 
     End Function solarelevation
 
@@ -1295,23 +1295,23 @@ CONTAINS
         solarazimuth, solarelevation, earthRadVec)
 
         !***********************************************************************/
-        !* Name:    solarposition
-        !* Type:    Subroutine
+        !* Name: solarposition
+        !* Type: Subroutine
         !* Purpose: calculate solar azimuth (deg from north)
-        !*          and elevation (deg from horizeon) for the entered
-        !*          date, time and location.
+        !* and elevation (deg from horizeon) for the entered
+        !* date, time and location.
         !*
         !* Arguments:
-        !*   latitude, longitude, year, month, day, hour, minute, second,
-        !*   timezone, daylightsavingstime
+        !* latitude, longitude, year, month, day, hour, minute, second,
+        !* timezone, daylightsavingstime
         !* Return value:
-        !*   solar azimuth in degrees from north
-        !*   solar elevation in degrees from horizon
-        !*   earth radius vector (distance to the sun in AU)
+        !* solar azimuth in degrees from north
+        !* solar elevation in degrees from horizon
+        !* earth radius vector (distance to the sun in AU)
         !*
         !* Note: solarelevation and solarazimuth functions are identical
-        !*       and could converted to a VBA subroutine that would return
-        !*       both values.
+        !* and could converted to a VBA subroutine that would return
+        !* both values.
         !*
         !***********************************************************************/
         USE nrtype
@@ -1320,9 +1320,9 @@ CONTAINS
         REAL(DP) lat, lon, year, month, day
 
         !GP 23-Nov-09
-        !INTEGER(I4B)	hours, minutes, timezone, dlstime
-        INTEGER(I4B)	hours, minutes
-        REAL(DP)	timezone, dlstime
+        !INTEGER(I4B) hours, minutes, timezone, dlstime
+        INTEGER(I4B) hours, minutes
+        REAL(DP) timezone, dlstime
 
         REAL(DP) seconds, solarazimuth, solarelevation, earthRadVec
         REAL(DP) longitude, Latitude
@@ -1355,7 +1355,7 @@ CONTAINS
         mm = minutes
         ss = seconds
 
-        !//    timenow is GMT time for calculation in hours since 0Z
+        !// timenow is GMT time for calculation in hours since 0Z
         timenow = hh + mm / 60 + ss / 3600 + Zone
 
         jd = calcJD(year, month, day)
@@ -1366,19 +1366,19 @@ CONTAINS
         Etime = calcEquationOfTime(t)
 
         eqtime = Etime
-        SolarDec = theta !//    in degrees
+        SolarDec = theta !// in degrees
         earthRadVec = R
 
         solarTimeFix = eqtime - 4.0 * longitude + 60.0 * Zone
         trueSolarTime = hh * 60.0 + mm + ss / 60.0 + solarTimeFix
-        !//    in minutes
+        !// in minutes
 
         Do While (trueSolarTime > 1440)
             trueSolarTime = trueSolarTime - 1440
         END DO
 
         hourangle = trueSolarTime / 4.0 - 180.0
-        !//    Thanks to Louis Schwarzmayr for the next line:
+        !// Thanks to Louis Schwarzmayr for the next line:
         If (hourangle < -180) hourangle = hourangle + 360.0
 
         harad = degToRad(hourangle)
@@ -1429,23 +1429,23 @@ CONTAINS
         exoatmElevation = 90.0 - zenith
 
         !beginning of complex expression commented out
-        !            If (exoatmElevation > 85.0) Then
-        !                refractionCorrection = 0.0
-        !            Else
-        !                te = Tan(degToRad(exoatmElevation))
-        !                If (exoatmElevation > 5.0) Then
-        !                    refractionCorrection = 58.1 / te - 0.07 / (te * te * te) + &
-        !                        0.000086 / (te * te * te * te * te)
-        !                ElseIf (exoatmElevation > -0.575) Then
-        !                    refractionCorrection = 1735.0 + exoatmElevation * &
-        !                        (-518.2 + exoatmElevation * (103.4 + &
-        !                        exoatmElevation * (-12.79 + &
-        !                        exoatmElevation * 0.711)))
-        !                Else
-        !                    refractionCorrection = -20.774 / te
-        !                End If
-        !                refractionCorrection = refractionCorrection / 3600.0
-        !            End If
+        ! If (exoatmElevation > 85.0) Then
+        ! refractionCorrection = 0.0
+        ! Else
+        ! te = Tan(degToRad(exoatmElevation))
+        ! If (exoatmElevation > 5.0) Then
+        ! refractionCorrection = 58.1 / te - 0.07 / (te * te * te) + &
+        ! 0.000086 / (te * te * te * te * te)
+        ! ElseIf (exoatmElevation > -0.575) Then
+        ! refractionCorrection = 1735.0 + exoatmElevation * &
+        ! (-518.2 + exoatmElevation * (103.4 + &
+        ! exoatmElevation * (-12.79 + &
+        ! exoatmElevation * 0.711)))
+        ! Else
+        ! refractionCorrection = -20.774 / te
+        ! End If
+        ! refractionCorrection = refractionCorrection / 3600.0
+        ! End If
         !end of complex expression
 
 
@@ -1472,19 +1472,19 @@ CONTAINS
 
         solarzen = zenith - refractionCorrection
 
-        !            If (solarZen < 108.0) Then
+        ! If (solarZen < 108.0) Then
         solarazimuth = azimuth
         solarelevation = 90.0 - solarzen
-        !              If (solarZen < 90.0) Then
-        !                coszen = Cos(degToRad(solarZen))
-        !              Else
-        !                coszen = 0.0
-        !              End If
-        !            Else    !// do not report az & el after astro twilight
-        !              solarazimuth = -999999
-        !              solarelevation = -999999
-        !              coszen = -999999
-        !            End If
+        ! If (solarZen < 90.0) Then
+        ! coszen = Cos(degToRad(solarZen))
+        ! Else
+        ! coszen = 0.0
+        ! End If
+        ! Else !// do not report az & el after astro twilight
+        ! solarazimuth = -999999
+        ! solarelevation = -999999
+        ! coszen = -999999
+        ! End If
 
     End SUBROUTINE
 
