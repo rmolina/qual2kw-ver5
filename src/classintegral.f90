@@ -1245,7 +1245,7 @@ CONTAINS
                         ELSEIF (k == nv-1) THEN
 
                             CO2sat = Khs(i-1, 1) * Rates%pco2
-                            hh = 10.0_r64 ** -pHs(i-1, 1)
+                            hh = 10.0_r64 ** (-pHs(i-1, 1))
                             alp0 = hh * hh / (hh ** 2.0 + K1s(i-1, 1) * hh + K1s(i-1, 1) * K2s(i-1, 1))
                             cHCO3CO3 = (1.0_r64 - alp0) * c(i-1, k, 1)
                             defa = CO2sat - alp0 * c(i-1, k, 1)
@@ -1300,7 +1300,7 @@ CONTAINS
 
                 ! --- ph dependent variables for later use in deriv calcs in this i loop
 
-                hh = 10.0_r64 ** -pHs(i, 1)
+                hh = 10.0_r64 ** (-pHs(i, 1))
                 alp0 = hh * hh / (hh ** 2.0_r64 + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1))
                 alp1 = K1s(i, 1) * hh / (hh ** 2.0_r64 + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1)) !fraction of cT as HCO3-
                 alp2 = K1s(i, 1) * K2s(i, 1) / (hh ** 2.0_r64 + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1)) !fraction of cT as CO3--
@@ -1310,9 +1310,9 @@ CONTAINS
                 Kamm = 10.0_r64 ** (-(0.09018_r64 + 2729.92_r64 / (Te(i, 1) + 273.15_r64))) !'equilibrium coeff for ammonia dissociation NH4+ = NH3(aq) + H+
                 Fi = hh / (hh + Kamm) !'fraction of ionized NH4+ = [NH4+ / (NH4+ + NH3)]
                 !'fraction of SRP that is H2PO4- (FPO41), HPO4-- (FPO42), and PO4--- (FPO43)
-                KPO41 = 10.0_r64 ** -2.15_r64 !'= [H+][H2PO4-]/[H3PO4] for eqn H3PO4 = H+ + H2PO4-
-                KPO42 = 10.0_r64 ** -7.2_r64 !'= [H+][HPO4--]/[H2PO4-] for eqn H2PO4- = H+ + HPO4--
-                KPO43 = 10.0_r64 ** -12.35_r64 !'= [H+][PO4---]/[HPO4--] for eqn HPO4-- = H+ + PO4---
+                KPO41 = 10.0_r64 ** (-2.15_r64) !'= [H+][H2PO4-]/[H3PO4] for eqn H3PO4 = H+ + H2PO4-
+                KPO42 = 10.0_r64 ** (-7.2_r64) !'= [H+][HPO4--]/[H2PO4-] for eqn H2PO4- = H+ + HPO4--
+                KPO43 = 10.0_r64 ** (-12.35_r64) !'= [H+][PO4---]/[HPO4--] for eqn HPO4-- = H+ + PO4---
                 DPO = 1.0_r64 / (hh ** 3.0_r64 + KPO41 * hh ** 2.0_r64 + KPO41 * KPO42 * hh + KPO41 * KPO42 * KPO43) !'intermediate calc of denominator
                 FPO41 = KPO41 * hh ** 2.0_r64 * DPO !'fraction of phosphate as H2PO4-
                 FPO42 = KPO41 * KPO42 * hh * DPO !'fraction of phosphate as HPO4--
