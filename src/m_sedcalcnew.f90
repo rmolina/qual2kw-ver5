@@ -45,7 +45,6 @@ contains
         real(r64) jdenit(2), jdenitt
         real(r64) jo2no3(2), jo2no3t, jc_o2equiv
         real(r64) ch4sat, csodmax
-        real(r64) sech_arg
         real(r64) fd1, fp1, fd2, fp2
         real(r64) a11, a12, a21, a22, b1, b2
 
