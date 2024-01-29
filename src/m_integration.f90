@@ -1,6 +1,6 @@
 !classintegration
 
-module class_integration
+module m_integration
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_derivs, only: derivs
     use m_hydraulics, only: riverhydraulics_type
@@ -30,8 +30,9 @@ module class_integration
     use m_tempadjust, only: temp_adjust
     use m_upstream_boundary, only: upstream_boundary_t, instanteousheadwater
     use nrtype, only: nv, nl, adam, bdam, cpw, rhow
-
     implicit none
+    private
+    public :: integration
 
 contains
 !----------------------------------------------------------------------------------
@@ -1499,4 +1500,4 @@ contains
         end select
     end subroutine print_report_integration_method
 
-end module class_integration
+end module m_integration

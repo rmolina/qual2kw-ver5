@@ -49,7 +49,7 @@ program q2kmain
     use class_solarcalc
 ! use class_rivertopo
     use m_readfile
-    use class_integration
+    use m_integration, only: integration
     use m_output, only: outdata_t, output
 
 
