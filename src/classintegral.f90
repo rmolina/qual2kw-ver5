@@ -9,7 +9,7 @@ MODULE Class_Integration
     USE m_upstream_boundary
     USE m_downstream_boundary
     use class_hydraulics, only: riverhydraulics_type
-    use m_tempadjust, only: temp_adjust 
+    use m_tempadjust, only: temp_adjust
     use m_oxygen, only: oxygen_inhibition_and_enhancement, oxygen_saturation
 
     IMPLICIT NONE
@@ -23,33 +23,33 @@ CONTAINS
         USE Class_Hydraulics
 
 
-        TYPE(Integral_type) intg				!integral data structure
+        TYPE(Integral_type) intg !integral data structure
         TYPE(SystemParams) sys
         TYPE(rates_t), INTENT(IN) :: Rates
         TYPE(meteorology_t) Meteo
-        TYPE(solar_type) Solar					!solar radiation
-        TYPE(upstream_boundary_t) HW					!headwater
-        TYPE(downstream_boundary_t) DB				!downstream boundary
-        TYPE(RiverHydraulics_type) hydrau			!channel dimensions, hydraulics, physical characters
-        TYPE(outdata_t), INTENT(OUT) :: pr			!print out data structure
-        INTEGER(I4B), INTENT(IN) :: nr				!number of reach
-        REAL(DP)	t
+        TYPE(solar_type) Solar !solar radiation
+        TYPE(upstream_boundary_t) HW !headwater
+        TYPE(downstream_boundary_t) DB !downstream boundary
+        TYPE(RiverHydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
+        TYPE(outdata_t), INTENT(OUT) :: pr !print out data structure
+        INTEGER(I4B), INTENT(IN) :: nr !number of reach
+        REAL(DP) t
         !Heat related values
 
         INTEGER(I4B) ip, ic, i, j, k
         REAL(DP) pH
         !gp 27-Oct-04 REAL(DP) dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
-        REAL(DP) dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)	!gp add dim to dc for nl
+        REAL(DP) dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr) !gp add dim to dc for nl
 
         !gp 24-Jun-09
         INTEGER(I4B) nrp
         REAL(DP) TOC, TKN, TSS, TP, TN, BottomAlgae, DOSat, NH3
         INTEGER(I4B) iskip, nskip
-        nskip = sys%nc / 32		!for output of dynamic calculations every 45 minutes (32 times per day)
-        iskip = 0	!initialize counter for skipping dynamic output
+        nskip = sys%nc / 32 !for output of dynamic calculations every 45 minutes (32 times per day)
+        iskip = 0 !initialize counter for skipping dynamic output
 
         !gp 24-Jun-09
-        !CHARACTER(LEN=30), INTENT(IN) :: IMethpH  ! pH solve method
+        !CHARACTER(LEN=30), INTENT(IN) :: IMethpH ! pH solve method
 
         intg=Integration_(nr)
 
@@ -62,20 +62,20 @@ CONTAINS
         !initial temperature and concentrations
         !CALL InstanteousHeadwater(HDboundary, sys%tday, 1, intg%Te(0,1), intg%c(0,:), pH)
         !gp CALL InstanteousHeadwater(HW, t, intg%Te(0,1), intg%c(0,:), pH)
-        CALL InstanteousHeadwater(HW, t, intg%Te(0,1), intg%c(0,:,1), pH)		!gp
+        CALL InstanteousHeadwater(HW, t, intg%Te(0,1), intg%c(0,:,1), pH) !gp
 
         DO i = 1, nr
 
             !gp 21-Nov-06
             !DO j = 1, nl
-            !	intg%Te(i, j) = intg%Te(0, 1)
+            ! intg%Te(i, j) = intg%Te(0, 1)
             !!gp 27-Oct-04 END DO
-            !	DO k = 1, nv - 1
-            !		intg%c(i, k, j) = intg%c(0, k, 1)
-            !	END DO
-            !END DO		!gp
+            ! DO k = 1, nv - 1
+            ! intg%c(i, k, j) = intg%c(0, k, 1)
+            ! END DO
+            !END DO !gp
             !!gp 11-Jan-05 IF (Rates%typeF == "First-order") intg%c(i, nv) = 1.0
-            !intg%c(i, nv, 1) = hydrau%reach(i)%botalg0 * Rates%adc * Rates%aca		!'convert mgA/m^2 to gD/m^2
+            !intg%c(i, nv, 1) = hydrau%reach(i)%botalg0 * Rates%adc * Rates%aca !'convert mgA/m^2 to gD/m^2
             !IF (Rates%typeF == "First-order" .and. hydrau%reach(i)%botalg0==0) intg%c(i, nv, 1) = 1.0
             DO j = 1, nl
                 If (hydrau%reach(i)%Te_ini < 0) Then
@@ -164,7 +164,7 @@ CONTAINS
                     intg%c(i, nv-1, j) = cT(hydrau%reach(i)%pH_ini, intg%c(i, nv-2, j), intg%Te(i, j), intg%c(i, 1, j))
                 End If
             END DO
-            If (hydrau%reach(i)%c17_ini < 0) Then												!bottom algae gD/m^2
+            If (hydrau%reach(i)%c17_ini < 0) Then !bottom algae gD/m^2
                 intg%c(i, nv, 1) = 0
             Else
                 intg%c(i, nv, 1) = hydrau%reach(i)%c17_ini
@@ -172,22 +172,22 @@ CONTAINS
             IF (Rates%typeF == "First-order" .and. intg%c(i, nv, 1) < 1) intg%c(i, nv, 1) = 1.0
 
             !gp 02-Nov-07
-            !If (hydrau%reach(i)%NINb_ini >= 0) Then												!intracellular N mgN/gD
+            !If (hydrau%reach(i)%NINb_ini >= 0) Then !intracellular N mgN/gD
             !intg%INb(i) = hydrau%reach(i)%NINb_ini * intg%c(i, nv, j)
-            If (hydrau%reach(i)%NINb_ini >= 0) Then												!intracellular N mgN/gD
+            If (hydrau%reach(i)%NINb_ini >= 0) Then !intracellular N mgN/gD
                 intg%INb(i) = hydrau%reach(i)%NINb_ini * intg%c(i, nv, 1)
 
             End If
 
             !gp 02-Nov-07
-            !If (hydrau%reach(i)%NIPb_ini >= 0) Then												!intracellular P mgP/gD
+            !If (hydrau%reach(i)%NIPb_ini >= 0) Then !intracellular P mgP/gD
             !intg%IPb(i) = hydrau%reach(i)%NIPb_ini * intg%c(i, nv, j)
-            If (hydrau%reach(i)%NIPb_ini >= 0) Then												!intracellular P mgP/gD
+            If (hydrau%reach(i)%NIPb_ini >= 0) Then !intracellular P mgP/gD
                 intg%IPb(i) = hydrau%reach(i)%NIPb_ini * intg%c(i, nv, 1)
 
             End If
 
-            IF (sys%simHyporheicWQ == "Level 2" .and. Rates%typeH == "First-order") intg%c(i, nv, 2) = 1.0		!gp 15-Nov-04
+            IF (sys%simHyporheicWQ == "Level 2" .and. Rates%typeH == "First-order") intg%c(i, nv, 2) = 1.0 !gp 15-Nov-04
         END DO
 
         SELECT CASE (sys%IMeth)
@@ -198,12 +198,12 @@ CONTAINS
           CASE ('Adaptive step')
             WRITE(*,*) 'Integrating: Adaptive-step method.'
           CASE DEFAULT
-            WRITE(8,*) '** Error: integration method not recognized **'	!gp 20-Oct-04
+            WRITE(8,*) '** Error: integration method not recognized **' !gp 20-Oct-04
             STOP 'Error: integration method not recognized'
         END SELECT
 
         !Integration
-        DO ip = 1, sys%np					!np
+        DO ip = 1, sys%np !np
 
 
             IF (ip >= sys%np) THEN
@@ -216,7 +216,7 @@ CONTAINS
             !Euler method
             IF (sys%IMeth == "Euler") THEN
                 WRITE(*,*) 'day', ip
-                DO ic = 1, sys%nc				!Time step in each day
+                DO ic = 1, sys%nc !Time step in each day
                     CALL Derivs(nr, Meteo, Solar,HW, DB, hydrau, sys, intg%Te, intg%c, intg%INb, &
                         intg%IPb, Rates, dTe, dc, dINb, dIPb, t)
                     !finite method: new= old + old * derive
@@ -242,17 +242,17 @@ CONTAINS
                             End If
 
                             !gp 27-Oct-04 END DO
-                            !		write (8, *) i, intg%c(i,3), dc(i,3)
-                            !			IF (i==1) THEN
-                            !				WRITE(8, '(I3, 16F26.18)') i, (intg%c(i, k), k=1, nv)
-                            !				WRITE(8, '(I3, 16F26.18)') i, (dc(i, k), k=1, nv)
-                            !				WRITE(8, '(I3, 4F26.18)') i, intg%INb(i), dINb(i), intg%IPb(i), dIPb(i)
-                            !			END IF
+                            ! write (8, *) i, intg%c(i,3), dc(i,3)
+                            ! IF (i==1) THEN
+                            ! WRITE(8, '(I3, 16F26.18)') i, (intg%c(i, k), k=1, nv)
+                            ! WRITE(8, '(I3, 16F26.18)') i, (dc(i, k), k=1, nv)
+                            ! WRITE(8, '(I3, 4F26.18)') i, intg%INb(i), dINb(i), intg%IPb(i), dIPb(i)
+                            ! END IF
                             DO k = 1, nv
                                 intg%c(i, k, j) = intg%c(i, k, j) + dc(i, k, j) * sys%dt
                                 IF (intg%c(i, k, j) < 0) intg%c(i, k, j) = 1.0E-6_DP
                             END DO
-                        END DO		!gp 27-Oct-04
+                        END DO !gp 27-Oct-04
                         intg%INb(i) = intg%INb(i) + dINb(i) * sys%dt
                         intg%IPb(i) = intg%IPb(i) + dIPb(i) * sys%dt
                         IF (intg%INb(i) < 0) intg%INb(i) = 1.0E-6_DP
@@ -276,10 +276,10 @@ CONTAINS
                                 !gp 23-Nov-09
                                 !IF (sys%IMethpH == "Newton-Raphson") THEN
                                 !CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
-                                !		intg%c(i, 1, j))
+                                ! intg%c(i, 1, j))
                                 !ELSE
                                 !CALL pHsolBisect(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
-                                !		intg%c(i, 1, j))
+                                ! intg%c(i, 1, j))
                                 !END IF
                                 IF (sys%IMethpH == "Newton-Raphson") THEN
                                     CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
@@ -294,7 +294,7 @@ CONTAINS
 
                                 NH3 = 1.0_dp/(1 + 10.0_dp ** (-pH)/10.0_dp** -(0.09018_dp + 2729.92_dp / &
                                     (intg%Te(i, j) + 273.15_dp))) * intg%c(i, 7, j)
-                                WRITE(12, '(I13, 41F13.4)') i, t, intg%Te(i, j),  &
+                                WRITE(12, '(I13, 41F13.4)') i, t, intg%Te(i, j), &
                                     (intg%c(i, k, j), k=1, nv-2), pH, &
                                     intg%c(i, nv, j), intg%c(i, nv, j)* Rates%mgA / Rates%mgD * 1000, &
                                     TSS, TP, TN , DOSat, NH3, &
@@ -327,12 +327,12 @@ CONTAINS
                 END DO
             ELSE IF (sys%IMeth == 'Runge-Kutta') THEN
                 WRITE(*,*) 'day', ip
-                DO ic = 1, sys%nc				!Time step in each day
+                DO ic = 1, sys%nc !Time step in each day
 
                     !gp 08-Jan-10
-                    !CALL  rk4(nr, Meteo, Solar,HW, DB, hydrau, sys, intg, &
-                    !		 Rates, dTe, dc, dINb, dIPb, t, sys%dt)
-                    CALL  rk4(nr, Meteo, Solar,HW, DB, hydrau, sys, intg, &
+                    !CALL rk4(nr, Meteo, Solar,HW, DB, hydrau, sys, intg, &
+                    ! Rates, dTe, dc, dINb, dIPb, t, sys%dt)
+                    CALL rk4(nr, Meteo, Solar,HW, DB, hydrau, sys, intg, &
                         Rates, dTe, dc, dINb, dIPb, t, sys%dt, sys%stateVariables)
 
                     !gp 24-Jun-09 write dynamic output every 45 minutes
@@ -351,10 +351,10 @@ CONTAINS
                                 !gp 23-Nov-09
                                 !IF (sys%IMethpH == "Newton-Raphson") THEN
                                 !CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
-                                !		intg%c(i, 1, j))
+                                ! intg%c(i, 1, j))
                                 !ELSE
                                 !CALL pHsolBisect(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
-                                !		intg%c(i, 1, j))
+                                ! intg%c(i, 1, j))
                                 !END IF
                                 IF (sys%IMethpH == "Newton-Raphson") THEN
                                     CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
@@ -369,7 +369,7 @@ CONTAINS
 
                                 NH3 = 1.0_dp/(1 + 10.0_dp ** (-pH)/10.0_dp** -(0.09018_dp + 2729.92_dp / &
                                     (intg%Te(i, j) + 273.15_dp))) * intg%c(i, 7, j)
-                                WRITE(12, '(I13, 41F13.4)') i, t, intg%Te(i, j),  &
+                                WRITE(12, '(I13, 41F13.4)') i, t, intg%Te(i, j), &
                                     (intg%c(i, k, j), k=1, nv-2), pH, &
                                     intg%c(i, nv, j), intg%c(i, nv, j)* Rates%mgA / Rates%mgD * 1000, &
                                     TSS, TP, TN , DOSat, NH3, &
@@ -406,7 +406,7 @@ CONTAINS
 
                     !gp 08-Jan-10
                     !CALL odeint(intg, sys, Rates, Meteo, Solar, &
-                    !					HW, DB, hydrau, pr, nr, 0.0_dp, 1.0_dp, sys%dt, .TRUE.)
+                    ! HW, DB, hydrau, pr, nr, 0.0_dp, 1.0_dp, sys%dt, .TRUE.)
                     CALL odeint(intg, sys, Rates, Meteo, Solar, &
                         HW, DB, hydrau, pr, nr, 0.0_dp, 1.0_dp, sys%dt, .TRUE., sys%stateVariables)
 
@@ -414,7 +414,7 @@ CONTAINS
 
                     !gp 08-Jan-10
                     !CALL odeint(intg, sys, Rates, Meteo, Solar, &
-                    !					HW, DB, hydrau, pr, nr, 0.0_dp, 1.0_dp, sys%dt, .FALSE.)
+                    ! HW, DB, hydrau, pr, nr, 0.0_dp, 1.0_dp, sys%dt, .FALSE.)
                     CALL odeint(intg, sys, Rates, Meteo, Solar, &
                         HW, DB, hydrau, pr, nr, 0.0_dp, 1.0_dp, sys%dt, .FALSE., sys%stateVariables)
 
@@ -434,15 +434,15 @@ CONTAINS
 !SUBROUTINE Save_init_step(nr, intg, pr, dt, IMethpH, Rates)
     SUBROUTINE Save_init_step(nr, intg, pr, dt, IMethpH, showDielResults, Rates)
 
-!	USE Class_Output, ONLY: outdata_type
+! USE Class_Output, ONLY: outdata_type
 
         INTEGER(I4B), INTENT(IN) :: nr
 
         REAL(DP), INTENT(IN) :: dt
-        CHARACTER(LEN=30), INTENT(IN) :: IMethpH  ! pH solve method
+        CHARACTER(LEN=30), INTENT(IN) :: IMethpH ! pH solve method
 
         !gp 17-Feb-05
-        CHARACTER(LEN=30), INTENT(IN) :: showDielResults		!Yes or No (only used in Excel VBA)
+        CHARACTER(LEN=30), INTENT(IN) :: showDielResults !Yes or No (only used in Excel VBA)
 
         TYPE(rates_t), INTENT(IN) :: Rates
         TYPE(Integral_type), INTENT(IN) :: intg
@@ -450,24 +450,24 @@ CONTAINS
 
         INTEGER(I4B) i, j, k
         !gp 27-Oct-04 REAL(DP) :: pHss(0:nr), Kamm, pH
-        REAL(DP) :: pHss(0:nr, 0:nl), Kamm, pH		!gp add dim for nl
+        REAL(DP) :: pHss(0:nr, 0:nl), Kamm, pH !gp add dim for nl
 
 
-!	!gp debug
-!	OPEN (unit=9, FILE='debug.out', status='REPLACE', ACTION='WRITE')
-!	WRITE(9,*) 'Program is now just before TYPE(RiverHydraulics_type) hydrau'
-!	CLOSE (9)
+! !gp debug
+! OPEN (unit=9, FILE='debug.out', status='REPLACE', ACTION='WRITE')
+! WRITE(9,*) 'Program is now just before TYPE(RiverHydraulics_type) hydrau'
+! CLOSE (9)
 
         !gp 29-Oct-04
-        TYPE(RiverHydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
+        TYPE(RiverHydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
 
-!	!gp debug
-!	OPEN (unit=9, FILE='debug.out', status='REPLACE', ACTION='WRITE')
-!	WRITE(9,'(A64)') 'Program is now just after TYPE(RiverHydraulics_type) hydrau'
-!	CLOSE (9)
+! !gp debug
+! OPEN (unit=9, FILE='debug.out', status='REPLACE', ACTION='WRITE')
+! WRITE(9,'(A64)') 'Program is now just after TYPE(RiverHydraulics_type) hydrau'
+! CLOSE (9)
 
         pr%tdy(0)=0
-        DO i = 0, nr			!nr public
+        DO i = 0, nr !nr public
             !gp 27-Oct-04 add nl dimension
             !gp pr%Temn(i) = intg%Te(i, 1)
             !gp pr%Temx(i) = intg%Te(i, 1)
@@ -475,15 +475,15 @@ CONTAINS
             !gp pr%osav(i) = 0
             !gp pr%pHsav(i) = 0
             !gp DO k = 1, nv
-            !gp 	pr%cmn(i, k) = intg%c(i, k)
-            !gp 	pr%cmx(i, k) = intg%c(i, k)
+            !gp pr%cmn(i, k) = intg%c(i, k)
+            !gp pr%cmx(i, k) = intg%c(i, k)
             !gp END DO
             !gp IF (IMethpH == "Newton-Raphson") THEN !public IMethpH As String
-            !gp 	CALL phsolNewton(pH, intg%c(i, 15), intg%Te(i, 1), intg%c(i, 14), &
-            !gp 					intg%c(i, 1))
+            !gp CALL phsolNewton(pH, intg%c(i, 15), intg%Te(i, 1), intg%c(i, 14), &
+            !gp intg%c(i, 1))
             !gp ELSE
-            !gp 	CALL pHsolBisect(pH, intg%c(i, 15), intg%Te(i, 1), intg%c(i, 14), &
-            !gp 					intg%c(i, 1))
+            !gp CALL pHsolBisect(pH, intg%c(i, 15), intg%Te(i, 1), intg%c(i, 14), &
+            !gp intg%c(i, 1))
             !gp END IF
             !gp pr%pHav(i) = 0
             !gp pr%pHmn(i) = pH
@@ -498,7 +498,7 @@ CONTAINS
             !gp pr%TPmx(i) = pr%TPmn(i)
             !gp pr%TNav(i) = 0
             !gp pr%TNmn(i) = intg%c(i, 6) + intg%c(i, 7) + intg%c(i, 8) + &
-            !gp 				intg%c(i, 11) * Rates%ana
+            !gp intg%c(i, 11) * Rates%ana
             !gp pr%TNmx(i) = pr%TNmn(i)
             DO j = 1, nl
                 pr%Temn(i, j) = intg%Te(i, j)
@@ -513,11 +513,11 @@ CONTAINS
 
                 !gp 23-Nov-09
                 !IF (IMethpH == "Newton-Raphson") THEN !public IMethpH As String
-                !	CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
-                !					intg%c(i, 1, j))
+                ! CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
+                ! intg%c(i, 1, j))
                 !ELSE
                 !CALL pHsolBisect(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
-                !					intg%c(i, 1, j))
+                ! intg%c(i, 1, j))
                 !END IF
                 IF (IMethpH == "Newton-Raphson") THEN
                     CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
@@ -544,13 +544,13 @@ CONTAINS
                 pr%TNav(i, j) = 0
                 pr%TNmn(i, j) = intg%c(i, 6, j) + intg%c(i, 7, j) + intg%c(i, 8, j) + &
                     intg%c(i, 11, j) * Rates%ana
-                pr%TNmx(i, j) = pr%TNmn(i, j)	!gp end of new block of code 27-Oct-04
+                pr%TNmx(i, j) = pr%TNmn(i, j) !gp end of new block of code 27-Oct-04
             END DO
             !'gp 15-Nov-04 reach average daily average sediment fluxes
-            pr%HypoFluxDOav(i) = 0;  pr%HypoFluxCBODav(i) = 0;  pr%HypoFluxNH4av(i) = 0
-            pr%HypoFluxNO3av(i) = 0;  pr%HypoFluxSRPav(i) = 0
-            pr%DiagFluxDOav(i) = 0;  pr%DiagFluxCBODav(i) = 0;  pr%DiagFluxNH4av(i) = 0
-            pr%DiagFluxNO3av(i) = 0;  pr%DiagFluxSRPav(i) = 0
+            pr%HypoFluxDOav(i) = 0; pr%HypoFluxCBODav(i) = 0; pr%HypoFluxNH4av(i) = 0
+            pr%HypoFluxNO3av(i) = 0; pr%HypoFluxSRPav(i) = 0
+            pr%DiagFluxDOav(i) = 0; pr%DiagFluxCBODav(i) = 0; pr%DiagFluxNH4av(i) = 0
+            pr%DiagFluxNO3av(i) = 0; pr%DiagFluxSRPav(i) = 0
             !'gp 11-Jan-05 min/max/mean cell quotas mgN/gD and mgP/gD
             If (intg%c(i, nv, 1) > 0) Then
                 pr%NINbav(i) = 0
@@ -580,20 +580,20 @@ CONTAINS
                     pr%Tepr(i, pr%nj, j) = intg%Te(i, j)
                     !gp 27-Oct-04 END DO
                     !gp DO k = 1, nv
-                    !gp 	pr%cpr(i, k, pr%nj) = intg%c(i, k)
+                    !gp pr%cpr(i, k, pr%nj) = intg%c(i, k)
                     !gp END DO
                     !gp pr%pHpr(i, pr%nj) = pHss(i)
                     DO k = 1, nv
                         pr%cpr(i, k, pr%nj, j) = intg%c(i, k, j)
                     END DO
                     pr%pHpr(i, pr%nj, j) = pHss(i, j)
-                END DO	!gp end of new block of code 27-Oct-04
+                END DO !gp end of new block of code 27-Oct-04
             END DO
             DO i = 1, nr
                 !gp 02-Nov-04 pr%NINbpr(i, pr%nj) = intg%INb(i) / intg%c(i, nv) !?
                 !gp pr%NIPbpr(i, pr%nj) = intg%IPb(i) / intg%c(i, nv) !?
                 pr%NINbpr(i, pr%nj) = intg%INb(i) / intg%c(i, nv, 1)
-                pr%NIPbpr(i, pr%nj) = intg%IPb(i) / intg%c(i, nv, 1)	!gp 02-Nov-04 end new block
+                pr%NIPbpr(i, pr%nj) = intg%IPb(i) / intg%c(i, nv, 1) !gp 02-Nov-04 end new block
                 !gp 20-Oct-04 output growth limitation factors for bottom algae
                 pr%phitotalSavepr(i, pr%nj) = phitotalSave(i)
                 pr%phitSavepr(i, pr%nj) = phitSave(i)
@@ -602,19 +602,19 @@ CONTAINS
                 pr%phipSavepr(i, pr%nj) = phipSave(i)
                 pr%phicSavepr(i, pr%nj) = phicSave(i)
                 !gp 28-Oct-04 output hyporheic fluxes of constituents (total surface area)
-                pr%HypoFluxDOpr(i, pr%nj) = HypoFluxDO(i)                   !'dissolved oxygen gO2/m^2/d
-                pr%HypoFluxCBODpr(i, pr%nj) = HypoFluxCBOD(i)               !'fast CBOD gO2/m^2/d
-                pr%HypoFluxNH4pr(i, pr%nj) = HypoFluxNH4(i)                 !'ammonia mgN/m^2/d
-                pr%HypoFluxNO3pr(i, pr%nj) = HypoFluxNO3(i)                 !'nitrate mgN/m^2/d
-                pr%HypoFluxSRPpr(i, pr%nj) = HypoFluxSRP(i)                 !'SRP mgP/m^2/d
-                pr%HypoFluxICpr(i, pr%nj) = HypoFluxIC(i)                   !'inorganic C gC/m^2/d
+                pr%HypoFluxDOpr(i, pr%nj) = HypoFluxDO(i) !'dissolved oxygen gO2/m^2/d
+                pr%HypoFluxCBODpr(i, pr%nj) = HypoFluxCBOD(i) !'fast CBOD gO2/m^2/d
+                pr%HypoFluxNH4pr(i, pr%nj) = HypoFluxNH4(i) !'ammonia mgN/m^2/d
+                pr%HypoFluxNO3pr(i, pr%nj) = HypoFluxNO3(i) !'nitrate mgN/m^2/d
+                pr%HypoFluxSRPpr(i, pr%nj) = HypoFluxSRP(i) !'SRP mgP/m^2/d
+                pr%HypoFluxICpr(i, pr%nj) = HypoFluxIC(i) !'inorganic C gC/m^2/d
                 !gp 01-Nov-04 output diagenesis fluxes of constituents (total surface area)
-                pr%DiagFluxDOpr(i, pr%nj) = DiagFluxDO(i)					!'dissolved oxygen gO2/m^2/d
-                pr%DiagFluxCBODpr(i, pr%nj) = DiagFluxCBOD(i)				!'fast CBOD gO2/m^2/d
-                pr%DiagFluxNH4pr(i, pr%nj) = DiagFluxNH4(i)					!'ammonia mgN/m^2/d
-                pr%DiagFluxNO3pr(i, pr%nj) = DiagFluxNO3(i)					!'nitrate mgN/m^2/d
-                pr%DiagFluxSRPpr(i, pr%nj) = DiagFluxSRP(i)					!'SRP mgP/m^2/d
-                pr%DiagFluxICpr(i, pr%nj) = DiagFluxIC(i)					!'inorganic C gC/m^2/d
+                pr%DiagFluxDOpr(i, pr%nj) = DiagFluxDO(i) !'dissolved oxygen gO2/m^2/d
+                pr%DiagFluxCBODpr(i, pr%nj) = DiagFluxCBOD(i) !'fast CBOD gO2/m^2/d
+                pr%DiagFluxNH4pr(i, pr%nj) = DiagFluxNH4(i) !'ammonia mgN/m^2/d
+                pr%DiagFluxNO3pr(i, pr%nj) = DiagFluxNO3(i) !'nitrate mgN/m^2/d
+                pr%DiagFluxSRPpr(i, pr%nj) = DiagFluxSRP(i) !'SRP mgP/m^2/d
+                pr%DiagFluxICpr(i, pr%nj) = DiagFluxIC(i) !'inorganic C gC/m^2/d
 
 
                 !'gp 05-Jul-05
@@ -679,11 +679,11 @@ CONTAINS
         INTEGER(I4B), INTENT(IN) :: nr
         REAL(DP), INTENT(IN) :: dt
         TYPE(rates_t), INTENT(IN) :: Rates
-        !CHARACTER(LEN=30) :: IMeth   = 'Euler'		! integration method
-        CHARACTER(LEN=30), INTENT(IN) :: IMethpH  ! pH solve method
+        !CHARACTER(LEN=30) :: IMeth = 'Euler' ! integration method
+        CHARACTER(LEN=30), INTENT(IN) :: IMethpH ! pH solve method
 
         !gp 17-Feb-05
-        CHARACTER(LEN=30), INTENT(IN) :: showDielResults		!Yes or No (only used in Excel VBA)
+        CHARACTER(LEN=30), INTENT(IN) :: showDielResults !Yes or No (only used in Excel VBA)
 
         TYPE(Integral_type), INTENT(IN) :: intg
         TYPE(outdata_t), INTENT(INOUT) :: pr
@@ -691,10 +691,10 @@ CONTAINS
         REAL(DP) Kamm, NH3, pH, TotP, TotN
         REAL(DP) K1, K2, KW, Kh, CO2sat
         !gp 28-Oct-04 REAL(DP) :: pHss(0:nr)
-        REAL(DP) :: pHss(0:nr, nl)		!gp
+        REAL(DP) :: pHss(0:nr, nl) !gp
 
         !gp 29-Oct-04
-        TYPE(RiverHydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
+        TYPE(RiverHydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
 
         DO i = 0, nr
 
@@ -711,9 +711,9 @@ CONTAINS
                 !update average saturation DO
                 pr%osav(i, j) = pr%osav(i, j) + os(i, j) * dt
                 CALL ChemRates(intg%Te(i, j), K1, K2, KW, Kh, intg%c(i, 1, j))
-                CO2sat = Kh * Rates%pco2							!co2 saturation concentration
+                CO2sat = Kh * Rates%pco2 !co2 saturation concentration
                 CALL ModFP2(4.0_DP, 12.0_DP, pH, CO2sat, intg%Te(i, j), intg%c(i, nv - 2, j), &
-                    intg%c(i, 1, j))			!solving pH under co2 saturation condition
+                    intg%c(i, 1, j)) !solving pH under co2 saturation condition
                 !update average pH under co2 saturation condition
                 pr%pHsav(i, j) = pr%pHsav(i, j) + pH * dt
                 !
@@ -721,7 +721,7 @@ CONTAINS
                     !update constituents max and min concentrations or values
                     IF (intg%c(i, k, j) < pr%cmn(i, k, j)) THEN
                         pr%cmn(i, k, j) = intg%c(i, k, j)
-                    ELSE IF (intg%c(i, k, j) > pr%cmx(i, k, j))  THEN
+                    ELSE IF (intg%c(i, k, j) > pr%cmx(i, k, j)) THEN
                         pr%cmx(i, k, j) = intg%c(i, k, j)
                     END IF
                     !update average constituents concentrations or values
@@ -732,11 +732,11 @@ CONTAINS
 
                 !gp 23-Nov-09
                 !IF (IMethpH == "Newton-Raphson") THEN
-                !	CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
-                !									intg%c(i, 1, j))
+                ! CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
+                ! intg%c(i, 1, j))
                 !ELSE
-                !	CALL pHsolBisect(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
-                !									intg%c(i, 1, j))
+                ! CALL pHsolBisect(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
+                ! intg%c(i, 1, j))
                 !END IF
                 IF (IMethpH == "Newton-Raphson") THEN
                     CALL phsolNewton(pH, intg%c(i, nv - 1, j), intg%Te(i, j), intg%c(i, nv - 2, j), &
@@ -787,19 +787,19 @@ CONTAINS
                 ELSEIF (TotN > pr%TNmx(i, j)) THEN
                     pr%TNmx(i, j) = TotN
                 END IF
-            END DO		!gp 27-Oct-04 end block of new code
+            END DO !gp 27-Oct-04 end block of new code
             !'gp 15-Nov-04 reach average daily average sediment fluxes
             IF (i > 0) THEN
-                pr%HypoFluxDOav(i) = pr%HypoFluxDOav(i) + HypoFluxDO(i) * dt			!'dissolved oxygen gO2/m^2/d
-                pr%HypoFluxCBODav(i) = pr%HypoFluxCBODav(i) + HypoFluxCBOD(i) * dt	!'fast CBOD gO2/m^2/d
-                pr%HypoFluxNH4av(i) = pr%HypoFluxNH4av(i) + HypoFluxNH4(i) * dt		!'ammonia mgN/m^2/d
-                pr%HypoFluxNO3av(i) = pr%HypoFluxNO3av(i) + HypoFluxNO3(i) * dt		!'nitrate mgN/m^2/d
-                pr%HypoFluxSRPav(i) = pr%HypoFluxSRPav(i) + HypoFluxSRP(i) * dt		!'SRP mgP/m^2/d
-                pr%DiagFluxDOav(i) = pr%DiagFluxDOav(i) + DiagFluxDO(i) * dt			!'dissolved oxygen gO2/m^2/d
-                pr%DiagFluxCBODav(i) = pr%DiagFluxCBODav(i) + DiagFluxCBOD(i) * dt    !'fast CBOD gO2/m^2/d
-                pr%DiagFluxNH4av(i) = pr%DiagFluxNH4av(i) + DiagFluxNH4(i) * dt		!'ammonia mgN/m^2/d
-                pr%DiagFluxNO3av(i) = pr%DiagFluxNO3av(i) + DiagFluxNO3(i) * dt		!'nitrate mgN/m^2/d
-                pr%DiagFluxSRPav(i) = pr%DiagFluxSRPav(i) + DiagFluxSRP(i) * dt		!'SRP mgP/m^2/d
+                pr%HypoFluxDOav(i) = pr%HypoFluxDOav(i) + HypoFluxDO(i) * dt !'dissolved oxygen gO2/m^2/d
+                pr%HypoFluxCBODav(i) = pr%HypoFluxCBODav(i) + HypoFluxCBOD(i) * dt !'fast CBOD gO2/m^2/d
+                pr%HypoFluxNH4av(i) = pr%HypoFluxNH4av(i) + HypoFluxNH4(i) * dt !'ammonia mgN/m^2/d
+                pr%HypoFluxNO3av(i) = pr%HypoFluxNO3av(i) + HypoFluxNO3(i) * dt !'nitrate mgN/m^2/d
+                pr%HypoFluxSRPav(i) = pr%HypoFluxSRPav(i) + HypoFluxSRP(i) * dt !'SRP mgP/m^2/d
+                pr%DiagFluxDOav(i) = pr%DiagFluxDOav(i) + DiagFluxDO(i) * dt !'dissolved oxygen gO2/m^2/d
+                pr%DiagFluxCBODav(i) = pr%DiagFluxCBODav(i) + DiagFluxCBOD(i) * dt !'fast CBOD gO2/m^2/d
+                pr%DiagFluxNH4av(i) = pr%DiagFluxNH4av(i) + DiagFluxNH4(i) * dt !'ammonia mgN/m^2/d
+                pr%DiagFluxNO3av(i) = pr%DiagFluxNO3av(i) + DiagFluxNO3(i) * dt !'nitrate mgN/m^2/d
+                pr%DiagFluxSRPav(i) = pr%DiagFluxSRPav(i) + DiagFluxSRP(i) * dt !'SRP mgP/m^2/d
                 !'gp 11-Jan-05 mgN/gD and mgP/gD
                 If (intg%c(i, nv, 1) > 0) Then
                     pr%NINbav(i) = pr%NINbav(i) + dt * intg%INb(i) / intg%c(i, nv, 1)
@@ -811,12 +811,12 @@ CONTAINS
                 End If
 
                 !gp 25-Jun-09
-                pr%av_BotAlgPhoto(i) = pr%av_BotAlgPhoto(i) + saveBotAlgPhoto(i) * dt			!average BotAlgPhoto/Asb gD/m2/d
-                pr%av_BotAlgResp(i) = pr%av_BotAlgResp(i) + saveBotAlgResp(i) * dt			!average BotAlgReso/Asb gD/m2/d
-                pr%av_BotAlgDeath(i) = pr%av_BotAlgDeath(i) + saveBotAlgDeath(i) * dt			!average BotAlgDeath/Asb gD/m2/d
-                pr%av_BotAlgNetGrowth(i) = pr%av_BotAlgNetGrowth(i) + saveBotAlgNetGrowth(i) * dt			!average BotAlg net growth (photo-resp-death) gD/m2/d
+                pr%av_BotAlgPhoto(i) = pr%av_BotAlgPhoto(i) + saveBotAlgPhoto(i) * dt !average BotAlgPhoto/Asb gD/m2/d
+                pr%av_BotAlgResp(i) = pr%av_BotAlgResp(i) + saveBotAlgResp(i) * dt !average BotAlgReso/Asb gD/m2/d
+                pr%av_BotAlgDeath(i) = pr%av_BotAlgDeath(i) + saveBotAlgDeath(i) * dt !average BotAlgDeath/Asb gD/m2/d
+                pr%av_BotAlgNetGrowth(i) = pr%av_BotAlgNetGrowth(i) + saveBotAlgNetGrowth(i) * dt !average BotAlg net growth (photo-resp-death) gD/m2/d
 
-            END IF     !'gp 15-Nov-04 end new block
+            END IF !'gp 15-Nov-04 end new block
         END DO
 
         !gp 17-Feb-05
@@ -833,33 +833,33 @@ CONTAINS
                         pr%cpr(i, k, pr%nj, j) = intg%c(i, k, j)
                     END DO
                     pr%pHpr(i, pr%nj, j) = pHss(i, j)
-                END DO		!gp 27-Oct-04
+                END DO !gp 27-Oct-04
             END DO
             DO i = 1, nr
                 !gp 02-Nov-04 pr%NINbpr(i, pr%nj) = intg%INb(i) / intg%c(i, nv)
                 !gp pr%NIPbpr(i, pr%nj) = intg%IPb(i) / intg%c(i, nv)
                 pr%NINbpr(i, pr%nj) = intg%INb(i) / intg%c(i, nv, 1)
-                pr%NIPbpr(i, pr%nj) = intg%IPb(i) / intg%c(i, nv, 1)	!gp 02-Nov-04 end new block
-                pr%phitotalSavepr(i, pr%nj) = phitotalSave(i)	!gp 20-Oct-04
-                pr%phitSavepr(i, pr%nj) = phitSave(i)			!gp 20-Oct-04
-                pr%philSavepr(i, pr%nj) = philSave(i)			!gp 20-Oct-04
-                pr%phinSavepr(i, pr%nj) = phinSave(i)			!gp 20-Oct-04
-                pr%phipSavepr(i, pr%nj) = phipSave(i)			!gp 20-Oct-04
-                pr%phicSavepr(i, pr%nj) = phicSave(i)			!gp 20-Oct-04
+                pr%NIPbpr(i, pr%nj) = intg%IPb(i) / intg%c(i, nv, 1) !gp 02-Nov-04 end new block
+                pr%phitotalSavepr(i, pr%nj) = phitotalSave(i) !gp 20-Oct-04
+                pr%phitSavepr(i, pr%nj) = phitSave(i) !gp 20-Oct-04
+                pr%philSavepr(i, pr%nj) = philSave(i) !gp 20-Oct-04
+                pr%phinSavepr(i, pr%nj) = phinSave(i) !gp 20-Oct-04
+                pr%phipSavepr(i, pr%nj) = phipSave(i) !gp 20-Oct-04
+                pr%phicSavepr(i, pr%nj) = phicSave(i) !gp 20-Oct-04
                 !gp 28-Oct-04 output hyporheic fluxes of constituents (total surface area)
-                pr%HypoFluxDOpr(i, pr%nj) = HypoFluxDO(i)                   !'dissolved oxygen gO2/m^2/d
-                pr%HypoFluxCBODpr(i, pr%nj) = HypoFluxCBOD(i)               !'fast CBOD gO2/m^2/d
-                pr%HypoFluxNH4pr(i, pr%nj) = HypoFluxNH4(i)                 !'ammonia mgN/m^2/d
-                pr%HypoFluxNO3pr(i, pr%nj) = HypoFluxNO3(i)                 !'nitrate mgN/m^2/d
-                pr%HypoFluxSRPpr(i, pr%nj) = HypoFluxSRP(i)                 !'SRP mgP/m^2/d
-                pr%HypoFluxICpr(i, pr%nj) = HypoFluxIC(i)                   !'inorganic C gC/m^2/d
+                pr%HypoFluxDOpr(i, pr%nj) = HypoFluxDO(i) !'dissolved oxygen gO2/m^2/d
+                pr%HypoFluxCBODpr(i, pr%nj) = HypoFluxCBOD(i) !'fast CBOD gO2/m^2/d
+                pr%HypoFluxNH4pr(i, pr%nj) = HypoFluxNH4(i) !'ammonia mgN/m^2/d
+                pr%HypoFluxNO3pr(i, pr%nj) = HypoFluxNO3(i) !'nitrate mgN/m^2/d
+                pr%HypoFluxSRPpr(i, pr%nj) = HypoFluxSRP(i) !'SRP mgP/m^2/d
+                pr%HypoFluxICpr(i, pr%nj) = HypoFluxIC(i) !'inorganic C gC/m^2/d
                 !gp 01-Nov-04 output diagenesis fluxes of constituents (total surface area)
-                pr%DiagFluxDOpr(i, pr%nj) = DiagFluxDO(i)					!'dissolved oxygen gO2/m^2/d
-                pr%DiagFluxCBODpr(i, pr%nj) = DiagFluxCBOD(i)				!'fast CBOD gO2/m^2/d
-                pr%DiagFluxNH4pr(i, pr%nj) = DiagFluxNH4(i)					!'ammonia mgN/m^2/d
-                pr%DiagFluxNO3pr(i, pr%nj) = DiagFluxNO3(i)					!'nitrate mgN/m^2/d
-                pr%DiagFluxSRPpr(i, pr%nj) = DiagFluxSRP(i)					!'SRP mgP/m^2/d
-                pr%DiagFluxICpr(i, pr%nj) = DiagFluxIC(i)					!'inorganic C gC/m^2/d
+                pr%DiagFluxDOpr(i, pr%nj) = DiagFluxDO(i) !'dissolved oxygen gO2/m^2/d
+                pr%DiagFluxCBODpr(i, pr%nj) = DiagFluxCBOD(i) !'fast CBOD gO2/m^2/d
+                pr%DiagFluxNH4pr(i, pr%nj) = DiagFluxNH4(i) !'ammonia mgN/m^2/d
+                pr%DiagFluxNO3pr(i, pr%nj) = DiagFluxNO3(i) !'nitrate mgN/m^2/d
+                pr%DiagFluxSRPpr(i, pr%nj) = DiagFluxSRP(i) !'SRP mgP/m^2/d
+                pr%DiagFluxICpr(i, pr%nj) = DiagFluxIC(i) !'inorganic C gC/m^2/d
 
                 !'gp 05-Jul-05
                 !'heat fluxes (converted from cal/cm^2/d to W/m^2)
@@ -926,20 +926,20 @@ CONTAINS
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr
         TYPE(meteorology_t) :: Meteo
-        TYPE(solar_type) Solar							!solar radiation
-        TYPE(upstream_boundary_t) HW							!headwater
-        TYPE(downstream_boundary_t) DB						!downstream boundary
-        TYPE(RiverHydraulics_type) hydrau					!channel dimensions, hydraulics, physical characters
+        TYPE(solar_type) Solar !solar radiation
+        TYPE(upstream_boundary_t) HW !headwater
+        TYPE(downstream_boundary_t) DB !downstream boundary
+        TYPE(RiverHydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         REAL(DP), DIMENSION(:), POINTER :: INb, IPb
-        !REAL(DP), DIMENSION(:), POINTER :: phitotalSave, phitSave, philSave, phinSave, phipSave, phicSave		!gp 20-Oct-04
+        !REAL(DP), DIMENSION(:), POINTER :: phitotalSave, phitSave, philSave, phinSave, phipSave, phicSave !gp 20-Oct-04
         !gp 27-Oct-04 REAL(DP), DIMENSION(:,:), POINTER :: Te, c
-        REAL(DP), DIMENSION(:,:), POINTER :: Te		!gp 27-Oct-04
-        REAL(DP), DIMENSION(:,:,:), POINTER :: c	!gp add dimension for nl
+        REAL(DP), DIMENSION(:,:), POINTER :: Te !gp 27-Oct-04
+        REAL(DP), DIMENSION(:,:,:), POINTER :: c !gp add dimension for nl
         TYPE(rates_t) Rates
         !gp 27-Oct-04 REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
-        REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
-        REAL(DP), INTENT(IN)::	t						!time
+        REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr) !gp
+        REAL(DP), INTENT(IN):: t !time
 
         INTEGER(I4B) i,j, k
         REAL(DP) :: evap, back, flux
@@ -954,7 +954,7 @@ CONTAINS
         REAL(DP) kiT(nr), kaT(nr), kgaT(nr), kdeaT(nr), kreaT(nr), vdiT(nr), kacT(nr)
 
         !gp 30-Nov-04
-        REAL(DP) kgenT(nr)		!gp 30-Nov-04 generic constituent decay
+        REAL(DP) kgenT(nr) !gp 30-Nov-04 generic constituent decay
 
         REAL(DP) :: pH=0
         REAL(DP) fcarb, fnitr, fdenitr, frespp, frespb
@@ -970,7 +970,7 @@ CONTAINS
         REAL(DP) Jamm, Jnitr, Jmeth, Jmethg, Jphos
 
         REAL(DP) botlight
-        REAL(DP) dam, dropft, defa, defb, Iat(nr)				!changed by Hua
+        REAL(DP) dam, dropft, defa, defb, Iat(nr) !changed by Hua
 
         !pH
         REAL(DP) K1, K2, KW, Kh, CO2sat
@@ -1000,8 +1000,8 @@ CONTAINS
         !pathogens
         REAL(DP) :: ksol=0
 
-        !gp 27-Oct-04 REAL(DP) pHs(0:nr), K1s(0:nr), K2s(0:nr), Khs(0:nr) 	!New 08/29/04 for less pH solver be called
-        REAL(DP) pHs(0:nr, nl), K1s(0:nr, nl), K2s(0:nr, nl), Khs(0:nr, nl)		!gp add dim for nl
+        !gp 27-Oct-04 REAL(DP) pHs(0:nr), K1s(0:nr), K2s(0:nr), Khs(0:nr) !New 08/29/04 for less pH solver be called
+        REAL(DP) pHs(0:nr, nl), K1s(0:nr, nl), K2s(0:nr, nl), Khs(0:nr, nl) !gp add dim for nl
 
         !gp 15-Nov-04 move Ehyporheic to hydrau
         !gp 20-Oct-04 sediment and hyporheic heat flux variables
@@ -1038,9 +1038,9 @@ CONTAINS
 
             !gp 23-Nov-09
             !IF (sys%IMethpH == "Newton-Raphson") THEN
-            !	CALL phsolNewton(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
+            ! CALL phsolNewton(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
             !ELSE
-            !	CALL phsolBisect(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
+            ! CALL phsolBisect(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
             !END IF
             IF (sys%IMethpH == "Newton-Raphson") THEN
                 CALL phsolNewton(pH, c(i, nv - 1, 1), Te(i, 1), c(i, nv - 2, 1), c(i, 1, 1))
@@ -1051,18 +1051,18 @@ CONTAINS
             END IF
 
             pHs(i, 1) = pH
-            pHs(i, 2) = 0	!not used unless hyporheic WQ is simulated
+            pHs(i, 2) = 0 !not used unless hyporheic WQ is simulated
             CALL ChemRates(Te(i, 1), K1, K2, KW, Kh, c(i, 1, 1))
             K1s(i, 1) = K1; K2s(i, 1) = K2; Khs(i, 1) = Kh
-            K1s(i, 2) = 0;  K2s(i, 2) = 0;  Khs(i, 2) = 0		!gp 02-Nov-04 end of new block of code
+            K1s(i, 2) = 0; K2s(i, 2) = 0; Khs(i, 2) = 0 !gp 02-Nov-04 end of new block of code
         END DO
 
-        !		Uw(0) = Uw(1)
+        ! Uw(0) = Uw(1)
 
         !gp evaluate point source sine functions and distribute loads to reaches for the current time t
         CALL SourcesCalc(t, nr, Hydrau%flag)
 
-        CALL SolarCalc(nr, Solar, Meteo, hydrau, sys)	!SolarCalc(tday, i)
+        CALL SolarCalc(nr, Solar, Meteo, hydrau, sys) !SolarCalc(tday, i)
 
         !gp 27-Oct-04 CALL InstanteousHeadwater(HW, t, Te(0,1), c(0,:), pH)
         !gp CALL InstanteousDownstreamboundary(DB, t, Te(nr,1), c(nr,:), Te(nr+1,1), c(nr+1,:))
@@ -1071,11 +1071,11 @@ CONTAINS
         !gp 12-Jan-06
         !WRITE(10,*) 'done thru Call InstanteousHeadwater'
 
-        CALL InstanteousDownstreamboundary(DB, t, Te(nr,1), c(nr,:,1), Te(nr+1,1), c(nr+1,:,1))		!gp 27-Oct-04 end new block
+        CALL InstanteousDownstreamboundary(DB, t, Te(nr,1), c(nr,:,1), Te(nr+1,1), c(nr+1,:,1)) !gp 27-Oct-04 end new block
 
         !gp 12-Jan-06
         !WRITE(10,*) 'done thru Call InstanteousDownstreamboundary'
-        !WRITE(10,'(32F13.4)')	Te(nr,1), (c(nr, k, 1), k=1, nv-2), Te(nr+1,1), (c(nr+1, k, 1), k=1, nv-2)
+        !WRITE(10,'(32F13.4)') Te(nr,1), (c(nr, k, 1), k=1, nv-2), Te(nr+1,1), (c(nr+1, k, 1), k=1, nv-2)
 
 
         !'
@@ -1087,18 +1087,18 @@ CONTAINS
         !Heat transport derivatives
 
         DO i = 1, nr
-            !			dTe(i, 1) = hydrau%reach(i-1)%QCMD * Te(i - 1, 1) * rhow * cpw &
-            !									-	hydrau%reach(i)%QCMD * Te(i, 1) * rhow * cpw &
-            !									+	hydrau%reach(i)%QptCMD * load(i)%Te * rhow * cpw &
-            !									-	hydrau%reach(i)%QptaCMD * Te(i, 1) * rhow * cpw &
-            !									+	hydrau%reach(i-1)%EpCMD * (Te(i - 1, 1) - Te(i, 1)) * rhow * cpw &
-            !									+	hydrau%reach(i)%EpCMD * (Te(i + 1, 1) - Te(i, 1)) * rhow * cpw
+            ! dTe(i, 1) = hydrau%reach(i-1)%QCMD * Te(i - 1, 1) * rhow * cpw &
+            ! - hydrau%reach(i)%QCMD * Te(i, 1) * rhow * cpw &
+            ! + hydrau%reach(i)%QptCMD * load(i)%Te * rhow * cpw &
+            ! - hydrau%reach(i)%QptaCMD * Te(i, 1) * rhow * cpw &
+            ! + hydrau%reach(i-1)%EpCMD * (Te(i - 1, 1) - Te(i, 1)) * rhow * cpw &
+            ! + hydrau%reach(i)%EpCMD * (Te(i + 1, 1) - Te(i, 1)) * rhow * cpw
             dTe(i,1) = hydrau%reach(i-1)%QCMD * Te(i - 1, 1) * rhow * cpw
-            dTe(i,1) = dTe(i,1) -	hydrau%reach(i)%QCMD * Te(i, 1) * rhow * cpw
-            dTe(i,1) = dTe(i,1)	+	hydrau%reach(i)%QptCMD * load(i)%Te * rhow * cpw
-            dTe(i,1) = dTe(i,1) -	hydrau%reach(i)%QptaCMD * Te(i, 1) * rhow * cpw
-            dTe(i,1) = dTe(i,1) +	hydrau%reach(i-1)%EpCMD * (Te(i - 1, 1) - Te(i, 1)) * rhow * cpw
-            dTe(i,1) = dTe(i,1) +	hydrau%reach(i)%EpCMD * (Te(i + 1, 1) - Te(i, 1)) * rhow * cpw
+            dTe(i,1) = dTe(i,1) - hydrau%reach(i)%QCMD * Te(i, 1) * rhow * cpw
+            dTe(i,1) = dTe(i,1) + hydrau%reach(i)%QptCMD * load(i)%Te * rhow * cpw
+            dTe(i,1) = dTe(i,1) - hydrau%reach(i)%QptaCMD * Te(i, 1) * rhow * cpw
+            dTe(i,1) = dTe(i,1) + hydrau%reach(i-1)%EpCMD * (Te(i - 1, 1) - Te(i, 1)) * rhow * cpw
+            dTe(i,1) = dTe(i,1) + hydrau%reach(i)%EpCMD * (Te(i + 1, 1) - Te(i, 1)) * rhow * cpw
 
             !'gp 05-Jul-05 (output fluxes in cal/cm^2/d)
             saveHeatFluxTribs(i) = ((hydrau%reach(i)%QptCMD * load(i)%Te &
@@ -1116,13 +1116,13 @@ CONTAINS
 
             !gp 16-Jul-08
             !CALL heatBalance(evap, conv, back, longat, lightheat, Te(i,1), Meteo%Ta(i), &
-            !			Meteo%Td(i), Meteo%cc(i), Meteo%Uw(i), hydrau%reach(i)%Ast)
+            ! Meteo%Td(i), Meteo%cc(i), Meteo%Uw(i), hydrau%reach(i)%Ast)
             CALL heatBalance(evap, conv, back, longat, lightheat, Te(i,1), Meteo%Ta(i), &
                 Meteo%Td(i), Meteo%cc(i), Meteo%Uw(i), hydrau%reach(i)%Ast, hydrau%reach(i)%SKOP)
 
-            flux = Solar%Jsnt(i) + longat - back - conv - evap     !gp changed Jsnt to Jsnt(i)
+            flux = Solar%Jsnt(i) + longat - back - conv - evap !gp changed Jsnt to Jsnt(i)
             dTe(i, 1) = dTe(i, 1) + flux * hydrau%reach(i)%Ast / 100.0_DP
-            !			if (i==1) write(8,*)  Meteo%Ta(i),Meteo%Td(i)    !, Solar%Jsnt(i), longat, back, conv, evap
+            ! if (i==1) write(8,*) Meteo%Ta(i),Meteo%Td(i) !, Solar%Jsnt(i), longat, back, conv, evap
 
             !'gp 01-Jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
             saveHeatFluxJsnt(i) = Solar%Jsnt(i)
@@ -1136,34 +1136,34 @@ CONTAINS
         DO i = 1 , nr
             !'gp new sediment-water heat flux from sediments into the water in units of cal/cm2/day
             Jsed(i) = (Te(i, 2) - Te(i, 1)) * &
-                86400 * 2 * hydrau%reach(i)%sedThermCond / hydrau%reach(i)%HsedCM	!'units of (cal/cm2/day), note that sedThermCond is in units of (cal/sec) per (cm deg C)
+                86400 * 2 * hydrau%reach(i)%sedThermCond / hydrau%reach(i)%HsedCM !'units of (cal/cm2/day), note that sedThermCond is in units of (cal/sec) per (cm deg C)
 
             !'gp 05-Jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
             saveHeatFluxJsed(i) = Jsed(i)
 
-            dTe(i, 1) = dTe(i, 1) + Jsed(i) * hydrau%reach(i)%Ast/ 100                      !'units of (cal/day) * (m3/cm3)
-            dTe(i, 2) = -Jsed(i) * hydrau%reach(i)%Ast / 100                                !'units of (cal/day) * (m3/cm3)
+            dTe(i, 1) = dTe(i, 1) + Jsed(i) * hydrau%reach(i)%Ast/ 100 !'units of (cal/day) * (m3/cm3)
+            dTe(i, 2) = -Jsed(i) * hydrau%reach(i)%Ast / 100 !'units of (cal/day) * (m3/cm3)
             SELECT CASE (sys%simHyporheicWQ)
-              CASE ('Level 1', 'Level 2')		!gp 15-Nov-04
+              CASE ('Level 1', 'Level 2') !gp 15-Nov-04
                 !'gp new hyporheic exchange flux in units of (cal/day) * (m3/cm3)
                 Jhyporheic(i) = hydrau%reach(i)%EhyporheicCMD * &
-                    (Te(i, 2) - Te(i, 1)) * rhow * cpw * 100 / hydrau%reach(i)%Ast		!'units of (cal/cm2/day)
+                    (Te(i, 2) - Te(i, 1)) * rhow * cpw * 100 / hydrau%reach(i)%Ast !'units of (cal/cm2/day)
 
                 !'gp 05-Jul-05 save heat flux terms (cal/cm2/d) for each reach for this time step for output
                 saveHeatFluxJhyporheic(i) = Jhyporheic(i)
 
-                dTe(i, 1) = dTe(i, 1) + Jhyporheic(i) * hydrau%reach(i)%Ast / 100               !'units of (cal/day) * (m3/cm3)
-                dTe(i, 2) = dTe(i, 2) - Jhyporheic(i) * hydrau%reach(i)%Ast / 100               !'units of (cal/day) * (m3/cm3)
+                dTe(i, 1) = dTe(i, 1) + Jhyporheic(i) * hydrau%reach(i)%Ast / 100 !'units of (cal/day) * (m3/cm3)
+                dTe(i, 2) = dTe(i, 2) - Jhyporheic(i) * hydrau%reach(i)%Ast / 100 !'units of (cal/day) * (m3/cm3)
             END SELECT
         END DO
         DO i = 1, nr
             !'gp units for dTe on LHS in the next original line of code is deg C per day
             dTe(i, 1) = dTe(i, 1) / &
-                hydrau%reach(i)%Vol / rhow / cpw									!'units of deg C per day
+                hydrau%reach(i)%Vol / rhow / cpw !'units of deg C per day
             !'gp sediment-water heat flux term dTs in deg C per day
             dTe(i, 2) = dTe(i, 2) / &
                 (hydrau%reach(i)%Ast * hydrau%reach(i)%HsedCM / 100) / &
-                hydrau%reach(i)%rhoCpSed											!'units of deg C per day
+                hydrau%reach(i)%rhoCpSed !'units of deg C per day
         END DO
 
 
@@ -1185,11 +1185,11 @@ CONTAINS
             !gp 02-Nov-04 os(0) = oxsat(Te(0, 1), hydrau%reach(0)%elev)
             os(0, 1) = oxygen_saturation(Te(0, 1), hydrau%reach(0)%elev)
             SELECT CASE (sys%simHyporheicWQ)
-              CASE ('Level 1', 'Level 2')		!gp 15-Nov-04
+              CASE ('Level 1', 'Level 2') !gp 15-Nov-04
                 os(0, 2) = oxygen_saturation(Te(0, 2), hydrau%reach(0)%elev)
               CASE DEFAULT
-                os(0, 2) = 0										!not used in calculation
-            END SELECT												!gp 02-Nov-04 end new block
+                os(0, 2) = 0 !not used in calculation
+            END SELECT !gp 02-Nov-04 end new block
 
             !'
             !' --------------------------------------------------------------------------
@@ -1199,11 +1199,11 @@ CONTAINS
 
             !gp 03-Apr-08
             !CALL TempAdjust(Rates, hydrau,Meteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
-            !								kreaFT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
-            !								kreaT, vdiT, kacT, kgenT)	!gp 30-Nov-04 add kgenT
+            ! kreaFT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
+            ! kreaT, vdiT, kacT, kgenT) !gp 30-Nov-04 add kgenT
             CALL temp_adjust(Rates, hydrau,Meteo, nr, Te, khcT, kdcsT, kdcT, kgaFT, kdeaFT, &
                 krea1FT, krea2FT, kexaFT, khnT, khpT, knT, kdtT, kpathT, kiT, kaT, kgaT, kdeaT, &
-                kreaT, vdiT, kacT, kgenT)	!gp 30-Nov-04 add kgenT
+                kreaT, vdiT, kacT, kgenT) !gp 30-Nov-04 add kgenT
 
 
             !'gp 20-Oct-04 temp limitation factor for output
@@ -1213,18 +1213,18 @@ CONTAINS
 
             DO i=1 ,nr
                 !gp 27-Oct-04 os(i)=oxsat(Te(i,1), hydrau%reach(i)%elev)
-                os(i, 1)=oxygen_saturation(Te(i, 1), hydrau%reach(i)%elev)		!gp 27-Oct-04
+                os(i, 1)=oxygen_saturation(Te(i, 1), hydrau%reach(i)%elev) !gp 27-Oct-04
             END DO
 
             !'
             !' ---------------------------------------------------------------------------
             !' ---------------------------------------------------------------------------
-            !' ---                                                                     ---
-            !' ---                Water column water quality deriviatives              ---
-            !' ---         Note that units are mass/time in the main i loop            ---
+            !' --- ---
+            !' --- Water column water quality deriviatives ---
+            !' --- Note that units are mass/time in the main i loop ---
             !' --- and at the the derivs are divided by Vol(i) to get mass/volume/time ---
-            !' ---                    or area to get mass/area/time                    ---
-            !' ---                                                                     ---
+            !' --- or area to get mass/area/time ---
+            !' --- ---
             !' ---------------------------------------------------------------------------
             !' ---------------------------------------------------------------------------
             !'
@@ -1237,13 +1237,13 @@ CONTAINS
                         !gp 31-Mar-05 cT is variable nv-1 (debug Alkalinity deriv)
                       CASE (3,nv-1)
 
-                        dropft = hydrau%reach(i -1)%drop * 3.281_DP				!SCC
+                        dropft = hydrau%reach(i -1)%drop * 3.281_DP !SCC
                         dam = 1.0_DP / (1 + 0.116_DP * adam * bdam * dropft * (1 - 0.034_DP * dropft) * &
                             (1.0_DP + 0.046_DP * Te(i - 1, 1)))
                         IF (k == 3) THEN
                             defa = os(i - 1, 1) - c(i - 1, 3, 1)
                             defb = dam * defa
-                            dc(i, k, 1) = hydrau%reach(i-1)%QCMD * (os(i-1, 1) - defb)		!gp 27-Oct-04 end new block
+                            dc(i, k, 1) = hydrau%reach(i-1)%QCMD * (os(i-1, 1) - defb) !gp 27-Oct-04 end new block
 
                             !'gp 05-Jul-05 (save DO fluxes in gO2/m^2/d)
                             saveDOfluxHeadwater(i) = (hydrau%reach(i-1)%QCMD * (os(i - 1, 1) - defb) &
@@ -1259,7 +1259,7 @@ CONTAINS
                             cHCO3CO3 = (1.0_DP - alp0) * c(i-1, k, 1)
                             defa = CO2sat - alp0 * c(i-1, k, 1)
                             defb = dam * defa
-                            dc(i, k, 1) = hydrau%reach(i-1)%QCMD * (cHCO3CO3 + CO2sat - defb)    !gp 27-Oct-04 end new block
+                            dc(i, k, 1) = hydrau%reach(i-1)%QCMD * (cHCO3CO3 + CO2sat - defb) !gp 27-Oct-04 end new block
 
                             !'gp 05-Jul-05 (save CO2 fluxes in gC/m^2/d)
                             saveCO2fluxHeadwater(i) = (hydrau%reach(i-1)%QCMD * (cHCO3CO3 + CO2sat - defb) &
@@ -1268,13 +1268,13 @@ CONTAINS
 
                         END IF
                       CASE DEFAULT !ELSE
-                        dc(i, k, 1) = hydrau%reach(i-1)%QCMD * c(i - 1, k, 1)		!gp 27-Oct-04 end new block
+                        dc(i, k, 1) = hydrau%reach(i-1)%QCMD * c(i - 1, k, 1) !gp 27-Oct-04 end new block
                     END SELECT
                     dc(i, k, 1) = dc(i, k, 1) - hydrau%reach(i)%QCMD * c(i, k, 1) &
                         + hydrau%reach(i)%QptCMD * load(i)%c(k) &
                         - hydrau%reach(i)%QptaCMD * c(i, k, 1) &
                         + hydrau%reach(i-1)%EpCMD * (c(i - 1, k, 1) - c(i, k, 1)) &
-                        + hydrau%reach(i)%EpCMD * (c(i + 1, k, 1) - c(i, k, 1))		!gp 27-Oct-04 end new block
+                        + hydrau%reach(i)%EpCMD * (c(i + 1, k, 1) - c(i, k, 1)) !gp 27-Oct-04 end new block
 
                     !'gp 05-Jul-05 (save net trib/GW and advec/disp DO fluxes in gO2/m^2/d and CO2 fluxes in gC/m^2/d)
                     Select Case (k)
@@ -1311,38 +1311,38 @@ CONTAINS
 
                 hh = 10.0_DP ** -pHs(i, 1)
                 alp0 = hh * hh / (hh ** 2.0_DP + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1))
-                alp1 = K1s(i, 1) * hh / (hh ** 2.0_DP + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1))		!fraction of cT as HCO3-
-                alp2 = K1s(i, 1) * K2s(i, 1) / (hh ** 2.0_DP + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1))   !fraction of cT as CO3--
+                alp1 = K1s(i, 1) * hh / (hh ** 2.0_DP + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1)) !fraction of cT as HCO3-
+                alp2 = K1s(i, 1) * K2s(i, 1) / (hh ** 2.0_DP + K1s(i, 1) * hh + K1s(i, 1) * K2s(i, 1)) !fraction of cT as CO3--
 
                 !'gp 03-Dec-09
                 !'fraction of total ammonia that is ionized ammonia NH4+ (Fi)
-                Kamm = 10.0_dp ** (-(0.09018_dp + 2729.92_dp / (Te(i, 1) + 273.15_dp)))   !'equilibrium coeff for ammonia dissociation NH4+ = NH3(aq) + H+
-                Fi = hh / (hh + Kamm)   !'fraction of ionized NH4+ = [NH4+ / (NH4+ + NH3)]
+                Kamm = 10.0_dp ** (-(0.09018_dp + 2729.92_dp / (Te(i, 1) + 273.15_dp))) !'equilibrium coeff for ammonia dissociation NH4+ = NH3(aq) + H+
+                Fi = hh / (hh + Kamm) !'fraction of ionized NH4+ = [NH4+ / (NH4+ + NH3)]
                 !'fraction of SRP that is H2PO4- (FPO41), HPO4-- (FPO42), and PO4--- (FPO43)
-                KPO41 = 10.0_dp ** -2.15_dp   !'= [H+][H2PO4-]/[H3PO4] for eqn H3PO4 = H+ + H2PO4-
-                KPO42 = 10.0_dp ** -7.2_dp    !'= [H+][HPO4--]/[H2PO4-] for eqn H2PO4- = H+ + HPO4--
-                KPO43 = 10.0_dp ** -12.35_dp  !'= [H+][PO4---]/[HPO4--] for eqn HPO4-- = H+ + PO4---
-                DPO = 1.0_dp / (hh ** 3.0_dp + KPO41 * hh ** 2.0_dp + KPO41 * KPO42 * hh + KPO41 * KPO42 * KPO43)   !'intermediate calc of denominator
-                FPO41 = KPO41 * hh ** 2.0_dp * DPO         !'fraction of phosphate as H2PO4-
-                FPO42 = KPO41 * KPO42 * hh * DPO      !'fraction of phosphate as HPO4--
-                FPO43 = KPO41 * KPO42 * KPO43 * DPO   !'fraction of phosphate as PO4---
+                KPO41 = 10.0_dp ** -2.15_dp !'= [H+][H2PO4-]/[H3PO4] for eqn H3PO4 = H+ + H2PO4-
+                KPO42 = 10.0_dp ** -7.2_dp !'= [H+][HPO4--]/[H2PO4-] for eqn H2PO4- = H+ + HPO4--
+                KPO43 = 10.0_dp ** -12.35_dp !'= [H+][PO4---]/[HPO4--] for eqn HPO4-- = H+ + PO4---
+                DPO = 1.0_dp / (hh ** 3.0_dp + KPO41 * hh ** 2.0_dp + KPO41 * KPO42 * hh + KPO41 * KPO42 * KPO43) !'intermediate calc of denominator
+                FPO41 = KPO41 * hh ** 2.0_dp * DPO !'fraction of phosphate as H2PO4-
+                FPO42 = KPO41 * KPO42 * hh * DPO !'fraction of phosphate as HPO4--
+                FPO43 = KPO41 * KPO42 * KPO43 * DPO !'fraction of phosphate as PO4---
                 !'stoichiometric conversion factors for alkalinity (some are pH dependent) (ralkbn & ralkbp calc in classstoch.f90)
-                !ralkbn = 1# / 14.0067 / 1000# / 1000#                                    !'eqH+/L per mgN/m^3 (1eqH+/moleN / 14gN/moleN / 1000mgN/gN / 1000L/m^3)
-                !ralkbp = (FPO41 + 2# * FPO42 + 3# * FPO43) / 30.973762 / 1000# / 1000#   !'eqH+/L per mgP/m^3 (eqH+/moleP / 31gP/moleP / 1000mgP/gP / 1000L/m^3)
-                Pcharge = (FPO41 + 2.0_dp * FPO42 + 3.0_dp * FPO43)   !'average charge of P species to multiply by ralkbp
+                !ralkbn = 1# / 14.0067 / 1000# / 1000# !'eqH+/L per mgN/m^3 (1eqH+/moleN / 14gN/moleN / 1000mgN/gN / 1000L/m^3)
+                !ralkbp = (FPO41 + 2# * FPO42 + 3# * FPO43) / 30.973762 / 1000# / 1000# !'eqH+/L per mgP/m^3 (eqH+/moleP / 31gP/moleP / 1000mgP/gP / 1000L/m^3)
+                Pcharge = (FPO41 + 2.0_dp * FPO42 + 3.0_dp * FPO43) !'average charge of P species to multiply by ralkbp
                 !'ammonia gas transfer at air/water interface (eqns from Chapra et al QUAL2K manual ver 2.11b8)
-                K1NH3 = 1.171_dp * kaT(i) * hydrau%reach(i)%depth   !'liquid film exchange coefficient for NH3 (m/d)
-                Uw10 = (10.0_dp / 7.0_dp) ** 0.15_dp * Meteo%Uw(i)   !'wind speed at 10 m (m/s)
-                KgNH3 = 175.287_dp * Uw10 + 262.9305_dp   !'NH3 mass transfer velocity (m/d)
-                HeNH3 = 0.0000136785_dp * 1.052_dp ** (Te(i, 1) - 20.0_dp)   !'Henry's Law constant for NH3 gas (atm m^3/mole)
-                vnh3 = K1NH3 * HeNH3 / (HeNH3 + 0.00008206_dp * (Te(i, 1) + 273.15_dp) * (K1NH3 / KgNH3))   !'NH3 gas transfer coefficient (m/d)
-                naus = 0.000000002_dp / HeNH3 * 14000.0_dp   !'sat'n conc of NH3 assuming partial press of NH3 in atm = 2e-9 atm (values range from 1-10e-9 in rural and 10-100e-9 in heavily polluted areas)
-                NH3gas = vnh3 * hydrau%reach(i)%Ast * (naus - (1.0_dp - Fi) * c(i, 7, 1))   !'loss or gain of NH3 via gas transfer (mgN/day)
+                K1NH3 = 1.171_dp * kaT(i) * hydrau%reach(i)%depth !'liquid film exchange coefficient for NH3 (m/d)
+                Uw10 = (10.0_dp / 7.0_dp) ** 0.15_dp * Meteo%Uw(i) !'wind speed at 10 m (m/s)
+                KgNH3 = 175.287_dp * Uw10 + 262.9305_dp !'NH3 mass transfer velocity (m/d)
+                HeNH3 = 0.0000136785_dp * 1.052_dp ** (Te(i, 1) - 20.0_dp) !'Henry's Law constant for NH3 gas (atm m^3/mole)
+                vnh3 = K1NH3 * HeNH3 / (HeNH3 + 0.00008206_dp * (Te(i, 1) + 273.15_dp) * (K1NH3 / KgNH3)) !'NH3 gas transfer coefficient (m/d)
+                naus = 0.000000002_dp / HeNH3 * 14000.0_dp !'sat'n conc of NH3 assuming partial press of NH3 in atm = 2e-9 atm (values range from 1-10e-9 in rural and 10-100e-9 in heavily polluted areas)
+                NH3gas = vnh3 * hydrau%reach(i)%Ast * (naus - (1.0_dp - Fi) * c(i, 7, 1)) !'loss or gain of NH3 via gas transfer (mgN/day)
 
                 !determine solar radiation
                 Iat(i) = lightheat%PAR * Solar%Jsnt(i)
 
-                CALL oxygen_inhibition_and_enhancement(Rates, c(i, 3, 1), fcarb, fnitr, fdenitr, frespp, frespb)	!gp 27-Oct-04
+                CALL oxygen_inhibition_and_enhancement(Rates, c(i, 3, 1), fcarb, fnitr, fdenitr, frespp, frespb) !gp 27-Oct-04
 
                 !light extinction
 
@@ -1363,9 +1363,9 @@ CONTAINS
 
                 !gp 09-Dec-09 include Fi
                 !IF (hydrau%reach(i)%ksn + c(i, 7, 1) + c(i, 8, 1) <= 0) THEN
-                !	phint = 0
+                ! phint = 0
                 !ELSE
-                !	phint = (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksn + c(i, 7, 1) + c(i, 8, 1))
+                ! phint = (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksn + c(i, 7, 1) + c(i, 8, 1))
                 !END IF
                 IF (hydrau%reach(i)%ksn + Fi * c(i, 7, 1) + c(i, 8, 1) <= 0) THEN
                     phint = 0
@@ -1389,14 +1389,14 @@ CONTAINS
                 !light limitation
 
                 SELECT CASE (Rates%Ilight)
-                  CASE (1)  !Half-saturation
+                  CASE (1) !Half-saturation
                     IF (hydrau%reach(i)%Isat == 0) THEN
                         phil = 1.0
                     ELSE
                         phil = 1.0 / (ke * hydrau%reach(i)%depth) * LOG((hydrau%reach(i)%Isat + Iat(i)) &
                             / (hydrau%reach(i)%Isat + Iat(i) * EXP(-ke * hydrau%reach(i)%depth)))
                     END IF
-                  CASE (2)  !Smith
+                  CASE (2) !Smith
                     IF (hydrau%reach(i)%Isat == 0) THEN
                         phil = 1.0
                     ELSE
@@ -1405,7 +1405,7 @@ CONTAINS
                             + SQRT(1 + (Iat(i) * EXP(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%Isat) ** 2)
                         phil = 1.0 / (ke * hydrau%reach(i)%depth) * LOG(num / den)
                     END IF
-                  CASE (3)  !Steele
+                  CASE (3) !Steele
                     IF (hydrau%reach(i)%Isat == 0) THEN
                         phil = 1.0
                     ELSE
@@ -1415,11 +1415,11 @@ CONTAINS
                     END IF
                 END SELECT
 
-                PhytoPhoto = phil * phint * kgaT(i) * hydrau%reach(i)%vol * c(i, 11, 1)				!mgA/day
-                PhytoResp = frespp * kreaT(i) * hydrau%reach(i)%vol * c(i, 11, 1)					!mgA/day
-                PhytoDeath = kdeaT(i) * hydrau%reach(i)%vol * c(i, 11, 1)							!mgA/day
-                PhytoSettl = hydrau%reach(i)%va * hydrau%reach(i)%Asd * c(i, 11, 1)					!mgA/day
-                dc(i, 11, 1) = dc(i, 11, 1) + PhytoPhoto - PhytoResp - PhytoDeath - PhytoSettl		!mgA/day
+                PhytoPhoto = phil * phint * kgaT(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mgA/day
+                PhytoResp = frespp * kreaT(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mgA/day
+                PhytoDeath = kdeaT(i) * hydrau%reach(i)%vol * c(i, 11, 1) !mgA/day
+                PhytoSettl = hydrau%reach(i)%va * hydrau%reach(i)%Asd * c(i, 11, 1) !mgA/day
+                dc(i, 11, 1) = dc(i, 11, 1) + PhytoPhoto - PhytoResp - PhytoDeath - PhytoSettl !mgA/day
 
                 !
                 ! --- (16) Bottom Algae (gD/day) ---
@@ -1450,17 +1450,17 @@ CONTAINS
                 IF (FBpb > 1.0_DP) FBpb = 1.0_DP
 
                 phint = 1.0_DP - FBnb
-                phinSave(i) = phint	!'gp 20-Oct-04
+                phinSave(i) = phint !'gp 20-Oct-04
                 phip = 1.0_DP - FBpb
-                phipSave(i) = phip		!'gp 20-Oct-04
+                phipSave(i) = phip !'gp 20-Oct-04
                 IF (phip < phint) phint = phip
 
                 IF (Rates%hco3useF == "No") THEN
-                    phic = alp0 * c(i, nv-1, 1) / (Rates%kscF + alp0 * c(i, nv-1, 1))		!gp !CO2 is the limiting substrate
+                    phic = alp0 * c(i, nv-1, 1) / (Rates%kscF + alp0 * c(i, nv-1, 1)) !gp !CO2 is the limiting substrate
                 ELSE
-                    phic = (alp0 + alp1) * c(i, nv-1, 1) / (Rates%kscF + (alp0 + alp1) * c(i, nv-1, 1))		!gp !HCO3- is the limiting substrate
+                    phic = (alp0 + alp1) * c(i, nv-1, 1) / (Rates%kscF + (alp0 + alp1) * c(i, nv-1, 1)) !gp !HCO3- is the limiting substrate
                 END IF
-                phicSave(i) = phic		!'gp 20-Oct-04
+                phicSave(i) = phic !'gp 20-Oct-04
                 IF (phic < phint) phint = phic
 
                 !light limitation
@@ -1469,14 +1469,14 @@ CONTAINS
                 IF ((hydrau%reach(i)%NUpWCfrac < 1.0_dp) .OR. (hydrau%reach(i)%PUpWCfrac < 1.0_dp)) THEN
                     !use water column average light for macrophytes
                     SELECT CASE (Rates%IlightF)
-                      CASE (1)  !Half-saturation
+                      CASE (1) !Half-saturation
                         IF (hydrau%reach(i)%IsatF == 0) THEN
                             phil = 1.0
                         ELSE
                             phil = 1.0 / (ke * hydrau%reach(i)%depth) * LOG((hydrau%reach(i)%IsatF + Iat(i)) &
                                 / (hydrau%reach(i)%IsatF + Iat(i) * EXP(-ke * hydrau%reach(i)%depth)))
                         END IF
-                      CASE (2)  !Smith
+                      CASE (2) !Smith
                         IF (hydrau%reach(i)%IsatF == 0) THEN
                             phil = 1.0
                         ELSE
@@ -1485,7 +1485,7 @@ CONTAINS
                                 + SQRT(1 + (Iat(i) * EXP(-ke * hydrau%reach(i)%depth) / hydrau%reach(i)%IsatF) ** 2)
                             phil = 1.0 / (ke * hydrau%reach(i)%depth) * LOG(num / den)
                         END IF
-                      CASE (3)  !Steele
+                      CASE (3) !Steele
                         IF (hydrau%reach(i)%IsatF == 0) THEN
                             phil = 1.0
                         ELSE
@@ -1497,19 +1497,19 @@ CONTAINS
                 ELSE
                     !use bottom light for periphyton
                     SELECT CASE (Rates%IlightF)
-                      CASE (1)  !Half-saturation
+                      CASE (1) !Half-saturation
                         IF (hydrau%reach(i)%IsatF + botlight <= 0) THEN
                             phil = 1.0_DP
                         ELSE
                             phil = botlight / (hydrau%reach(i)%IsatF + botlight)
                         END IF
-                      CASE (2)  !Smith
+                      CASE (2) !Smith
                         IF (botlight ** 2 + hydrau%reach(i)%IsatF ** 2 == 0) THEN
                             phil = 1.0_DP
                         ELSE
                             phil = botlight / SQRT(botlight ** 2 + hydrau%reach(i)%IsatF ** 2)
                         END IF
-                      CASE (3)  !Steele
+                      CASE (3) !Steele
                         IF (hydrau%reach(i)%IsatF <= 0) THEN
                             phil = 1.0_DP
                         ELSE
@@ -1521,29 +1521,29 @@ CONTAINS
                 philSave(i) = phil
 
                 IF (Rates%typeF == "Zero-order") THEN
-                    BotAlgPhoto = phil * phint * kgaFT(i) * hydrau%reach(i)%Asb					!gD/day
+                    BotAlgPhoto = phil * phint * kgaFT(i) * hydrau%reach(i)%Asb !gD/day
                 ELSE
                     BotAlgPhoto = phil * phint * kgaFT(i) * hydrau%reach(i)%Asb * c(i, nv, 1) &
-                        * (1 - c(i, nv, 1) / hydrau%reach(i)%abmax)		!gD/day
+                        * (1 - c(i, nv, 1) / hydrau%reach(i)%abmax) !gD/day
                 END IF
 
                 phitotalSave(i) = phil * phint * phitSave(i)
 
                 !basal resp
-                BotAlgResp = krea1FT(i) * hydrau%reach(i)%Asb * c(i, nv, 1)	!gD/day
+                BotAlgResp = krea1FT(i) * hydrau%reach(i)%Asb * c(i, nv, 1) !gD/day
                 !add phot-resp
                 If (Rates%typeF == "Zero-order") Then
                     BotAlgResp = BotAlgResp + krea2FT(i) * phil * phint * kgaFT(i) * hydrau%reach(i)%Asb
-                Else	!'else first-order growth used for photo resp
+                Else !'else first-order growth used for photo resp
                     BotAlgResp = BotAlgResp + krea2FT(i) * phil * phint * kgaFT(i) * hydrau%reach(i)%Asb &
                         * c(i, nv, 1) * (1 - c(i, nv, 1) / hydrau%reach(i)%abmax)
                 End If
                 !'adjust for oxygen attenuation
-                BotAlgResp = frespb * BotAlgResp							!gD/day
+                BotAlgResp = frespb * BotAlgResp !gD/day
 
-                BotAlgExc = kexaFT(i) * hydrau%reach(i)%Asb * c(i, nv, 1)	!gD/day (note that BotAlgExc does not contribute to dc(i,nv,1)
-                BotAlgDeath = kdeaFT(i) * hydrau%reach(i)%Asb * c(i, nv, 1)	!gD/day
-                dc(i, nv, 1) = BotAlgPhoto - BotAlgResp - BotAlgDeath		!gD/day
+                BotAlgExc = kexaFT(i) * hydrau%reach(i)%Asb * c(i, nv, 1) !gD/day (note that BotAlgExc does not contribute to dc(i,nv,1)
+                BotAlgDeath = kdeaFT(i) * hydrau%reach(i)%Asb * c(i, nv, 1) !gD/day
+                dc(i, nv, 1) = BotAlgPhoto - BotAlgResp - BotAlgDeath !gD/day
 
                 !gp 25-Jun-09
                 saveBotAlgPhoto(i) = BotAlgPhoto / hydrau%reach(i)%Asb
@@ -1555,17 +1555,17 @@ CONTAINS
 
                 !gp 03-Dec-09
                 !IF ((hydrau%reach(i)%ksnF + c(i, 7, 1) + c(i, 8, 1)) > 0) THEN
-                !	NLIM = hydrau%reach(i)%KqN / (hydrau%reach(i)%KqN + NINb - hydrau%reach(i)%NINbmin)
-                !	IF (NLIM < 0) THEN
-                !		NLIM = 0
-                !	ELSE IF (NLIM > 1.0) THEN
-                !	  NLIM = 1.0_dp
-                !	END IF
-                !	BotAlgUptakeN = hydrau%reach(i)%Asb * NLIM * c(i, nv, 1) * hydrau%reach(i)%NINbupmax &
-                !					* (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksnF + c(i, 7, 1) &
-                !					+ c(i, 8, 1))
+                ! NLIM = hydrau%reach(i)%KqN / (hydrau%reach(i)%KqN + NINb - hydrau%reach(i)%NINbmin)
+                ! IF (NLIM < 0) THEN
+                ! NLIM = 0
+                ! ELSE IF (NLIM > 1.0) THEN
+                ! NLIM = 1.0_dp
+                ! END IF
+                ! BotAlgUptakeN = hydrau%reach(i)%Asb * NLIM * c(i, nv, 1) * hydrau%reach(i)%NINbupmax &
+                ! * (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%ksnF + c(i, 7, 1) &
+                ! + c(i, 8, 1))
                 !ELSE
-                !	BotAlgUptakeN = 0
+                ! BotAlgUptakeN = 0
                 !END IF
                 IF ((hydrau%reach(i)%ksnF + Fi * c(i, 7, 1) + c(i, 8, 1)) > 0) THEN
                     NLIM = hydrau%reach(i)%KqN / (hydrau%reach(i)%KqN + NINb - hydrau%reach(i)%NINbmin)
@@ -1596,21 +1596,21 @@ CONTAINS
 
                 !gp 03-Dec-09
                 !If (BotAlgUptakeN * sys%dt > (c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol) Then
-                !	BotAlgUptakeN = (c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol / sys%dt     !'mgN/day
+                ! BotAlgUptakeN = (c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol / sys%dt !'mgN/day
                 !End If
                 !If (BotAlgUptakeP * sys%dt > c(i, 10, 1) * hydrau%reach(i)%vol) Then
-                !	BotAlgUptakeP = c(i, 10, 1) * hydrau%reach(i)%vol / sys%dt                   !'mgP/day
+                ! BotAlgUptakeP = c(i, 10, 1) * hydrau%reach(i)%vol / sys%dt !'mgP/day
                 !End If
                 If (BotAlgUptakeN * sys%dt > (Fi * c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol) Then
-                    BotAlgUptakeN = (Fi * c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol / sys%dt     !'mgN/day
+                    BotAlgUptakeN = (Fi * c(i, 7, 1) + c(i, 8, 1)) * hydrau%reach(i)%vol / sys%dt !'mgN/day
                 End If
                 If (BotAlgUptakeP * sys%dt > c(i, 10, 1) * hydrau%reach(i)%vol) Then
-                    BotAlgUptakeP = c(i, 10, 1) * hydrau%reach(i)%vol / sys%dt                   !'mgP/day
+                    BotAlgUptakeP = c(i, 10, 1) * hydrau%reach(i)%vol / sys%dt !'mgP/day
                 End If
 
                 !change in intracellular N and P in periphyton
-                dINb(i) = BotAlgUptakeN - NINb * BotAlgDeath - NINb * BotAlgExc		!mgN/day
-                dIPb(i) = BotAlgUptakeP - NIPb * BotAlgDeath - NIPb * BotAlgExc		!mgP/day
+                dINb(i) = BotAlgUptakeN - NINb * BotAlgDeath - NINb * BotAlgExc !mgN/day
+                dIPb(i) = BotAlgUptakeP - NIPb * BotAlgDeath - NIPb * BotAlgExc !mgP/day
 
                 !ammonium preference
 
@@ -1618,12 +1618,12 @@ CONTAINS
                 !prefam = 0
                 !IF (c(i, 7, 1) * c(i, 8, 1) > 0) THEN
                 ! prefam = c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnx + c(i, 7, 1)) / (hydrau%reach(i)%khnx + c(i, 8, 1)) &
-                !		+ c(i, 7, 1) * hydrau%reach(i)%khnx / (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnx + c(i, 8, 1))
+                ! + c(i, 7, 1) * hydrau%reach(i)%khnx / (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnx + c(i, 8, 1))
                 !END IF
                 !prefamF = 0
                 !IF (c(i, 7, 1) + c(i, 8, 1) > 0) THEN
                 ! prefamF = c(i, 7, 1) * c(i, 8, 1) / (hydrau%reach(i)%khnxF + c(i, 7, 1)) / (hydrau%reach(i)%khnxF + c(i, 8, 1)) &
-                !		+ c(i, 7, 1) * hydrau%reach(i)%khnxF / (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnxF + c(i, 8, 1))
+                ! + c(i, 7, 1) * hydrau%reach(i)%khnxF / (c(i, 7, 1) + c(i, 8, 1)) / (hydrau%reach(i)%khnxF + c(i, 8, 1))
                 !END IF
                 prefam = 0
                 IF (Fi * c(i, 7, 1) * c(i, 8, 1) > 0) THEN
@@ -1644,47 +1644,47 @@ CONTAINS
                 ! --- sediment fluxes of O2, C, N, and P ---
                 !
 
-                If (sys%calcSedFlux == "Yes" .OR. sys%calcSedFlux == "Option 1" .OR. sys%calcSedFlux == "Option 2") Then	!gp 11-Jan-06
+                If (sys%calcSedFlux == "Yes" .OR. sys%calcSedFlux == "Option 1" .OR. sys%calcSedFlux == "Option 2") Then !gp 11-Jan-06
 
                     Jcin = Rates%roc * Rates%aca * hydrau%reach(i)%va * c(i, 11, 1) &
-                        + hydrau%reach(i)%vdt * c(i, 12, 1) / Rates%adc * Rates%roc	!gO2/m^2/d
-                    Jnin = (Rates%ana * hydrau%reach(i)%va * c(i, 11, 1) + hydrau%reach(i)%von * c(i, 6, 1)) / 1000.0_DP	!gN/m^2/d
+                        + hydrau%reach(i)%vdt * c(i, 12, 1) / Rates%adc * Rates%roc !gO2/m^2/d
+                    Jnin = (Rates%ana * hydrau%reach(i)%va * c(i, 11, 1) + hydrau%reach(i)%von * c(i, 6, 1)) / 1000.0_DP !gN/m^2/d
                     Jpin = (Rates%apa * hydrau%reach(i)%va * c(i, 11, 1) + hydrau%reach(i)%vop * c(i, 9, 1) &
-                        + hydrau%reach(i)%vip * c(i, 10, 1)) / 1000.0_DP	!gP/m^2/d
-                    ow = c(i, 3, 1)		!mgO2/L = gO2/m^3
+                        + hydrau%reach(i)%vip * c(i, 10, 1)) / 1000.0_DP !gP/m^2/d
+                    ow = c(i, 3, 1) !mgO2/L = gO2/m^3
 
                     !gp 09-Dec-09 include Fi
-                    !NH3w = c(i, 7, 1) / 1000.0_DP	!gN/m^3
-                    NH3w = Fi * c(i, 7, 1) / 1000.0_DP	!gN/m^3
+                    !NH3w = c(i, 7, 1) / 1000.0_DP !gN/m^3
+                    NH3w = Fi * c(i, 7, 1) / 1000.0_DP !gN/m^3
 
-                    NO3w = c(i, 8, 1) / 1000.0_DP	!gN/m^3
-                    PO4w = c(i, 10, 1) / 1000.0_DP	!gP/m^3
-                    Tw = Te(i, 1)	!deg C
+                    NO3w = c(i, 8, 1) / 1000.0_DP !gN/m^3
+                    PO4w = c(i, 10, 1) / 1000.0_DP !gP/m^3
+                    Tw = Te(i, 1) !deg C
 
                     !note that inputs and outputs of O2, C(O2), N, and P fluxes to/from SedCalcNumNew are g/m^2/day
                     CALL SedCalcNumNew(Jcin, Jnin, Jpin, ow, hydrau%reach(i)%depth, Tw, SOD, Jamm, Jnitr, Jmeth, Jmethg, &
                         Jphos, NH3w, NO3w, PO4w, c(i, 5, 1), CSOD, sys%calcSedFlux)
 
-                    JNH4 = Jamm * 1000.0_DP		!mgN/m^2/d
-                    JNO3 = Jnitr * 1000.0_DP	!mgN/m^2/d
-                    JCH4 = Jmeth				!gO2/m^2/d
-                    JPO4 = Jphos * 1000.0_DP * Rates%kspi / (Rates%kspi + c(i, 3, 1))	!mgP/m^2/d
+                    JNH4 = Jamm * 1000.0_DP !mgN/m^2/d
+                    JNO3 = Jnitr * 1000.0_DP !mgN/m^2/d
+                    JCH4 = Jmeth !gO2/m^2/d
+                    JPO4 = Jphos * 1000.0_DP * Rates%kspi / (Rates%kspi + c(i, 3, 1)) !mgP/m^2/d
                 END IF
 
-                SODpr(i) = hydrau%reach(i)%SODspec + SOD		!gO2/m^2/d
-                JNH4pr(i) = hydrau%reach(i)%JNH4spec + JNH4		!mgN/m^2/d
-                JNO3pr(i) = JNO3								!mgN/m^2/d
-                JCH4pr(i) = hydrau%reach(i)%JCH4spec + JCH4		!gO2/m^2/d
-                JSRPpr(i) = hydrau%reach(i)%JSRPspec + JPO4		!mgP/m^2/d
-                CSODpr(i) = CSOD								!gO2/m^2/d
+                SODpr(i) = hydrau%reach(i)%SODspec + SOD !gO2/m^2/d
+                JNH4pr(i) = hydrau%reach(i)%JNH4spec + JNH4 !mgN/m^2/d
+                JNO3pr(i) = JNO3 !mgN/m^2/d
+                JCH4pr(i) = hydrau%reach(i)%JCH4spec + JCH4 !gO2/m^2/d
+                JSRPpr(i) = hydrau%reach(i)%JSRPspec + JPO4 !mgP/m^2/d
+                CSODpr(i) = CSOD !gO2/m^2/d
 
                 !gp 01-Nov-04 output diel diagenesis fluxes of constituents (averaged over total surface area)
-                DiagFluxDO(i) = -SODpr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast					!'dissolved oxygen gO2/m^2/d
-                DiagFluxCBOD(i) = JCH4pr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast					!'fast CBOD gO2/m^2/d
-                DiagFluxNH4(i) = JNH4pr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast					!'ammonia mgN/m^2/d
-                DiagFluxNO3(i) = JNO3pr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast					!'nitrate mgN/m^2/d
-                DiagFluxSRP(i) = JSRPpr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast					!'SRP mgP/m^2/d
-                DiagFluxIC(i) = CSODpr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast / Rates%roc		!'inorganic C gC/m^2/d
+                DiagFluxDO(i) = -SODpr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast !'dissolved oxygen gO2/m^2/d
+                DiagFluxCBOD(i) = JCH4pr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast !'fast CBOD gO2/m^2/d
+                DiagFluxNH4(i) = JNH4pr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast !'ammonia mgN/m^2/d
+                DiagFluxNO3(i) = JNO3pr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast !'nitrate mgN/m^2/d
+                DiagFluxSRP(i) = JSRPpr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast !'SRP mgP/m^2/d
+                DiagFluxIC(i) = CSODpr(i) * hydrau%reach(i)%Asd / hydrau%reach(i)%Ast / Rates%roc !'inorganic C gC/m^2/d
 
                 !
                 ! --- (12) detritus (gD/day) ---
@@ -1723,19 +1723,19 @@ CONTAINS
                 dc(i, 7, 1) = dc(i, 7, 1) + NINb * BotAlgExc
 
                 !gp 03-Dec-09
-                dc(i, 7, 1) = dc(i, 7, 1) + NH3gas		!air/water exchange of NH3 gas
+                dc(i, 7, 1) = dc(i, 7, 1) + NH3gas !air/water exchange of NH3 gas
 
                 !
                 ! --- (8) Nitrate+Nitrite Nitrogen (mgN/day) ---
                 !
 
-                Denitr = c(i, 5, 1) / (0.1_DP + c(i, 5, 1)) * fdenitr * kiT(i) * hydrau%reach(i)%vol * c(i, 8, 1)	!wc denitr
+                Denitr = c(i, 5, 1) / (0.1_DP + c(i, 5, 1)) * fdenitr * kiT(i) * hydrau%reach(i)%vol * c(i, 8, 1) !wc denitr
                 dc(i, 8, 1) = dc(i, 8, 1) + NH4Nitrif
                 dc(i, 8, 1) = dc(i, 8, 1) - Denitr
                 dc(i, 8, 1) = dc(i, 8, 1) - (1 - prefam) * Rates%ana * PhytoPhoto
                 dc(i, 8, 1) = dc(i, 8, 1) - (1 - prefamF) * BotAlgUptakeN * hydrau%reach(i)%NUpWCfrac
                 dc(i, 8, 1) = dc(i, 8, 1) + JNO3pr(i) * hydrau%reach(i)%Asd
-                dc(i, 8, 1) = dc(i, 8, 1) - vdiT(i) * hydrau%reach(i)%Asd * c(i, 8, 1)		!sed denitr
+                dc(i, 8, 1) = dc(i, 8, 1) - vdiT(i) * hydrau%reach(i)%Asd * c(i, 8, 1) !sed denitr
 
                 !
                 ! --- (9) Organic Phosphorus (mgP/day) ---
@@ -1777,14 +1777,14 @@ CONTAINS
                 dc(i, 5, 1) = dc(i, 5, 1) + CBODsHydr
                 dc(i, 5, 1) = dc(i, 5, 1) - CBODfOxid
                 dc(i, 5, 1) = dc(i, 5, 1) + JCH4pr(i) * hydrau%reach(i)%Asd
-                dc(i, 5, 1) = dc(i, 5, 1) - Rates%rondn * Denitr		!gp end new block
+                dc(i, 5, 1) = dc(i, 5, 1) - Rates%rondn * Denitr !gp end new block
 
                 !
                 ! --- (2) Inorganic Suspended Solids (gD/day) ---
                 !
 
                 InorgSettl = hydrau%reach(i)%vss * hydrau%reach(i)%Asd * c(i, 2, 1)
-                dc(i, 2, 1) = dc(i, 2, 1) - InorgSettl		!gp end new block
+                dc(i, 2, 1) = dc(i, 2, 1) - InorgSettl !gp end new block
 
                 !
                 ! --- (14) Generic constituent or COD (user defined units of mass/time, gO2/day if used as COD) ---
@@ -1839,7 +1839,7 @@ CONTAINS
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + Rates%rccd * BotAlgResp
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + Rates%rcco * CSOD * hydrau%reach(i)%Asd
                 dc(i, nv - 1, 1) = dc(i, nv - 1, 1) + kacT(i) * hydrau%reach(i)%vol * (Khs(i, 1) &
-                    * Rates%pco2 - alp0 * c(i, nv - 1, 1))  !gp end new block
+                    * Rates%pco2 - alp0 * c(i, nv - 1, 1)) !gp end new block
 
                 !
                 ! --- (nv-2) Alkalinity (gCaCO3/day) ---
@@ -1852,40 +1852,40 @@ CONTAINS
                     !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkan * PhytoPhoto * (1.0_dp - prefam) * 50000.0_DP
                     !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkaa * PhytoResp * 50000.0_DP
                     !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * BotAlgUptakeN * prefamF * 50000.0_DP &
-                    !						 - Rates%ralkbp * BotAlgUptakeP * 50000.0_DP
+                    ! - Rates%ralkbp * BotAlgUptakeP * 50000.0_DP
                     !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * BotAlgUptakeN * (1.0_dp - prefamF) * 50000.0_DP
                     !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkn * NH4Nitrif * 50000.0_DP
                     !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkden * Denitr * 50000.0_DP
-                    !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * OrgNHydr * 50000.0_DP + Rates%ralkbp * OrgPHydr * 50000.0_DP	!gp end new block
-                    !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkn * JNH4pr(i) * hydrau%reach(i)%Asd * 50000.0_DP   !'sed flux of ammonia
-                    !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * JSRPpr(i) * hydrau%reach(i)%Asd * 50000.0_DP   !'sed flux of PO4
+                    !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * OrgNHydr * 50000.0_DP + Rates%ralkbp * OrgPHydr * 50000.0_DP !gp end new block
+                    !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkn * JNH4pr(i) * hydrau%reach(i)%Asd * 50000.0_DP !'sed flux of ammonia
+                    !dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * JSRPpr(i) * hydrau%reach(i)%Asd * 50000.0_DP !'sed flux of PO4
 
                     !gp 03-Dec-09
-                    !   alkalinity derivative (factor of 50043.45 converts eqH+/L to mgCaCO3/L or gCaCO3/m^3)
-                    !   Fi is already accounted for in nitrification, uptake
-                    !   but not in the production of total ammonia (e.g. excretion, OrgN hydrolysis, JNH4pr)
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * Fi* Rates%ana * PhytoPhoto * prefam * 50043.45_dp   !'phyto photo uptake of ammonia
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Rates%ana * PhytoPhoto * (1 - prefam) * 50043.45_dp   !'phyto photo uptake of nitrate
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * Rates%apa * PhytoPhoto * 50043.45_dp   !'phyto photo uptake of P
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * Rates%ana * PhytoResp * 50043.45_dp   !'phyto resp of N
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * Rates%apa * PhytoResp * 50043.45_dp   !'phyto resp of P
+                    ! alkalinity derivative (factor of 50043.45 converts eqH+/L to mgCaCO3/L or gCaCO3/m^3)
+                    ! Fi is already accounted for in nitrification, uptake
+                    ! but not in the production of total ammonia (e.g. excretion, OrgN hydrolysis, JNH4pr)
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * Fi* Rates%ana * PhytoPhoto * prefam * 50043.45_dp !'phyto photo uptake of ammonia
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Rates%ana * PhytoPhoto * (1 - prefam) * 50043.45_dp !'phyto photo uptake of nitrate
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * Rates%apa * PhytoPhoto * 50043.45_dp !'phyto photo uptake of P
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * Rates%ana * PhytoResp * 50043.45_dp !'phyto resp of N
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * Rates%apa * PhytoResp * 50043.45_dp !'phyto resp of P
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * Fi * BotAlgUptakeN * prefamF &
                         * hydrau%reach(i)%NUpWCfrac * 50043.45_dp !'periphyton N uptake (ammonia)
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * BotAlgUptakeN * (1 - prefamF) &
-                        * hydrau%reach(i)%NUpWCfrac * 50043.45_dp  !'periphyton N uptake (nitrate)
+                        * hydrau%reach(i)%NUpWCfrac * 50043.45_dp !'periphyton N uptake (nitrate)
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * BotAlgUptakeP &
-                        * hydrau%reach(i)%PUpWCfrac * 50043.45_dp   !'periphyton P uptake
+                        * hydrau%reach(i)%PUpWCfrac * 50043.45_dp !'periphyton P uptake
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * BotAlgExc * NINb * 50043.45_dp !'periphyton excretion of N
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * BotAlgExc * NIPb * 50043.45_dp   !'periphyton excretion of P
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * 2.0_dp * NH4Nitrif * 50043.45_dp  !'nitrification ammonia loss and nitrate gain
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Denitr * 50043.45_dp   !'water column denitrification
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * vdiT(i) * hydrau%reach(i)%Asd * c(i, 8, 1) * 50043.45_dp   !'sediment denitrification
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * BotAlgExc * NIPb * 50043.45_dp !'periphyton excretion of P
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * 2.0_dp * NH4Nitrif * 50043.45_dp !'nitrification ammonia loss and nitrate gain
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Denitr * 50043.45_dp !'water column denitrification
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * vdiT(i) * hydrau%reach(i)%Asd * c(i, 8, 1) * 50043.45_dp !'sediment denitrification
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * OrgNHydr * 50043.45_dp !'organic N hydrolysis
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * OrgPHydr * 50043.45_dp   !'organic P hydrolysis
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * OrgPHydr * 50043.45_dp !'organic P hydrolysis
                     dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbn * Fi * JNH4pr(i) * hydrau%reach(i)%Asd * 50043.45_dp !'sed flux of ammonia
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * JNO3pr(i) * hydrau%reach(i)%Asd * 50043.45_dp   !'sed flux of nitrate
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * JSRPpr(i) * hydrau%reach(i)%Asd * 50043.45_dp   !'sed flux of PO4
-                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * InorgPSettl * 50043.45_dp   !'settling flux of PO4
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbn * JNO3pr(i) * hydrau%reach(i)%Asd * 50043.45_dp !'sed flux of nitrate
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) - Rates%ralkbp * Pcharge * JSRPpr(i) * hydrau%reach(i)%Asd * 50043.45_dp !'sed flux of PO4
+                    dc(i, nv - 2, 1) = dc(i, nv - 2, 1) + Rates%ralkbp * Pcharge * InorgPSettl * 50043.45_dp !'settling flux of PO4
 
                 end if
 
@@ -1934,7 +1934,7 @@ CONTAINS
                 ! -----------------------------------------------------
                 !
 
-              CASE ('Level 1')		!gp 15-Nov-04
+              CASE ('Level 1') !gp 15-Nov-04
 
                 !
                 ! ------------------------
@@ -1946,9 +1946,9 @@ CONTAINS
 
                     !gp 23-Nov-09
                     !IF (sys%IMethpH == "Newton-Raphson") THEN
-                    !	CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
+                    ! CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
                     !ELSE
-                    !	CALL phsolBisect(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
+                    ! CALL phsolBisect(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
                     !END IF
                     IF (sys%IMethpH == "Newton-Raphson") THEN
                         CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
@@ -1984,8 +1984,8 @@ CONTAINS
                     !kreaT(i) = Rates%krea * Rates%tkrea ** (Te(i, 2) - 20)
                     !kdtT(i) = Rates%kdt * Rates%tkdt ** (Te(i, 2) - 20)
                     !kpathT(i) = Rates%kpath * Rates%tkpath ** (Te(i, 2) - 20)
-                    !kgaHT(i) = Rates%kgaH * Rates%tkgaH ** (Te(i, 2) - 20)		!enhanced CBOD oxidation rate from hyporheic biofilm
-                    !kgenT(i) = Rates%kgen * Rates%tkgen ** (Te(i, 2) - 20)		!gp 30-Nov-04
+                    !kgaHT(i) = Rates%kgaH * Rates%tkgaH ** (Te(i, 2) - 20) !enhanced CBOD oxidation rate from hyporheic biofilm
+                    !kgenT(i) = Rates%kgen * Rates%tkgen ** (Te(i, 2) - 20) !gp 30-Nov-04
                     khcT(i) = hydrau%reach(i)%khc * Rates%tkhc ** (Te(i, 2) - 20)
                     kdcsT(i) = hydrau%reach(i)%kdcs * Rates%tkdcs ** (Te(i, 2) - 20)
                     kdcT(i) = hydrau%reach(i)%kdc * Rates%tkdc ** (Te(i, 2) - 20)
@@ -2016,13 +2016,13 @@ CONTAINS
                         dc(i, k, 2) = hydrau%reach(i)%EhyporheicCMD * (c(i, k, 1) - c(i, k, 2))
                     END DO
                     !store hyporheic fluxes for output (positive flux is source to the water column from the hyporheic zone)
-                    HypoFluxDO(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 3, 2) - c(i, 3, 1)) / hydrau%reach(i)%Ast                      !DO gO2/m^2/d
-                    HypoFluxCBOD(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 5, 2) - c(i, 5, 1)) / hydrau%reach(i)%Ast                    !fast CBOD gO2/m^2/d
-                    HypoFluxNH4(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 7, 2) - c(i, 7, 1)) / hydrau%reach(i)%Ast                     !NH4 mgN/m^2/d
-                    HypoFluxNO3(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 8, 2) - c(i, 8, 1)) / hydrau%reach(i)%Ast                     !NO3 mgN/m^2/d
-                    HypoFluxSRP(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 10, 2) - c(i, 10, 1)) / hydrau%reach(i)%Ast                   !SRP mgP/m^2/d
+                    HypoFluxDO(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 3, 2) - c(i, 3, 1)) / hydrau%reach(i)%Ast !DO gO2/m^2/d
+                    HypoFluxCBOD(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 5, 2) - c(i, 5, 1)) / hydrau%reach(i)%Ast !fast CBOD gO2/m^2/d
+                    HypoFluxNH4(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 7, 2) - c(i, 7, 1)) / hydrau%reach(i)%Ast !NH4 mgN/m^2/d
+                    HypoFluxNO3(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 8, 2) - c(i, 8, 1)) / hydrau%reach(i)%Ast !NO3 mgN/m^2/d
+                    HypoFluxSRP(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 10, 2) - c(i, 10, 1)) / hydrau%reach(i)%Ast !SRP mgP/m^2/d
                     HypoFluxIC(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, nv - 1, 2) - c(i, nv - 1, 1)) &
-                        / hydrau%reach(i)%Ast / Rates%rccc     !cT gC/m^2/d
+                        / hydrau%reach(i)%Ast / Rates%rccc !cT gC/m^2/d
                 END DO
 
                 !
@@ -2046,15 +2046,15 @@ CONTAINS
                     KPO42 = 10.0_dp ** (-7.2_dp)
                     KPO43 = 10.0_dp ** (-12.35_dp)
                     DPO = 1.0_dp / (hh ** 3.0_dp + KPO41 * hh ** 2.0_dp + KPO41 * KPO42 * hh + KPO41 * KPO42 * KPO43)
-                    FPO41 = KPO41 * hh ** 2.0_dp * DPO         !'fraction of phosphate as H2PO4-
-                    FPO42 = KPO41 * KPO42 * hh * DPO      !'fraction of phosphate as HPO4--
-                    FPO43 = KPO41 * KPO42 * KPO43 * DPO   !'fraction of phosphate as PO4---
+                    FPO41 = KPO41 * hh ** 2.0_dp * DPO !'fraction of phosphate as H2PO4-
+                    FPO42 = KPO41 * KPO42 * hh * DPO !'fraction of phosphate as HPO4--
+                    FPO43 = KPO41 * KPO42 * KPO43 * DPO !'fraction of phosphate as PO4---
                     !'stoichiometric conversion factors (some are pH dependent)
-                    !ralkbn = 1# / 14.0067 / 1000# / 1000#                                    !'eqH+/L per mgN/m^3
-                    !ralkbp = (FPO41 + 2# * FPO42 + 3# * FPO43) / 30.973762 / 1000# / 1000#   !'eqH+/L per mgP/m^3
+                    !ralkbn = 1# / 14.0067 / 1000# / 1000# !'eqH+/L per mgN/m^3
+                    !ralkbp = (FPO41 + 2# * FPO42 + 3# * FPO43) / 30.973762 / 1000# / 1000# !'eqH+/L per mgP/m^3
                     Pcharge = (FPO41 + 2.0_dp * FPO42 + 3.0_dp * FPO43) !avg charge of P species for multiplier for ralkbp
 
-                    SELECT CASE (Rates%IkoxC)     !'low O2 inhibition of C oxidation by floating heterotrophs
+                    SELECT CASE (Rates%IkoxC) !'low O2 inhibition of C oxidation by floating heterotrophs
                       CASE (1)
                         fcarb = c(i, 3, 2) / (Rates%Ksocf + c(i, 3, 2))
                       CASE (2)
@@ -2064,15 +2064,15 @@ CONTAINS
                     END SELECT
 
                     !gp 08-Feb-06
-                    !SELECT CASE (Rates%IkoxCH)     !'low O2 inhibition of C oxidation by hyporheic biofilm heterotrophs
+                    !SELECT CASE (Rates%IkoxCH) !'low O2 inhibition of C oxidation by hyporheic biofilm heterotrophs
                     !CASE (1)
-                    !	fcarbH = c(i, 3, 2) / (Rates%kinhcH + c(i, 3, 2))
+                    ! fcarbH = c(i, 3, 2) / (Rates%kinhcH + c(i, 3, 2))
                     !CASE (2)
-                    !	fcarbH = 1 - Exp(-Rates%kinhcH * c(i, 3, 2))
+                    ! fcarbH = 1 - Exp(-Rates%kinhcH * c(i, 3, 2))
                     !CASE (3)
-                    !	fcarbH = c(i, 3, 2) ** 2 / (Rates%kinhcH + c(i, 3, 2) ** 2)
+                    ! fcarbH = c(i, 3, 2) ** 2 / (Rates%kinhcH + c(i, 3, 2) ** 2)
                     !END SELECT
-                    SELECT CASE (Rates%IkoxCH)     !'low O2 inhibition of C oxidation by hyporheic biofilm heterotrophs
+                    SELECT CASE (Rates%IkoxCH) !'low O2 inhibition of C oxidation by hyporheic biofilm heterotrophs
                       CASE (1)
                         fcarbH = c(i, 3, 2) / (hydrau%reach(i)%kinhcH + c(i, 3, 2))
                       CASE (2)
@@ -2081,7 +2081,7 @@ CONTAINS
                         fcarbH = c(i, 3, 2) ** 2 / (hydrau%reach(i)%kinhcH + c(i, 3, 2) ** 2)
                     END SELECT
 
-                    SELECT CASE (Rates%IkoxN)     !'low O2 inhibition of nitrification
+                    SELECT CASE (Rates%IkoxN) !'low O2 inhibition of nitrification
                       CASE (1)
                         fnitr = c(i, 3, 2) / (Rates%Ksona + c(i, 3, 2))
                       CASE (2)
@@ -2090,7 +2090,7 @@ CONTAINS
                         fnitr = c(i, 3, 2) ** 2 / (Rates%Ksona + c(i, 3, 2) ** 2)
                     END SELECT
 
-                    SELECT CASE (Rates%IkoxDN)     !'low O2 enhancement of denitrification
+                    SELECT CASE (Rates%IkoxDN) !'low O2 enhancement of denitrification
                       CASE (1)
                         fdenitr = 1 - c(i, 3, 2) / (Rates%Ksodn + c(i, 3, 2))
                       CASE (2)
@@ -2099,7 +2099,7 @@ CONTAINS
                         fdenitr = 1 - c(i, 3, 2) ** 2 / (Rates%Ksodn + c(i, 3, 2) ** 2)
                     END SELECT
 
-                    SELECT CASE (Rates%IkoxP)     !'low O2 inhib of phytoplankton respiration
+                    SELECT CASE (Rates%IkoxP) !'low O2 inhib of phytoplankton respiration
                       CASE (1)
                         frespp = c(i, 3, 2) / (Rates%Ksop + c(i, 3, 2))
                       CASE (2)
@@ -2121,12 +2121,12 @@ CONTAINS
                     !gp 08-Feb-06
                     !phint = 1
                     !IF ((Rates%kscH + c(i, 5, 2)) <= 0) THEN
-                    !	phic = 0
+                    ! phic = 0
                     !ELSE
-                    !	phic = c(i, 5, 2) / (Rates%kscH + c(i, 5, 2))
+                    ! phic = c(i, 5, 2) / (Rates%kscH + c(i, 5, 2))
                     !END IF
                     !IF (phic < phint) THEN
-                    !	phint = phic
+                    ! phint = phic
                     !END IF
                     phint = 1
                     IF ((hydrau%reach(i)%kscH + c(i, 5, 2)) <= 0) THEN
@@ -2196,7 +2196,7 @@ CONTAINS
 
                     !'CBOD Fast (5)
                     CBODfOxid = fcarb * kdcT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 5, 2)
-                    CBODfOxid = CBODfOxid + Rates%roc * (1 / Rates%adc) * HeteroGrow     !'enhanced CBOD oxidation from hyporheic biofilm growth
+                    CBODfOxid = CBODfOxid + Rates%roc * (1 / Rates%adc) * HeteroGrow !'enhanced CBOD oxidation from hyporheic biofilm growth
                     dc(i, 5, 2) = dc(i, 5, 2) + CBODsHydr
                     dc(i, 5, 2) = dc(i, 5, 2) - CBODfOxid
                     dc(i, 5, 2) = dc(i, 5, 2) - Rates%rondn * Denitr
@@ -2214,25 +2214,25 @@ CONTAINS
                     dc(i, 3, 2) = dc(i, 3, 2) - CBODsOxid - CBODfOxid
                     dc(i, 3, 2) = dc(i, 3, 2) - Rates%ron * NH4Nitrif
                     dc(i, 3, 2) = dc(i, 3, 2) - Rates%roa * PhytoResp
-                    dc(i, 3, 2) = dc(i, 3, 2) - CODoxid		!gp 08-Dec-04
+                    dc(i, 3, 2) = dc(i, 3, 2) - CODoxid !gp 08-Dec-04
 
                     !'Alkalinity (nv - 2)
 
-                    If (sys%simAlk == "Yes") Then	!gp 26-Oct-07
+                    If (sys%simAlk == "Yes") Then !gp 26-Oct-07
 
                         !gp 03-Dec-09
                         !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkaa * PhytoResp * 50000
                         !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkn * NH4Nitrif * 50000
                         !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkden * Denitr * 50000
                         !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * OrgNHydr * 50000 + Rates%ralkbp * OrgPHydr * 50000
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * Rates%ana * PhytoResp * 50043.45_dp   !'phyto resp of N
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * Rates%apa * PhytoResp * 50043.45_dp   !'phyto resp of P
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbn * 2.0_dp * NH4Nitrif * 50043.45_dp  !'nitrification ammonia loss (Fi) and nitrate gain (+1)
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Denitr * 50043.45_dp   !'denitrification
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * Rates%ana * PhytoResp * 50043.45_dp !'phyto resp of N
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * Rates%apa * PhytoResp * 50043.45_dp !'phyto resp of P
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbn * 2.0_dp * NH4Nitrif * 50043.45_dp !'nitrification ammonia loss (Fi) and nitrate gain (+1)
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Denitr * 50043.45_dp !'denitrification
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * OrgNHydr * 50043.45_dp !'organic N hydrolysis
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * OrgPHydr * 50043.45_dp   !'organic P hydrolysis
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * OrgPHydr * 50043.45_dp !'organic P hydrolysis
 
-                    end if		!gp 26-Oct-07
+                    end if !gp 26-Oct-07
 
                     !'Inorganic Carbon (nv - 1)
                     dc(i, nv - 1, 2) = dc(i, nv - 1, 2) + Rates%rcca * PhytoResp
@@ -2266,7 +2266,7 @@ CONTAINS
                 ! -----------------------------------------------------
                 !
 
-              CASE ('Level 2')		!gp 15-Nov-04
+              CASE ('Level 2') !gp 15-Nov-04
 
                 !
                 ! ------------------------
@@ -2278,9 +2278,9 @@ CONTAINS
 
                     !gp 23-Nov-09
                     !IF (sys%IMethpH == "Newton-Raphson") THEN
-                    !	CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
+                    ! CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
                     !ELSE
-                    !	CALL phsolBisect(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
+                    ! CALL phsolBisect(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
                     !END IF
                     IF (sys%IMethpH == "Newton-Raphson") THEN
                         CALL phsolNewton(pH, c(i, nv - 1, 2), Te(i, 2), c(i, nv - 2, 2), c(i, 1, 2))
@@ -2316,11 +2316,11 @@ CONTAINS
                     !kreaT(i) = Rates%krea * Rates%tkrea ** (Te(i, 2) - 20)
                     !kdtT(i) = Rates%kdt * Rates%tkdt ** (Te(i, 2) - 20)
                     !kpathT(i) = Rates%kpath * Rates%tkpath ** (Te(i, 2) - 20)
-                    !kgaHT(i) = Rates%kgaH * Rates%tkgaH ** (Te(i, 2) - 20)		!enhanced CBOD oxidation rate from hyporheic biofilm
-                    !kgaHT(i) = Rates%kgaH * Rates%tkgaH ** (Te(i, 2) - 20)		!gp 15-Nov-04 hyporheic biofilm growth
-                    !kreaHT(i) = Rates%kreaH * Rates%tkreaH ** (Te(i, 2) - 20)	!gp 15-Nov-04 hyporheic biofilm respiration
-                    !kdeaHT(i) = Rates%kdeaH * Rates%tkdeaH ** (Te(i, 2) - 20)	!gp 15-Nov-04 hyporheic biofilm death
-                    !kgenT(i) = Rates%kgen * Rates%tkgen ** (Te(i, 2) - 20)		!gp 30-Nov-04
+                    !kgaHT(i) = Rates%kgaH * Rates%tkgaH ** (Te(i, 2) - 20) !enhanced CBOD oxidation rate from hyporheic biofilm
+                    !kgaHT(i) = Rates%kgaH * Rates%tkgaH ** (Te(i, 2) - 20) !gp 15-Nov-04 hyporheic biofilm growth
+                    !kreaHT(i) = Rates%kreaH * Rates%tkreaH ** (Te(i, 2) - 20) !gp 15-Nov-04 hyporheic biofilm respiration
+                    !kdeaHT(i) = Rates%kdeaH * Rates%tkdeaH ** (Te(i, 2) - 20) !gp 15-Nov-04 hyporheic biofilm death
+                    !kgenT(i) = Rates%kgen * Rates%tkgen ** (Te(i, 2) - 20) !gp 30-Nov-04
                     khcT(i) = hydrau%reach(i)%khc * Rates%tkhc ** (Te(i, 2) - 20)
                     kdcsT(i) = hydrau%reach(i)%kdcs * Rates%tkdcs ** (Te(i, 2) - 20)
                     kdcT(i) = hydrau%reach(i)%kdc * Rates%tkdc ** (Te(i, 2) - 20)
@@ -2353,13 +2353,13 @@ CONTAINS
                         dc(i, k, 2) = hydrau%reach(i)%EhyporheicCMD * (c(i, k, 1) - c(i, k, 2))
                     END DO
                     !store hyporheic fluxes for output (positive flux is source to the water column from the hyporheic zone)
-                    HypoFluxDO(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 3, 2) - c(i, 3, 1)) / hydrau%reach(i)%Ast                      !DO gO2/m^2/d
-                    HypoFluxCBOD(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 5, 2) - c(i, 5, 1)) / hydrau%reach(i)%Ast                    !fast CBOD gO2/m^2/d
-                    HypoFluxNH4(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 7, 2) - c(i, 7, 1)) / hydrau%reach(i)%Ast                     !NH4 mgN/m^2/d
-                    HypoFluxNO3(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 8, 2) - c(i, 8, 1)) / hydrau%reach(i)%Ast                     !NO3 mgN/m^2/d
-                    HypoFluxSRP(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 10, 2) - c(i, 10, 1)) / hydrau%reach(i)%Ast                   !SRP mgP/m^2/d
+                    HypoFluxDO(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 3, 2) - c(i, 3, 1)) / hydrau%reach(i)%Ast !DO gO2/m^2/d
+                    HypoFluxCBOD(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 5, 2) - c(i, 5, 1)) / hydrau%reach(i)%Ast !fast CBOD gO2/m^2/d
+                    HypoFluxNH4(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 7, 2) - c(i, 7, 1)) / hydrau%reach(i)%Ast !NH4 mgN/m^2/d
+                    HypoFluxNO3(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 8, 2) - c(i, 8, 1)) / hydrau%reach(i)%Ast !NO3 mgN/m^2/d
+                    HypoFluxSRP(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, 10, 2) - c(i, 10, 1)) / hydrau%reach(i)%Ast !SRP mgP/m^2/d
                     HypoFluxIC(i) = hydrau%reach(i)%EhyporheicCMD * (c(i, nv - 1, 2) - c(i, nv - 1, 1)) &
-                        / hydrau%reach(i)%Ast / Rates%rccc     !cT gC/m^2/d
+                        / hydrau%reach(i)%Ast / Rates%rccc !cT gC/m^2/d
                 END DO
 
                 !
@@ -2382,15 +2382,15 @@ CONTAINS
                     KPO42 = 10.0_dp ** (-7.2_dp)
                     KPO43 = 10.0_dp ** (-12.35_dp)
                     DPO = 1.0_dp / (hh ** 3.0_dp + KPO41 * hh ** 2.0_dp + KPO41 * KPO42 * hh + KPO41 * KPO42 * KPO43)
-                    FPO41 = KPO41 * hh ** 2.0_dp * DPO         !'fraction of phosphate as H2PO4-
-                    FPO42 = KPO41 * KPO42 * hh * DPO      !'fraction of phosphate as HPO4--
-                    FPO43 = KPO41 * KPO42 * KPO43 * DPO   !'fraction of phosphate as PO4---
+                    FPO41 = KPO41 * hh ** 2.0_dp * DPO !'fraction of phosphate as H2PO4-
+                    FPO42 = KPO41 * KPO42 * hh * DPO !'fraction of phosphate as HPO4--
+                    FPO43 = KPO41 * KPO42 * KPO43 * DPO !'fraction of phosphate as PO4---
                     !'stoichiometric conversion factors (some are pH dependent)
-                    !ralkbn = 1# / 14.0067 / 1000# / 1000#                                    !'eqH+/L per mgN/m^3
-                    !ralkbp = (FPO41 + 2# * FPO42 + 3# * FPO43) / 30.973762 / 1000# / 1000#   !'eqH+/L per mgP/m^3
+                    !ralkbn = 1# / 14.0067 / 1000# / 1000# !'eqH+/L per mgN/m^3
+                    !ralkbp = (FPO41 + 2# * FPO42 + 3# * FPO43) / 30.973762 / 1000# / 1000# !'eqH+/L per mgP/m^3
                     Pcharge = (FPO41 + 2.0_dp * FPO42 + 3.0_dp * FPO43) !avg charge of P species for multiplier for ralkbp
 
-                    SELECT CASE (Rates%IkoxC)     !'low O2 inhibition of C oxidation by floating heterotrophs
+                    SELECT CASE (Rates%IkoxC) !'low O2 inhibition of C oxidation by floating heterotrophs
                       CASE (1)
                         fcarb = c(i, 3, 2) / (Rates%Ksocf + c(i, 3, 2))
                       CASE (2)
@@ -2400,15 +2400,15 @@ CONTAINS
                     END SELECT
 
                     !gp 08-Feb-06
-                    !SELECT CASE (Rates%IkoxCH)     !'low O2 inhibition of C oxidation by hyporheic biofilm heterotrophs
+                    !SELECT CASE (Rates%IkoxCH) !'low O2 inhibition of C oxidation by hyporheic biofilm heterotrophs
                     !CASE (1)
-                    !	fcarbH = c(i, 3, 2) / (Rates%kinhcH + c(i, 3, 2))
+                    ! fcarbH = c(i, 3, 2) / (Rates%kinhcH + c(i, 3, 2))
                     !CASE (2)
-                    !	fcarbH = 1 - Exp(-Rates%kinhcH * c(i, 3, 2))
+                    ! fcarbH = 1 - Exp(-Rates%kinhcH * c(i, 3, 2))
                     !CASE (3)
-                    !	fcarbH = c(i, 3, 2) ** 2 / (Rates%kinhcH + c(i, 3, 2) ** 2)
+                    ! fcarbH = c(i, 3, 2) ** 2 / (Rates%kinhcH + c(i, 3, 2) ** 2)
                     !END SELECT
-                    SELECT CASE (Rates%IkoxCH)     !'low O2 inhibition of C oxidation by hyporheic biofilm heterotrophs
+                    SELECT CASE (Rates%IkoxCH) !'low O2 inhibition of C oxidation by hyporheic biofilm heterotrophs
                       CASE (1)
                         fcarbH = c(i, 3, 2) / (hydrau%reach(i)%kinhcH + c(i, 3, 2))
                       CASE (2)
@@ -2417,7 +2417,7 @@ CONTAINS
                         fcarbH = c(i, 3, 2) ** 2 / (hydrau%reach(i)%kinhcH + c(i, 3, 2) ** 2)
                     END SELECT
 
-                    SELECT CASE (Rates%IkoxN)     !'low O2 inhibition of nitrification
+                    SELECT CASE (Rates%IkoxN) !'low O2 inhibition of nitrification
                       CASE (1)
                         fnitr = c(i, 3, 2) / (Rates%Ksona + c(i, 3, 2))
                       CASE (2)
@@ -2426,7 +2426,7 @@ CONTAINS
                         fnitr = c(i, 3, 2) ** 2 / (Rates%Ksona + c(i, 3, 2) ** 2)
                     END SELECT
 
-                    SELECT CASE (Rates%IkoxDN)     !'low O2 enhancement of denitrification
+                    SELECT CASE (Rates%IkoxDN) !'low O2 enhancement of denitrification
                       CASE (1)
                         fdenitr = 1 - c(i, 3, 2) / (Rates%Ksodn + c(i, 3, 2))
                       CASE (2)
@@ -2435,7 +2435,7 @@ CONTAINS
                         fdenitr = 1 - c(i, 3, 2) ** 2 / (Rates%Ksodn + c(i, 3, 2) ** 2)
                     END SELECT
 
-                    SELECT CASE (Rates%IkoxP)     !'low O2 inhib of phytoplankton respiration
+                    SELECT CASE (Rates%IkoxP) !'low O2 inhib of phytoplankton respiration
                       CASE (1)
                         frespp = c(i, 3, 2) / (Rates%Ksop + c(i, 3, 2))
                       CASE (2)
@@ -2455,14 +2455,14 @@ CONTAINS
 
                     !gp 03-Dec-09
                     !If (hydrau%reach(i)%ksnH + c(i, 7, 2) + c(i, 8, 2) <= 0) Then
-                    !  phint = 0
+                    ! phint = 0
                     !Else
-                    !  phint = (c(i, 7, 2) + c(i, 8, 2)) / (hydrau%reach(i)%ksnH + c(i, 7, 2) + c(i, 8, 2))
+                    ! phint = (c(i, 7, 2) + c(i, 8, 2)) / (hydrau%reach(i)%ksnH + c(i, 7, 2) + c(i, 8, 2))
                     !End If
                     !If (hydrau%reach(i)%kspH + c(i, 10, 2) <= 0) Then
-                    !  phip = 0
+                    ! phip = 0
                     !Else
-                    !  phip = c(i, 10, 2) / (hydrau%reach(i)%kspH + c(i, 10, 2))
+                    ! phip = c(i, 10, 2) / (hydrau%reach(i)%kspH + c(i, 10, 2))
                     !End If
                     !If (phip < phint) phint = phip
                     If (hydrau%reach(i)%ksnH + Fi * c(i, 7, 2) + c(i, 8, 2) <= 0) Then
@@ -2492,24 +2492,24 @@ CONTAINS
                     If (Rates%typeH == "First-order") Then
 
                         !gp 08-Feb-06
-                        !HeteroGrow = phint * kgaHT(i) * hydrau%reach(i)%Ast * c(i, nv, 2) * (1 - c(i, nv, 2) / Rates%ahmax)  !use first-order growth kinetics
+                        !HeteroGrow = phint * kgaHT(i) * hydrau%reach(i)%Ast * c(i, nv, 2) * (1 - c(i, nv, 2) / Rates%ahmax) !use first-order growth kinetics
                         HeteroGrow = phint * kgaHT(i) * hydrau%reach(i)%Ast * c(i, nv, 2) &
-                            * (1 - c(i, nv, 2) / hydrau%reach(i)%ahmax)  !use first-order growth kinetics
+                            * (1 - c(i, nv, 2) / hydrau%reach(i)%ahmax) !use first-order growth kinetics
 
                     Else
-                        HeteroGrow = (Rates%adc / Rates%roc) * phint * kgaHT(i) * hydrau%reach(i)%Ast                  !use zero-order, kgaH is gO2/m2/d
+                        HeteroGrow = (Rates%adc / Rates%roc) * phint * kgaHT(i) * hydrau%reach(i)%Ast !use zero-order, kgaH is gO2/m2/d
                     End If
-                    HeteroResp = fcarbH * kreaHT(i) * hydrau%reach(i)%Ast * c(i, nv, 2)   !first-order respiration with O2 limitation
-                    HeteroDeath = kdeaHT(i) * hydrau%reach(i)%Ast * c(i, nv, 2)           !first-order death
-                    dc(i, nv, 2) = HeteroGrow - HeteroResp - HeteroDeath				!units gD/d deriv for biofilm biomass
+                    HeteroResp = fcarbH * kreaHT(i) * hydrau%reach(i)%Ast * c(i, nv, 2) !first-order respiration with O2 limitation
+                    HeteroDeath = kdeaHT(i) * hydrau%reach(i)%Ast * c(i, nv, 2) !first-order death
+                    dc(i, nv, 2) = HeteroGrow - HeteroResp - HeteroDeath !units gD/d deriv for biofilm biomass
 
                     !ammonium preference
 
                     !gp 03-Dec-09
                     !prefamH = 0
                     !If (c(i, 7, 2) + c(i, 8, 2) > 0) Then
-                    !  prefamH = c(i, 7, 2) * c(i, 8, 2) / (hydrau%reach(i)%khnxH + c(i, 7, 2)) / (hydrau%reach(i)%khnxH + c(i, 8, 2)) &
-                    !          + c(i, 7, 2) * hydrau%reach(i)%khnxH / (c(i, 7, 2) + c(i, 8, 2)) / (hydrau%reach(i)%khnxH + c(i, 8, 2))
+                    ! prefamH = c(i, 7, 2) * c(i, 8, 2) / (hydrau%reach(i)%khnxH + c(i, 7, 2)) / (hydrau%reach(i)%khnxH + c(i, 8, 2)) &
+                    ! + c(i, 7, 2) * hydrau%reach(i)%khnxH / (c(i, 7, 2) + c(i, 8, 2)) / (hydrau%reach(i)%khnxH + c(i, 8, 2))
                     !End If
                     prefamH = 0
                     If (Fi * c(i, 7, 2) + c(i, 8, 2) > 0) Then
@@ -2523,13 +2523,13 @@ CONTAINS
                     DetrDiss = kdtT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 12, 2)
                     dc(i, 12, 2) = dc(i, 12, 2) - DetrDiss
                     dc(i, 12, 2) = dc(i, 12, 2) + Rates%ada * PhytoDeath
-                    dc(i, 12, 2) = dc(i, 12, 2) + HeteroDeath     !gp 22-Nov-04
+                    dc(i, 12, 2) = dc(i, 12, 2) + HeteroDeath !gp 22-Nov-04
 
                     !'Organic Nitrogen (6)
                     OrgNHydr = khnT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 6, 2)
                     dc(i, 6, 2) = dc(i, 6, 2) + Rates%ana * PhytoDeath
                     dc(i, 6, 2) = dc(i, 6, 2) - OrgNHydr
-                    dc(i, 6, 2) = dc(i, 6, 2) + HeteroDeath * Rates%ana / Rates%ada     !gp 15-Nov-04
+                    dc(i, 6, 2) = dc(i, 6, 2) + HeteroDeath * Rates%ana / Rates%ada !gp 15-Nov-04
 
                     !'Ammonium Nitrogen (7)
 
@@ -2540,26 +2540,26 @@ CONTAINS
                     dc(i, 7, 2) = dc(i, 7, 2) + OrgNHydr
                     dc(i, 7, 2) = dc(i, 7, 2) - NH4Nitrif
                     dc(i, 7, 2) = dc(i, 7, 2) + Rates%ana * PhytoResp
-                    dc(i, 7, 2) = dc(i, 7, 2) + Rates%anc / Rates%adc * HeteroResp               !gp 15-Nov-04
-                    dc(i, 7, 2) = dc(i, 7, 2) - Rates%anc / Rates%adc * prefamH * HeteroGrow     !gp 15-Nov-04
+                    dc(i, 7, 2) = dc(i, 7, 2) + Rates%anc / Rates%adc * HeteroResp !gp 15-Nov-04
+                    dc(i, 7, 2) = dc(i, 7, 2) - Rates%anc / Rates%adc * prefamH * HeteroGrow !gp 15-Nov-04
 
                     !'Nitrate Nitrogen (8)
                     Denitr = c(i, 5, 2) / (0.1 + c(i, 5, 2)) * fdenitr * kiT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 8, 2)
                     dc(i, 8, 2) = dc(i, 8, 2) + NH4Nitrif
                     dc(i, 8, 2) = dc(i, 8, 2) - Denitr
-                    dc(i, 8, 2) = dc(i, 8, 2) - Rates%anc / Rates%adc * (1 - prefamH) * HeteroGrow     !gp 15-Nov-04
+                    dc(i, 8, 2) = dc(i, 8, 2) - Rates%anc / Rates%adc * (1 - prefamH) * HeteroGrow !gp 15-Nov-04
 
                     !'Organic Phosphorus (9)
                     OrgPHydr = khpT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 9, 2)
                     dc(i, 9, 2) = dc(i, 9, 2) + Rates%apa * PhytoDeath
                     dc(i, 9, 2) = dc(i, 9, 2) - OrgPHydr
-                    dc(i, 9, 2) = dc(i, 9, 2) + HeteroDeath * Rates%apa / Rates%ada     !gp 15-Nov-04
+                    dc(i, 9, 2) = dc(i, 9, 2) + HeteroDeath * Rates%apa / Rates%ada !gp 15-Nov-04
 
                     !'Inorganic Phosphorus (10)
                     dc(i, 10, 2) = dc(i, 10, 2) + OrgPHydr
                     dc(i, 10, 2) = dc(i, 10, 2) + Rates%apa * PhytoResp
-                    dc(i, 10, 2) = dc(i, 10, 2) + Rates%apc / Rates%adc * HeteroResp     !gp 15-Nov-04
-                    dc(i, 10, 2) = dc(i, 10, 2) - Rates%apc / Rates%adc * HeteroGrow     !gp 15-Nov-04
+                    dc(i, 10, 2) = dc(i, 10, 2) + Rates%apc / Rates%adc * HeteroResp !gp 15-Nov-04
+                    dc(i, 10, 2) = dc(i, 10, 2) - Rates%apc / Rates%adc * HeteroGrow !gp 15-Nov-04
 
                     !'CBOD Slow (4)
                     CBODsHydr = khcT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 4, 2)
@@ -2569,8 +2569,8 @@ CONTAINS
                     dc(i, 4, 2) = dc(i, 4, 2) - CBODsOxid
 
                     !'CBOD Fast (5)
-                    CBODfOxid = fcarb * kdcT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 5, 2)		!oxidation by suspended bacteria
-                    CBODfOxid = CBODfOxid + Rates%roc * (1 / Rates%adc) * HeteroGrow			!enhanced CBOD oxidation from hyporheic biofilm growth
+                    CBODfOxid = fcarb * kdcT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 5, 2) !oxidation by suspended bacteria
+                    CBODfOxid = CBODfOxid + Rates%roc * (1 / Rates%adc) * HeteroGrow !enhanced CBOD oxidation from hyporheic biofilm growth
                     dc(i, 5, 2) = dc(i, 5, 2) + CBODsHydr
                     dc(i, 5, 2) = dc(i, 5, 2) - CBODfOxid
                     dc(i, 5, 2) = dc(i, 5, 2) - Rates%rondn * Denitr
@@ -2585,48 +2585,48 @@ CONTAINS
                     END IF
 
                     !'Dissolved Oxygen (3)
-                    dc(i, 3, 2) = dc(i, 3, 2) - CBODsOxid - CBODfOxid		!CBODfOxid includes oxidation by hyporheic biofilm
+                    dc(i, 3, 2) = dc(i, 3, 2) - CBODsOxid - CBODfOxid !CBODfOxid includes oxidation by hyporheic biofilm
                     dc(i, 3, 2) = dc(i, 3, 2) - Rates%ron * NH4Nitrif
                     dc(i, 3, 2) = dc(i, 3, 2) - Rates%roa * PhytoResp
-                    dc(i, 3, 2) = dc(i, 3, 2) - Rates%roc / Rates%adc * HeteroResp			!gp 15-Nov-04
-                    dc(i, 3, 2) = dc(i, 3, 2) - CODoxid			!gp 08-Dec-04
+                    dc(i, 3, 2) = dc(i, 3, 2) - Rates%roc / Rates%adc * HeteroResp !gp 15-Nov-04
+                    dc(i, 3, 2) = dc(i, 3, 2) - CODoxid !gp 08-Dec-04
 
                     !'Alkalinity (nv - 2)
 
-                    If (sys%simAlk == "Yes") Then	!gp 26-Oct-07
+                    If (sys%simAlk == "Yes") Then !gp 26-Oct-07
 
                         !gp 03-Dec-09
                         !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkaa * PhytoResp * 50000
                         !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkn * NH4Nitrif * 50000
                         !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkden * Denitr * 50000
                         !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * OrgNHydr * 50000 + Rates%ralkbp * OrgPHydr * 50000
-                        !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkda * HeteroGrow * prefamH * 50000           !gp 15-Nov-04
-                        !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkdn * HeteroGrow * (1 - prefamH) * 50000     !gp 15-Nov-04
-                        !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkda * HeteroResp * 50000                     !gp 15-Nov-04
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * Rates%ana * PhytoResp * 50043.45_dp   !'phyto resp of N
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * Rates%apa * PhytoResp * 50043.45_dp   !'phyto resp of P
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbn * 2.0_dp * NH4Nitrif * 50043.45_dp  !'nitrification ammonia loss (Fi) and nitrate gain (+1)
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Denitr * 50043.45_dp   !'denitrification
+                        !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkda * HeteroGrow * prefamH * 50000 !gp 15-Nov-04
+                        !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkdn * HeteroGrow * (1 - prefamH) * 50000 !gp 15-Nov-04
+                        !dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkda * HeteroResp * 50000 !gp 15-Nov-04
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * Rates%ana * PhytoResp * 50043.45_dp !'phyto resp of N
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * Rates%apa * PhytoResp * 50043.45_dp !'phyto resp of P
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbn * 2.0_dp * NH4Nitrif * 50043.45_dp !'nitrification ammonia loss (Fi) and nitrate gain (+1)
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Denitr * 50043.45_dp !'denitrification
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * OrgNHydr * 50043.45_dp !'organic N hydrolysis
-                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * OrgPHydr * 50043.45_dp   !'organic P hydrolysis
+                        dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * OrgPHydr * 50043.45_dp !'organic P hydrolysis
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbn * Rates%anc / Rates%adc * prefamH &
-							* HeteroGrow * 50043.45_dp  !'hetero uptake of ammonia
+                            * HeteroGrow * 50043.45_dp !'hetero uptake of ammonia
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Rates%anc / Rates%adc * (1 - prefamH) &
-							* HeteroGrow * 50043.45_dp  !'hetero uptake of nitrate
+                            * HeteroGrow * 50043.45_dp !'hetero uptake of nitrate
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbp * Pcharge * Rates%apc / Rates%adc &
-							* HeteroGrow * 50043.45_dp  !'hetero uptake of SRP
+                            * HeteroGrow * 50043.45_dp !'hetero uptake of SRP
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) + Rates%ralkbn * Fi * Rates%anc / Rates%adc &
-							* HeteroResp * 50043.45_dp  !'hetero resp of ammonia
+                            * HeteroResp * 50043.45_dp !'hetero resp of ammonia
                         dc(i, nv - 2, 2) = dc(i, nv - 2, 2) - Rates%ralkbp * Pcharge * Rates%apc / Rates%adc &
-							* HeteroResp * 50043.45_dp  !'hetero resp of SRP
+                            * HeteroResp * 50043.45_dp !'hetero resp of SRP
 
-                    end if		!gp 26-Oct-07
+                    end if !gp 26-Oct-07
 
                     !'Inorganic Carbon (nv - 1)
                     dc(i, nv - 1, 2) = dc(i, nv - 1, 2) + Rates%rcca * PhytoResp
                     dc(i, nv - 1, 2) = dc(i, nv - 1, 2) + Rates%rcco * CBODfOxid
                     dc(i, nv - 1, 2) = dc(i, nv - 1, 2) + Rates%rcco * CBODsOxid
-                    dc(i, nv - 1, 2) = dc(i, nv - 1, 2) + Rates%rccd * HeteroResp     !gp 15-Nov-04
+                    dc(i, nv - 1, 2) = dc(i, nv - 1, 2) + Rates%rccd * HeteroResp !gp 15-Nov-04
 
                     !'PATHOGEN
                     dc(i, 13, 2) = dc(i, 13, 2) - kpathT(i) * hydrau%reach(i)%HypoPoreVol * c(i, 13, 2)
@@ -2643,11 +2643,11 @@ CONTAINS
                     DO k = 1, nv - 1
                         dc(i, k, 2) = dc(i, k, 2) / hydrau%reach(i)%HypoPoreVol
                     END DO
-                    dc(i, nv, 2) = dc(i, nv, 2) / hydrau%reach(i)%Ast	!gp 15-Nov-04
+                    dc(i, nv, 2) = dc(i, nv, 2) / hydrau%reach(i)%Ast !gp 15-Nov-04
                 END DO
 
 
-            END SELECT	!'gp end of calculation of hyporheic water quality derivatives
+            END SELECT !'gp end of calculation of hyporheic water quality derivatives
 
 
             !'
@@ -2659,10 +2659,10 @@ CONTAINS
             DO i = 1, nr
                 DO k = 1, nv - 1
                     !gp dc(i, k) = dc(i, k) / hydrau%reach(i)%vol
-                    dc(i, k, 1) = dc(i, k, 1) / hydrau%reach(i)%vol	!gp
+                    dc(i, k, 1) = dc(i, k, 1) / hydrau%reach(i)%vol !gp
                 END DO
                 !gp dc(i, nv) = dc(i, nv) / hydrau%reach(i)%Asb
-                dc(i, nv, 1) = dc(i, nv, 1) / hydrau%reach(i)%Asb	!gp
+                dc(i, nv, 1) = dc(i, nv, 1) / hydrau%reach(i)%Asb !gp
                 dINb(i) = dINb(i) / hydrau%reach(i)%Asb
                 dIPb(i) = dIPb(i) / hydrau%reach(i)%Asb
             END DO
@@ -2689,7 +2689,7 @@ CONTAINS
 
     !gp 25-Aug-08
     !SUBROUTINE SedCalcNumNew(Jcin, Jnin, Jpin, O20, depth, Tw, SOD, JNH4, JNO3, JCH4, &
-    !				JCH4g, JPO4, NH30, NO30, PO40, CH40, CSOD)
+    ! JCH4g, JPO4, NH30, NO30, PO40, CH40, CSOD)
     SUBROUTINE SedCalcNumNew(Jcin, Jnin, Jpin, O20, depth, Tw, SOD, JNH4, JNO3, JCH4, &
         JCH4g, JPO4, NH30, NO30, PO40, CH40, CSOD, calcSedFlux)
 
@@ -2747,20 +2747,20 @@ CONTAINS
         KdPO41=0; PO4T=0; PO4=0
         !Compute influxes corrected for settling and refractory
         fpon(1) = 0.65_DP; fpon(2) = 0.25_DP; fpon(3) = 1.0_dp - fpon(1) - fpon(2)
-        fpoc(1) = 0.65_DP; fpoc(2) = 0.2_DP;  fpoc(3) = 1.0_dp - fpoc(1) - fpoc(2)
-        fpop(1) = 0.65_DP; fpop(2) = 0.2_DP;  fpop(3) = 1.0_dp - fpop(1) - fpop(2)
+        fpoc(1) = 0.65_DP; fpoc(2) = 0.2_DP; fpoc(3) = 1.0_dp - fpoc(1) - fpoc(2)
+        fpop(1) = 0.65_DP; fpop(2) = 0.2_DP; fpop(3) = 1.0_dp - fpop(1) - fpop(2)
 
         kdiaPON(1) = 0.035_DP; ThtaPON(1) = 1.1_DP
-		kdiaPON(2) = 0.0018_DP; ThtaPON(2) = 1.15_DP
-		kdiaPON(3) = 0; ThtaPON(3) = 1.17_DP
+        kdiaPON(2) = 0.0018_DP; ThtaPON(2) = 1.15_DP
+        kdiaPON(3) = 0; ThtaPON(3) = 1.17_DP
 
-		kdiaPOC(1) = 0.035_DP; ThtaPOC(1) = 1.1_DP
-		kdiaPOC(2) = 0.0018_DP; ThtaPOC(2) = 1.15_DP
-		kdiaPOC(3) = 0; ThtaPOC(3) = 1.17_DP
+        kdiaPOC(1) = 0.035_DP; ThtaPOC(1) = 1.1_DP
+        kdiaPOC(2) = 0.0018_DP; ThtaPOC(2) = 1.15_DP
+        kdiaPOC(3) = 0; ThtaPOC(3) = 1.17_DP
 
-		kdiaPOP(1) = 0.035_DP; ThtaPOP(1) = 1.1_DP
-		kdiaPOP(2) = 0.0018_DP; ThtaPOP(2) = 1.15_DP
-		kdiaPOP(3) = 0; ThtaPOP(3) = 1.17_DP
+        kdiaPOP(1) = 0.035_DP; ThtaPOP(1) = 1.1_DP
+        kdiaPOP(2) = 0.0018_DP; ThtaPOP(2) = 1.15_DP
+        kdiaPOP(3) = 0; ThtaPOP(3) = 1.17_DP
 
         !compute input fluxes
         DO i = 1, 3
@@ -2794,8 +2794,8 @@ CONTAINS
 
         SODold = Jc + 1.714_DP * Jn
         iter = 0
-        !     Saturation conc. of methane in oxygen equivalent units (Equation 10.51)
-        CH4SAT = 100.0_DP * (1.0_DP + depth / 10.0_DP) * (1.024_DP ** (20.0_DP - Tw))        ![gmO*/m3]
+        ! Saturation conc. of methane in oxygen equivalent units (Equation 10.51)
+        CH4SAT = 100.0_DP * (1.0_DP + depth / 10.0_DP) * (1.024_DP ** (20.0_DP - Tw)) ![gmO*/m3]
         IF ((O20 < 0.001_DP) .OR. (Jc + Jn <= 0)) THEN
             SOD = 0
             JNH4 = Jn
@@ -2809,70 +2809,70 @@ CONTAINS
                     O20 / (2.0_DP * KM_O2_NH3 + O20)
                 ! [m/d] = [m2/d2] / [m/d] * [-] * [-]
 
-                !     Calculate dissolved and particulate (sorbed) fractions
+                ! Calculate dissolved and particulate (sorbed) fractions
                 fd1 = (1.0_DP / (1.0_DP + m1 * KdNH3))
-                fp1 = 1.0_DP - fd1                              != ((m1*KdNH3)/(1 + m1*KdNH3))
+                fp1 = 1.0_DP - fd1 != ((m1*KdNH3)/(1 + m1*KdNH3))
                 fd2 = (1.0_DP / (1.0_DP + m2 * KdNH3))
-                fp2 = 1.0_DP - fd2                              != ((m2*KdNH3)/(1 + m2*KdNH3))
+                fp2 = 1.0_DP - fd2 != ((m2*KdNH3)/(1 + m2*KdNH3))
 
-                !     Write linear sys of equations around NH3T
+                ! Write linear sys of equations around NH3T
                 a11 = -fd1 * KL12 - fp1 * w12 - fd1 * NH3toNO3 - fd1 * s - w2
                 a12 = fd2 * KL12 + fp2 * w12
-                b1 = -s * NH30                                  ![m/d]*[mg/m3]
+                b1 = -s * NH30 ![m/d]*[mg/m3]
                 a21 = fd1 * KL12 + fp1 * w12 + w2
                 a22 = -fd2 * KL12 - fp2 * w12 - w2
                 b2 = -Jn
 
                 CALL Lin_Sys(a11, a12, a21, a22, b1, b2, NH3T(1), NH3T(2))
 
-                !     Dissolved Concentrations
+                ! Dissolved Concentrations
                 NH3(1) = fd1 * NH3T(1)
                 NH3(2) = fd2 * NH3T(2)
 
-                !     Oxygen Flux due to NH3->NO2, see Equation 23.3 in Chapra (1997)
+                ! Oxygen Flux due to NH3->NO2, see Equation 23.3 in Chapra (1997)
                 JNH3toNO3 = NH3toNO3 * NH3(1)
                 NSOD = 2.0_DP * (32.0_DP / 14.0_DP) * NH3toNO3 * NH3(1)
-                !     [gmO/m2-d] = [mol O2/mol N]*[gm O2/mol O2]/[gm N/mol N]*
+                ! [gmO/m2-d] = [mol O2/mol N]*[gm O2/mol O2]/[gm N/mol N]*
                 ! [gm/1000mg] * [m/day] * [mgN/m3]
 
                 !:::::::::::::::::::::::::::: BEGIN Nitrate::::::::::::::::::::::::::::
 
-                !     Denitrification in layers 1 and 2 (Equation 4.55)
+                ! Denitrification in layers 1 and 2 (Equation 4.55)
                 Denit(1) = (KappaNO3_1 ** 2 * ThtaNO3 ** (Tw - 20.0_DP) / s)
                 Denit(2) = KappaNO3_2 * ThtaNO3 ** (Tw - 20.0_DP)
 
-                !     Layer 1
+                ! Layer 1
                 a11 = -KL12 - Denit(1) - s - w2
                 a12 = KL12
                 b1 = -s * NO30 - NH3toNO3 * NH3(1)
-                !     Layer 2
+                ! Layer 2
                 a21 = KL12 + w2
                 a22 = -KL12 - Denit(2) - w2
                 b2 = 0.0
 
                 CALL Lin_Sys(a11, a12, a21, a22, b1, b2, NO3(1), NO3(2))
 
-                !     Nitrate Flux to water column
+                ! Nitrate Flux to water column
                 JNO3 = s * (NO3(1) - NO30)
 
-                !     Denitrification Flux [mgN/m2d]
+                ! Denitrification Flux [mgN/m2d]
                 JDenit(1) = Denit(1) * NO3(1)
                 JDenit(2) = Denit(2) * NO3(2)
                 JDenitT = JDenit(1) + JDenit(2)
 
-                !     Methane consumption due to denitrification (Equation 9.16)
-                !     Layer 1
+                ! Methane consumption due to denitrification (Equation 9.16)
+                ! Layer 1
                 JO2NO3(1) = 2.0_DP * (16.0_DP / 12.0_DP) * (10.0_DP / 8.0_DP) * (12.0_DP / 14.0_DP) * JDenit(1)
-                !     [gmO*/m2-d] = [molO/molC]*[(gmO/molO)/(gmC/molC)]*[molC/MolN]*
+                ! [gmO*/m2-d] = [molO/molC]*[(gmO/molO)/(gmC/molC)]*[molC/MolN]*
                 ! [(gmC/molC)/(gmN/molN)] * [mg/m2d] * [gm/1000mg]
-                !       where 2*16/12 is the ubiquitous 32/12 (= 2.67) for oxidation of carbon
-                !     Layer 2
+                ! where 2*16/12 is the ubiquitous 32/12 (= 2.67) for oxidation of carbon
+                ! Layer 2
                 JO2NO3(2) = (32.0_DP / 12.0_DP) * (10.0_DP / 8.0_DP) * (12.0_DP / 14.0_DP) * JDenit(2)
                 ! Sum
                 JO2NO3T = JO2NO3(1) + JO2NO3(2)
 
-                !     Calculate methane flux in oxygen equivalent units, adjusted for
-                !       the methane consumed in denitrification
+                ! Calculate methane flux in oxygen equivalent units, adjusted for
+                ! the methane consumed in denitrification
                 JC_O2equiv = Jc - JO2NO3T
                 IF (JC_O2equiv < 0) JC_O2equiv = 0.0
 
@@ -2880,20 +2880,20 @@ CONTAINS
                 !:::::::::::::::::::::::::::: BEGIN methane::::::::::::::::::::::::::::
 
 
-                !     CSODMAX Equations 10.28 and 10.30
-                CSODmax = MIN(SQRT(2.0_DP * KL12 * CH4SAT * JC_O2equiv), JC_O2equiv)    ! [gmO*/m2-d] = sqr([m/d] * [gmO*/m3] * [gmO*/m2-d])
+                ! CSODMAX Equations 10.28 and 10.30
+                CSODmax = MIN(SQRT(2.0_DP * KL12 * CH4SAT * JC_O2equiv), JC_O2equiv) ! [gmO*/m2-d] = sqr([m/d] * [gmO*/m3] * [gmO*/m2-d])
                 !MsgBox CSODmax
                 !SECH_ARG = (KappaCH4 * ThtaCH4 ** ((Tw - 20) / 2.0)) / s
-                !     CSOD Equation 10.35
-                !     The hyperbolic secant is defined as HSec(X) = 2 / (EXP(X) + EXP(-X))
+                ! CSOD Equation 10.35
+                ! The hyperbolic secant is defined as HSec(X) = 2 / (EXP(X) + EXP(-X))
                 !IF (SECH_ARG < 400.0) THEN !This is the usual case
-                !  CSOD = CSODmax * (1.0 - (2.0 / (EXP(SECH_ARG) + EXP(-SECH_ARG))))
+                ! CSOD = CSODmax * (1.0 - (2.0 / (EXP(SECH_ARG) + EXP(-SECH_ARG))))
                 !ELSE !HSec(SECH_ARG) < 3.8E-174 ~ 0
-                !  CSOD = CSODmax
+                ! CSOD = CSODmax
                 !END IF
-                !     Aqueous methane flux to water column
+                ! Aqueous methane flux to water column
                 !JCH4 = CSODmax - CSOD
-                !     Gaseous methane flux to water column
+                ! Gaseous methane flux to water column
                 !JCH4g = JC_O2equiv - JCH4 - CSOD
 
                 CH4toCO2 = (KappaCH4 * KappaCH4 * ThtaCH4 ** ((Tw - 20.0_DP) / 2.0_DP)) / s
@@ -2906,7 +2906,7 @@ CONTAINS
 
                 !gp 20-May-09
                 !IF (ea <= es) THEN
-                IF (ea <= es  .or. (calcSedFlux == "Option 2" .AND. iter >= maxit)) THEN
+                IF (ea <= es .or. (calcSedFlux == "Option 2" .AND. iter >= maxit)) THEN
 
                     EXIT
 
@@ -2914,9 +2914,9 @@ CONTAINS
                     !gp 20-May-09
                     !!gp 25-Aug-08
                     !!ELSEIF (iter >= maxit) THEN
-                    !!	WRITE(*,*) "SOD iterations exceeded! Turn off sediment diagenesis on QUAL2K sheet."
+                    !! WRITE(*,*) "SOD iterations exceeded! Turn off sediment diagenesis on QUAL2K sheet."
                     !ELSEIF ((calcSedFlux == "Yes" .or. calcSedFlux == "Option 1") .AND. iter >= maxit) THEN
-                    !	WRITE(*,*) "SOD iterations exceeded! Turn off sediment diagenesis on QUAL2K sheet."
+                    ! WRITE(*,*) "SOD iterations exceeded! Turn off sediment diagenesis on QUAL2K sheet."
                 ELSEIF (iter >= maxit) THEN
                     WRITE(*,*) "SOD iterations exceeded! Turn off sediment diagenesis on QUAL2K sheet."
 
@@ -2925,39 +2925,39 @@ CONTAINS
                 SODold = SOD
             END DO
             !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-            !     BEGIN ORTHOPHOSPHATE
+            ! BEGIN ORTHOPHOSPHATE
             !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-            !     Determine Kd in layer 1 (Kd in layer 2 is a constant)
+            ! Determine Kd in layer 1 (Kd in layer 2 is a constant)
             IF (O20 > O2critPO4) THEN
                 KdPO41 = KdPO42 * dKDPO41
             ELSE
                 KdPO41 = KdPO42 * (dKDPO41 ** (O20 / O2critPO4))
             END IF
 
-            !     Calculate dissolved and particulate (sorbed) fractions
+            ! Calculate dissolved and particulate (sorbed) fractions
             fd1 = (1.0_DP / (1.0_DP + m1 * KdPO41))
-            fp1 = 1.0_DP - fd1                      != ((m1*KdPO41)/(1 + m1*KdPO41))
+            fp1 = 1.0_DP - fd1 != ((m1*KdPO41)/(1 + m1*KdPO41))
             fd2 = (1.0_DP / (1.0_DP + m2 * KdPO42))
-            fp2 = 1.0_DP - fd2                      != ((m2*KdPO42)/(1 + m2*KdPO42))
+            fp2 = 1.0_DP - fd2 != ((m2*KdPO42)/(1 + m2*KdPO42))
 
-            !     Write linear sys of equations around PO4T
-            !     Layer 1
+            ! Write linear sys of equations around PO4T
+            ! Layer 1
             a11 = -fd1 * KL12 - fp1 * w12 - fd1 * s - w2
             a12 = fd2 * KL12 + fp2 * w12
             b1 = -s * PO40
-            !     Layer 2
+            ! Layer 2
             a21 = fd1 * KL12 + fp1 * w12 + w2
             a22 = -fd2 * KL12 - fp2 * w12 - w2
             b2 = -Jp
 
             CALL Lin_Sys(a11, a12, a21, a22, b1, b2, PO4T(1), PO4T(2))
 
-            !     Dissolved PO4 concentrations
+            ! Dissolved PO4 concentrations
             PO4(1) = fd1 * PO4T(1)
             PO4(2) = fd2 * PO4T(2)
 
-            !     PO4 flux to water column
+            ! PO4 flux to water column
             JPO4 = s * (PO4(1) - PO40)
             JNH4 = s * (NH3(1) - NH30)
             JNO3 = s * (NO3(1) - NO30)
@@ -2970,7 +2970,7 @@ CONTAINS
 
     SUBROUTINE Lin_Sys(a11, a12, a21, a22, b1, b2, x1, x2)
 
-        REAL(DP), INTENT(IN)  :: a11, a12, a21, a22, b1, b2
+        REAL(DP), INTENT(IN) :: a11, a12, a21, a22, b1, b2
         REAL(DP), INTENT(OUT) :: x1, x2
         !This subroutine solves a linear sys of 2 equations and 2 unknowns
 
@@ -2987,7 +2987,7 @@ CONTAINS
 
     !gp 08-Jan-10
     !SUBROUTINE odeint (begin, sys, Rates, Meteo, Solar, &
-    !			HW, DB, hydrau, pr, nr, t1, t2, dt1, saveSteps)
+    ! HW, DB, hydrau, pr, nr, t1, t2, dt1, saveSteps)
     SUBROUTINE odeint (begin, sys, Rates, Meteo, Solar, &
         HW, DB, hydrau, pr, nr, t1, t2, dt1, saveSteps, stateVariables)
 
@@ -3010,32 +3010,32 @@ CONTAINS
         INTEGER(I4B), INTENT(IN) :: nr
 
         !gp 08-Jan-10
-        CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
+        CHARACTER(LEN=30), INTENT(IN) :: stateVariables !to test for 'All except temperature'
 
         TYPE(meteorology_t) :: Meteo
-        TYPE(solar_type) Solar							!solar radiation
-!	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
-        TYPE(upstream_boundary_t) HW							!headwater
-        TYPE(downstream_boundary_t) DB						!downstream boundary
-        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
+        TYPE(solar_type) Solar !solar radiation
+! TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
+        TYPE(upstream_boundary_t) HW !headwater
+        TYPE(downstream_boundary_t) DB !downstream boundary
+        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau !channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: begin
         TYPE(rates_t), INTENT(IN) :: Rates
-        TYPE(outdata_t), INTENT(OUT) :: pr	  !output data
+        TYPE(outdata_t), INTENT(OUT) :: pr !output data
         REAL(DP), INTENT(IN) :: t1, t2, dt1
         LOGICAL(4), INTENT(IN) :: saveSteps
         !local variables
-        REAL(DP) t, dt       !initial time
+        REAL(DP) t, dt !initial time
         INTEGER(I4B) nstp, i, j
         REAL(DP) dtnext, dtdid
         TYPE(Integral_type) scal, now
-        REAL(DP), DIMENSION(nr,nl) ::  Tenow
+        REAL(DP), DIMENSION(nr,nl) :: Tenow
         REAL(DP), DIMENSION(nr) :: INbnow, IPbnow
         !gp 28-Oct-04 REAL(DP) dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
-        REAL(DP) dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
+        REAL(DP) dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr) !gp
         INTEGER(I4B) kmax, kout
 
-        t=t1   !initial time
+        t=t1 !initial time
         dt=dt1
 
         !constructor
@@ -3045,13 +3045,13 @@ CONTAINS
         now = begin
 
         DO nstp = 1, MAXSTP
-            !	WRITE(*,*) t
+            ! WRITE(*,*) t
             CALL derivs(nr, Meteo, Solar, HW, DB, hydrau, sys, now%Te, now%c, now%INb, now%IPb, &
                 Rates, dTe, dc, dINb, dIPb, t)
 
             !scaling to monitor accuracy.
             !gp 28-Oct-04 scal%c(1:nr, 1:nv) = ABS(now%c(1:nr, 1:nv)) + ABS(dc(1:nr, 1:nv) * dt) + TINY
-            scal%c(1:nr, 1:nv, 1:nl) = ABS(now%c(1:nr, 1:nv, 1:nl)) + ABS(dc(1:nr, 1:nv, 1:nl) * dt) + TINY		!gp
+            scal%c(1:nr, 1:nv, 1:nl) = ABS(now%c(1:nr, 1:nv, 1:nl)) + ABS(dc(1:nr, 1:nv, 1:nl) * dt) + TINY !gp
             scal%Te(1:nr, 1:nl) = ABS(now%Te(1:nr, 1:nl)) +ABS(dTe(1:nr, 1:nl) *dt) + TINY
             scal%INb(1:nr) = ABS(now%INb(1:nr)) +ABS(dINb(1:nr) *dt) + TINY
             scal%IPb(1:nr) = ABS(now%IPb(1:nr)) +ABS(dIPb(1:nr) *dt) + TINY
@@ -3061,7 +3061,7 @@ CONTAINS
 
             !gp 08-Jan-10
             !CALL rkqs(nr, Meteo, Solar, HW, DB, hydrau, sys, now, &
-            !					scal, Rates, dTe, dc, dINb, dIPb, t, dt, dtdid,dtnext)
+            ! scal, Rates, dTe, dc, dINb, dIPb, t, dt, dtdid,dtnext)
             CALL rkqs(nr, Meteo, Solar, HW, DB, hydrau, sys, now, &
                 scal, Rates, dTe, dc, dINb, dIPb, t, dt, dtdid, dtnext, stateVariables)
 
@@ -3072,7 +3072,7 @@ CONTAINS
                 CALL Save_a_step(nr, now, pr, dtdid, sys%IMethpH, sys%showDielResults, Rates)
 
             END IF
-            IF (t - t2 >= 0)  THEN  !are we done?
+            IF (t - t2 >= 0) THEN !are we done?
                 begin= now
                 RETURN
             END IF
@@ -3085,7 +3085,7 @@ CONTAINS
 
     !gp 08-Jan-10
     !SUBROUTINE rkqs(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
-    !						scal, Rates, dTe, dc, dINb, dIPb, t, dttry, dtdid, dtnext)
+    ! scal, Rates, dTe, dc, dINb, dIPb, t, dttry, dtdid, dtnext)
     SUBROUTINE rkqs(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
         scal, Rates, dTe, dc, dINb, dIPb, t, dttry, dtdid, dtnext, stateVariables)
 
@@ -3110,26 +3110,26 @@ CONTAINS
         INTEGER(I4B), INTENT(IN) :: nr
 
         !gp 08-Jan-10
-        CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
+        CHARACTER(LEN=30), INTENT(IN) :: stateVariables !to test for 'All except temperature'
 
         TYPE(meteorology_t) :: Meteo
-        TYPE(solar_type) Solar						!solar radiation
-        TYPE(upstream_boundary_t), INTENT(IN) :: HW				!headwater
-        TYPE(downstream_boundary_t), INTENT(IN) :: DB				!downstream boundary
-        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau		!channel dimensions, hydraulics, physical characters
+        TYPE(solar_type) Solar !solar radiation
+        TYPE(upstream_boundary_t), INTENT(IN) :: HW !headwater
+        TYPE(downstream_boundary_t), INTENT(IN) :: DB !downstream boundary
+        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau !channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: intg
         TYPE(Integral_type), INTENT(IN) :: scal
         TYPE(rates_t), INTENT(IN) :: Rates
         !gp 28-Oct-04 REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
-        REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
-        REAL(DP), INTENT(INOUT) :: t       				!initial time, double
+        REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr) !gp
+        REAL(DP), INTENT(INOUT) :: t !initial time, double
         REAL(DP), INTENT(IN) :: dttry
         REAL(DP), INTENT(OUT) :: dtdid, dtnext
         INTEGER(I4B) i, j, k
         REAL(DP) errmax, dt, dttemp, tnew
 
-        TYPE(Integral_type) tmp, err 					!current value and incremented value
+        TYPE(Integral_type) tmp, err !current value and incremented value
 
         tmp = integration_(nr)
         err = integration_(nr)
@@ -3141,27 +3141,27 @@ CONTAINS
 
             !gp 08-Jan-10
             !CALL rkck(nr, Meteo, Solar, HW, DB, hydrau, sys, intg, &
-            !					Rates, dTe, dc, dINb, dIPb, t, dt, tmp, err)
+            ! Rates, dTe, dc, dINb, dIPb, t, dt, tmp, err)
             CALL rkck(nr, Meteo, Solar, HW, DB, hydrau, sys, intg, &
                 Rates, dTe, dc, dINb, dIPb, t, dt, tmp, err, stateVariables)
 
             !gp 28-Oct-04 errmax = 0.0
             !gp !evaluate accuracy
             !gp DO i = 1 , nr
-            !gp 	DO j = 1 , nv -1
-            !gp 		errmax = MAX(errmax, ABS(err%c(i, j) / scal%c(i, j)))
-            !gp 		!				write(*,*) i, j, errmax
-            !gp 	END DO
+            !gp DO j = 1 , nv -1
+            !gp errmax = MAX(errmax, ABS(err%c(i, j) / scal%c(i, j)))
+            !gp ! write(*,*) i, j, errmax
+            !gp END DO
             !gp END DO
             !gp
-            !gp !		write (*,*) 'temperature'
+            !gp ! write (*,*) 'temperature'
             !gp DO i = 1 , nr
-            !gp 	DO k=1, nl
-            !gp 		errmax= MAX(errmax, ABS(err%Te(i,k)/scal%Te(i,k)))
-            !gp 		!				write(*,*) i,k, errmax
-            !gp 	END DO
-            !gp 	!			errmax= MAX(errmax, ABS(err%INb(i)/scal%INb(i)))
-            !gp 	!			errmax= MAX(errmax, ABS(err%IPb(i)/scal%IPb(i)))
+            !gp DO k=1, nl
+            !gp errmax= MAX(errmax, ABS(err%Te(i,k)/scal%Te(i,k)))
+            !gp ! write(*,*) i,k, errmax
+            !gp END DO
+            !gp ! errmax= MAX(errmax, ABS(err%INb(i)/scal%INb(i)))
+            !gp ! errmax= MAX(errmax, ABS(err%IPb(i)/scal%IPb(i)))
             !gp END DO
             !evaluate accuracy
             errmax = 0.0
@@ -3172,30 +3172,30 @@ CONTAINS
                         errmax = MAX(errmax, ABS(err%c(i, k, j) / scal%c(i, k, j)))
                     END DO
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             !scale relative to required tolerance
             errmax = errmax / EPSTOL
             IF (errmax <= 1.0) THEN
-                Exit  !Step succeeded, Compute size of next step
+                Exit !Step succeeded, Compute size of next step
             END IF
             dttemp = SAFETY * dt * (errmax ** PSHRNK)
 
             !Truncation error too large, reduce stepsize
-            dt = MAX(dttemp, 0.1 * dt)  !no more than a factor of 10.
+            dt = MAX(dttemp, 0.1 * dt) !no more than a factor of 10.
 
             tnew = t + dt
             IF (tnew == t) THEN
-                !			 write(*,*) 'dt = ', dt, 'l = ', l
-                STOP  "Stepsize underflow in rkqs"
+                ! write(*,*) 'dt = ', dt, 'l = ', l
+                STOP "Stepsize underflow in rkqs"
             END IF
         END DO
 
-        !	l=l+1
+        ! l=l+1
         IF (errmax > ERRCON) THEN
             dtnext = SAFETY * dt * (errmax ** PGROW)
         ELSE
-            dtnext = 5.0 * dt    !no more than a factor of 5 increase
+            dtnext = 5.0 * dt !no more than a factor of 5 increase
         END IF
 
         dtdid = dt
@@ -3205,21 +3205,21 @@ CONTAINS
         END IF
 
 ! off next 4 lines by hua 09/09/04
-!	c(1:nr,1:nv) = tmp%c(1:nr,1:nv)
-!	Te(1:nr,1:nl) = tmp%Te(1:nr,1:nl)
-!	INb(1:nr) = tmp%INb(1:nr)
-!	IPb(1:nr) = tmp%IPb(1:nr)
-!	os=tmp%os
+! c(1:nr,1:nv) = tmp%c(1:nr,1:nv)
+! Te(1:nr,1:nl) = tmp%Te(1:nr,1:nl)
+! INb(1:nr) = tmp%INb(1:nr)
+! IPb(1:nr) = tmp%IPb(1:nr)
+! os=tmp%os
 ! hua then add
         intg=tmp
-!	WRITE(*,*) t
+! WRITE(*,*) t
     END SUBROUTINE
 
 !---------------------------------------------------------------------------------------------
 
     !gp 08-Jan-10
     !SUBROUTINE rkck(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
-    !		Rates, dTe, dc, dINb, dIPb, t, dt, outIntg, err)
+    ! Rates, dTe, dc, dINb, dIPb, t, dt, outIntg, err)
     SUBROUTINE rkck(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
         Rates, dTe, dc, dINb, dIPb, t, dt, outIntg, err, stateVariables)
 
@@ -3237,22 +3237,22 @@ CONTAINS
         INTEGER(I4B), INTENT(IN) :: nr
 
         !gp 08-Jan-10
-        CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
+        CHARACTER(LEN=30), INTENT(IN) :: stateVariables !to test for 'All except temperature'
 
         TYPE(meteorology_t) :: Meteo
-        TYPE(solar_type) Solar							!solar radiation
-        !	TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
-        TYPE(upstream_boundary_t), INTENT(IN) :: HW					!headwater
-        TYPE(downstream_boundary_t), INTENT(IN) :: DB					!downstream boundary
-        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
+        TYPE(solar_type) Solar !solar radiation
+        ! TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
+        TYPE(upstream_boundary_t), INTENT(IN) :: HW !headwater
+        TYPE(downstream_boundary_t), INTENT(IN) :: DB !downstream boundary
+        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau !channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(IN) :: intg
-        TYPE(Integral_type), INTENT(OUT) :: outIntg, err 			!current value and incremented value
+        TYPE(Integral_type), INTENT(OUT) :: outIntg, err !current value and incremented value
         TYPE(rates_t), INTENT(IN) :: Rates
 
         !gp 28-Oct-04 REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
-        REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
-        REAL(DP), INTENT(IN) :: t, dt       					!initial time, and step size
+        REAL(DP), INTENT(IN):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr) !gp
+        REAL(DP), INTENT(IN) :: t, dt !initial time, and step size
         INTEGER(I4B) i,j,k
         REAL(DP), PARAMETER :: A2 = 0.2, A3 = 0.3, A4 = 0.6, A5 = 1.0, A6 = 0.875, &
             B21 = 0.2, B31 = 3./40., B32 = 9./ 40., B41 = 0.3, &
@@ -3273,13 +3273,13 @@ CONTAINS
         REAL(DP) ak3dc(nr, nv, nl), ak3dTe(nr, nl), ak3dINb(nr), ak3dIPb(nr)
         REAL(DP) ak4dc(nr, nv, nl), ak4dTe(nr, nl), ak4dINb(nr), ak4dIPb(nr)
         REAL(DP) ak5dc(nr, nv, nl), ak5dTe(nr, nl), ak5dINb(nr), ak5dIPb(nr)
-        REAL(DP) ak6dc(nr, nv, nl), ak6dTe(nr, nl), ak6dINb(nr), ak6dIPb(nr)	!gp end new block
+        REAL(DP) ak6dc(nr, nv, nl), ak6dTe(nr, nl), ak6dINb(nr), ak6dIPb(nr) !gp end new block
 
         !call constructors
         temp= Integration_(nr)
 
         !gp 28-Oct-04 temp%c(1:nr,1:nv) = intg%c(1:nr,1:nv) + b21 * dt * dc(1:nr,1:nv)
-        temp%c(1:nr,1:nv,1:nl) = intg%c(1:nr,1:nv,1:nl) + b21 * dt * dc(1:nr,1:nv,1:nl)		!gp
+        temp%c(1:nr,1:nv,1:nl) = intg%c(1:nr,1:nv,1:nl) + b21 * dt * dc(1:nr,1:nv,1:nl) !gp
         temp%Te(1:nr,1:nl) = intg%Te(1:nr,1:nl) + b21* dt * dTe(1:nr,1:nl)
         temp%INb(1:nr) = intg%INb(1:nr) + b21* dt * dINb(1:nr)
         temp%IPb(1:nr) = intg%IPb(1:nr) + b21* dt * dIPb(1:nr)
@@ -3290,11 +3290,11 @@ CONTAINS
         DO i=1, nr
 
             !gp DO j=1, nv
-            !gp 	temp%c(i,j) = intg%c(i,j) + dt* (b31* dc(i,j) + b32 * ak2dc(i,j))
-            !gp 	IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
+            !gp temp%c(i,j) = intg%c(i,j) + dt* (b31* dc(i,j) + b32 * ak2dc(i,j))
+            !gp IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	temp%Te(i,k) = intg%Te(i,k) + dt* (b31* dTe(i,k) + b32 * ak2dTe(i,k))
+            !gp temp%Te(i,k) = intg%Te(i,k) + dt* (b31* dTe(i,k) + b32 * ak2dTe(i,k))
             !gp END DO
             DO j=1, nl
                 temp%Te(i,j) = intg%Te(i,j) + dt* (b31* dTe(i,j) + b32 * ak2dTe(i,j))
@@ -3302,7 +3302,7 @@ CONTAINS
                     temp%c(i,k,j) = intg%c(i,k,j) + dt* (b31* dc(i,k,j) + b32 * ak2dc(i,k,j))
                     IF (temp%c(i,k,j)<0) temp%c(i,k,j)=1.0E-6
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             temp%INb(i) = intg%INb(i) + dt* (b31* dINb(i) + b32 * ak2dINb(i))
             temp%IPb(i) = intg%IPb(i) + dt* (b31* dINb(i) + b32 * ak2dIPb(i))
@@ -3316,13 +3316,13 @@ CONTAINS
         DO i=1, nr
 
             !gp 28-Oct-04 DO j=1, nv
-            !gp 	temp%c(i, j) = intg%c(i, j) + dt * (b41* dc(i, j) + b42 * ak2dc(i, j) + &
-            !gp 							b43 * ak3dc(i, j))
-            !gp 	IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
+            !gp temp%c(i, j) = intg%c(i, j) + dt * (b41* dc(i, j) + b42 * ak2dc(i, j) + &
+            !gp b43 * ak3dc(i, j))
+            !gp IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	temp%Te(i, k) = intg%Te(i, k) + dt * (b41 * dTe(i, k) + b42 * ak2dTe(i, k) + &
-            !gp 							b43 * ak3dTe(i, k))
+            !gp temp%Te(i, k) = intg%Te(i, k) + dt * (b41 * dTe(i, k) + b42 * ak2dTe(i, k) + &
+            !gp b43 * ak3dTe(i, k))
             !gp END DO
             DO j=1, nl
                 temp%Te(i,j) = intg%Te(i,j) + dt * (b41 * dTe(i,j) + b42 * ak2dTe(i,j) + &
@@ -3332,7 +3332,7 @@ CONTAINS
                         b43 * ak3dc(i,k,j))
                     IF (temp%c(i,k,j)<0) temp%c(i,k,j)=1.0E-6
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             temp%INb(i) = intg%INb(i) + dt * (b41 * dINb(i) + b42 * ak2dINb(i) + &
                 b43 * ak3dINb(i))
@@ -3349,13 +3349,13 @@ CONTAINS
         DO i=1, nr
 
             !gp 28-Oct-04 DO j=1, nv
-            !gp 	temp%c(i, j) = intg%c(i, j) + dt * (b51 * dc(i, j) + b52 * ak2dc(i, j) + &
-            !gp 						 b53 * ak3dc(i, j) + b54 * ak4dc(i, j))
-            !gp 	IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
+            !gp temp%c(i, j) = intg%c(i, j) + dt * (b51 * dc(i, j) + b52 * ak2dc(i, j) + &
+            !gp b53 * ak3dc(i, j) + b54 * ak4dc(i, j))
+            !gp IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	temp%Te(i, k) = intg%Te(i, k) + dt * (b51 * dTe(i, k) + &
-            !gp 							b52 * ak2dTe(i, k) + b53 * ak3dTe(i, k) + b54 * ak4dTe(i, k))
+            !gp temp%Te(i, k) = intg%Te(i, k) + dt * (b51 * dTe(i, k) + &
+            !gp b52 * ak2dTe(i, k) + b53 * ak3dTe(i, k) + b54 * ak4dTe(i, k))
             !gp END DO
             DO j=1, nl
                 temp%Te(i,j) = intg%Te(i,j) + dt * (b51 * dTe(i,j) + &
@@ -3365,7 +3365,7 @@ CONTAINS
                         b53 * ak3dc(i,k,j) + b54 * ak4dc(i,k,j))
                     IF (temp%c(i,k,j)<0) temp%c(i,k,j)=1.0E-6
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             temp%INb(i) = intg%INb(i) + dt * (b51 * dINb(i) + &
                 b52 * ak2dINb(i) + b53 * ak3dINb(i) + b54 * ak4dINb(i))
@@ -3381,23 +3381,23 @@ CONTAINS
         DO i=1, nr
 
             !gp 28-Oct-04 DO j=1, nv
-            !gp 	temp%c(i, j) = intg%c(i, j) + dt * (b61 * dc(i, j) + b62 * ak2dc(i, j) + &
-            !gp 						b63 * ak3dc(i, j) +	b64 * ak4dc(i, j) + b65 * ak5dc(i, j))
-            !gp 	IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
+            !gp temp%c(i, j) = intg%c(i, j) + dt * (b61 * dc(i, j) + b62 * ak2dc(i, j) + &
+            !gp b63 * ak3dc(i, j) + b64 * ak4dc(i, j) + b65 * ak5dc(i, j))
+            !gp IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	temp%Te(i, k) = intg%Te(i, k) + dt * (b61 * dTe(i, k) + b62 * ak2dTe(i, k) + &
-            !gp 							b63 * ak3dTe(i, k) + b64 * ak4dTe(i, k) + b65 * ak5dTe(i, k))
+            !gp temp%Te(i, k) = intg%Te(i, k) + dt * (b61 * dTe(i, k) + b62 * ak2dTe(i, k) + &
+            !gp b63 * ak3dTe(i, k) + b64 * ak4dTe(i, k) + b65 * ak5dTe(i, k))
             !gp END DO
             DO j=1, nl
                 temp%Te(i,j) = intg%Te(i,j) + dt * (b61 * dTe(i,j) + b62 * ak2dTe(i,j) + &
                     b63 * ak3dTe(i,j) + b64 * ak4dTe(i,j) + b65 * ak5dTe(i,j))
                 DO k=1, nv
                     temp%c(i,k,j) = intg%c(i,k,j) + dt * (b61 * dc(i,k,j) + b62 * ak2dc(i,k,j) + &
-                        b63 * ak3dc(i,k,j) +	b64 * ak4dc(i,k,j) + b65 * ak5dc(i,k,j))
+                        b63 * ak3dc(i,k,j) + b64 * ak4dc(i,k,j) + b65 * ak5dc(i,k,j))
                     IF (temp%c(i,k,j)<0) temp%c(i,k,j)=1.0E-6
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             temp%INb(i) = intg%INb(i) + dt * (b61 * dINb(i) + b62 * ak2dINb(i) + &
                 b63 * ak3dINb(i) + b64 * ak4dINb(i) + b65 * ak5dINb(i))
@@ -3414,27 +3414,27 @@ CONTAINS
         DO i=1, nr
 
             !gp 28-Oct-04 DO j=1, nv
-            !gp 	outIntg%c(i, j) = intg%c(i, j) + dt * (c1 * dc(i, j) + c3 * ak3dc(i, j) + &
-            !gp 						c4 * ak4dc(i, j) +	c6 * ak6dc(i, j))
-            !gp 	IF (outIntg%c(i,j)<0) temp%c(i,j)=1.0E-6
+            !gp outIntg%c(i, j) = intg%c(i, j) + dt * (c1 * dc(i, j) + c3 * ak3dc(i, j) + &
+            !gp c4 * ak4dc(i, j) + c6 * ak6dc(i, j))
+            !gp IF (outIntg%c(i,j)<0) temp%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	outIntg%Te(i, k) = intg%Te(i, k) + dt * (c1 * dTe(i, k) + c3 * ak3dTe(i, k) + &
-            !gp 						c4 * ak4dTe(i, k) +	c6 * ak6dTe(i, k))
+            !gp outIntg%Te(i, k) = intg%Te(i, k) + dt * (c1 * dTe(i, k) + c3 * ak3dTe(i, k) + &
+            !gp c4 * ak4dTe(i, k) + c6 * ak6dTe(i, k))
             !gp END DO
             DO j=1, nl
 
                 !gp 08-Jan-10
                 !outIntg%Te(i,j) = intg%Te(i,j) + dt * (c1 * dTe(i,j) + c3 * ak3dTe(i,j) + &
-                !					c4 * ak4dTe(i,j) +	c6 * ak6dTe(i,j))
+                ! c4 * ak4dTe(i,j) + c6 * ak6dTe(i,j))
                 If (stateVariables /= "All except temperature") Then
                     outIntg%Te(i,j) = intg%Te(i,j) + dt * (c1 * dTe(i,j) + c3 * ak3dTe(i,j) + &
-                        c4 * ak4dTe(i,j) +	c6 * ak6dTe(i,j))
+                        c4 * ak4dTe(i,j) + c6 * ak6dTe(i,j))
                 End If
 
                 DO k=1, nv
                     outIntg%c(i,k,j) = intg%c(i,k,j) + dt * (c1 * dc(i,k,j) + c3 * ak3dc(i,k,j) + &
-                        c4 * ak4dc(i,k,j) +	c6 * ak6dc(i,k,j))
+                        c4 * ak4dc(i,k,j) + c6 * ak6dc(i,k,j))
                     IF (outIntg%c(i,k,j)<0) temp%c(i,k,j)=1.0E-6
                 END DO
             END DO
@@ -3446,21 +3446,21 @@ CONTAINS
             IF (outIntg%INb(i)<0) temp%INb(i)=1.0E-6
             IF (outIntg%IPb(i)<0) temp%IPb(i)=1.0E-6
         END DO
-!	outIntg%os=intg%os
+! outIntg%os=intg%os
 
         !gp 28-Oct-04 err%c(1:nr, 1:nv) = dt * (DC1 * dc(1:nr, 1:nv) + DC3 * ak3dc(1:nr, 1:nv) + &
-        !gp 							DC4 * ak4dc(1:nr, 1:nv) + DC5 * ak5dc(1:nr, 1:nv) + &
-        !gp 							DC6 * ak6dc(1:nr, 1:nv))
+        !gp DC4 * ak4dc(1:nr, 1:nv) + DC5 * ak5dc(1:nr, 1:nv) + &
+        !gp DC6 * ak6dc(1:nr, 1:nv))
         err%c(1:nr, 1:nv, 1:nl) = dt * (DC1 * dc(1:nr, 1:nv, 1:nl) + DC3 * ak3dc(1:nr, 1:nv, 1:nl) + &
             DC4 * ak4dc(1:nr, 1:nv, 1:nl) + DC5 * ak5dc(1:nr, 1:nv, 1:nl) + &
-            DC6 * ak6dc(1:nr, 1:nv, 1:nl))		!gp
+            DC6 * ak6dc(1:nr, 1:nv, 1:nl)) !gp
         err%Te(1:nr, 1:nl) = dt * (DC1 * dTe(1:nr, 1:nl) + DC3 * ak3dTe(1:nr, 1:nl) + &
             DC4 * ak4dTe(1:nr, 1:nl) + DC5 * ak5dTe(1:nr, 1:nl) + &
             DC6 * ak6dTe(1:nr, 1:nl))
         err%INb(1:nr) = dt * (DC1 * dINb(1:nr) + DC3 * ak3dINb(1:nr) + DC4 * ak4dINb(1:nr) + &
             DC5 * ak5dINb(1:nr)+ DC6 * ak6dINb(1:nr))
         err%IPb(1:nr) = dt * (DC1 * dIPb(1:nr) + DC3 * ak3dIPb(1:nr) + DC4 * ak4dIPb(1:nr) + &
-            DC5 *	ak5dIPb(1:nr) + DC6 * ak6dIPb(1:nr))
+            DC5 * ak5dIPb(1:nr) + DC6 * ak6dIPb(1:nr))
 
     END SUBROUTINE
 
@@ -3469,7 +3469,7 @@ CONTAINS
 
     !gp 08-Jan-10
     !SUBROUTINE rk4(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
-    !			Rates, dTe, dc, dINb, dIPb, t, dt)
+    ! Rates, dTe, dc, dINb, dIPb, t, dt)
     SUBROUTINE rk4(nr, Meteo, Solar, HW, DB, hydrau, sys, intg,&
         Rates, dTe, dc, dINb, dIPb, t, dt, stateVariables)
 
@@ -3486,22 +3486,22 @@ CONTAINS
         IMPLICIT NONE
         INTEGER(I4B), INTENT(IN) :: nr
         TYPE(meteorology_t) :: Meteo
-        TYPE(solar_type) Solar							!solar radiation
+        TYPE(solar_type) Solar !solar radiation
         !TYPE(HeadwaterDownstream_type), INTENT(IN) :: HDboundary
-        TYPE(upstream_boundary_t), INTENT(IN) :: HW					!headwater
-        TYPE(downstream_boundary_t), INTENT(IN) :: DB					!downstream boundary
-        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau			!channel dimensions, hydraulics, physical characters
+        TYPE(upstream_boundary_t), INTENT(IN) :: HW !headwater
+        TYPE(downstream_boundary_t), INTENT(IN) :: DB !downstream boundary
+        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau !channel dimensions, hydraulics, physical characters
         TYPE(SystemParams) sys
         TYPE(Integral_type), INTENT(INOUT) :: intg
         TYPE(rates_t), INTENT(IN) :: Rates
 
         !gp 28-Oct-04 REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv), dINb(nr), dIPb(nr)
-        REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr)		!gp
+        REAL(DP), INTENT(OUT):: dTe(nr, nl), dc(nr, nv, nl), dINb(nr), dIPb(nr) !gp
 
-        REAL(DP), INTENT(IN) :: t, dt       					!initial time, and step size
+        REAL(DP), INTENT(IN) :: t, dt !initial time, and step size
 
         !gp 08-Jan-10
-        CHARACTER(LEN=30), INTENT(IN) :: stateVariables		!to test for 'All except temperature'
+        CHARACTER(LEN=30), INTENT(IN) :: stateVariables !to test for 'All except temperature'
 
         INTEGER(I4B) i,j,k
 
@@ -3512,7 +3512,7 @@ CONTAINS
         !gp REAL(DP) ak4dc(nr, nv), ak4dTe(nr, nl), ak4dINb(nr), ak4dIPb(nr)
         REAL(DP) ak2dc(nr, nv, nl), ak2dTe(nr, nl), ak2dINb(nr), ak2dIPb(nr)
         REAL(DP) ak3dc(nr, nv, nl), ak3dTe(nr, nl), ak3dINb(nr), ak3dIPb(nr)
-        REAL(DP) ak4dc(nr, nv, nl), ak4dTe(nr, nl), ak4dINb(nr), ak4dIPb(nr)		!gp end new block
+        REAL(DP) ak4dc(nr, nv, nl), ak4dTe(nr, nl), ak4dINb(nr), ak4dIPb(nr) !gp end new block
 
         !call constructors
         temp= Integration_(nr)
@@ -3523,11 +3523,11 @@ CONTAINS
         DO i=1, nr
 
             !gp 28-Oct-04 DO j=1, nv
-            !gp 	temp%c(i, j) = intg%c(i, j) + dt/2 * dc(i, j)
-            !gp 	IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
+            !gp temp%c(i, j) = intg%c(i, j) + dt/2 * dc(i, j)
+            !gp IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	temp%Te(i, k) = intg%Te(i, k) + dt/2 * dTe(i, k)
+            !gp temp%Te(i, k) = intg%Te(i, k) + dt/2 * dTe(i, k)
             !gp END DO
             DO j=1, nl
                 temp%Te(i,j) = intg%Te(i,j) + dt/2 * dTe(i,j)
@@ -3535,7 +3535,7 @@ CONTAINS
                     temp%c(i,k,j) = intg%c(i,k,j) + dt/2 * dc(i,k,j)
                     IF (temp%c(i,k,j)<0) temp%c(i,k,j)=1.0E-6
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             temp%INb(i) = intg%INb(i) + dt/2 * dINb(i)
             temp%IPb(i) = intg%IPb(i) + dt/2 * dIPb(i)
@@ -3550,19 +3550,19 @@ CONTAINS
         DO i=1, nr
 
             !gp 28-Oct-04 DO j=1, nv
-            !gp 	temp%c(i,j) = intg%c(i,j) + dt/2 *  ak2dc(i,j)
-            !gp 	IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
+            !gp temp%c(i,j) = intg%c(i,j) + dt/2 * ak2dc(i,j)
+            !gp IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	temp%Te(i, k) = intg%Te(i, k) + dt/2 * ak2dTe(i,k)
+            !gp temp%Te(i, k) = intg%Te(i, k) + dt/2 * ak2dTe(i,k)
             !gp END DO
             DO j=1, nl
                 temp%Te(i,j) = intg%Te(i,j) + dt/2 * ak2dTe(i,j)
                 DO k=1, nv
-                    temp%c(i,k,j) = intg%c(i,k,j) + dt/2 *  ak2dc(i,k,j)
+                    temp%c(i,k,j) = intg%c(i,k,j) + dt/2 * ak2dc(i,k,j)
                     IF (temp%c(i,k,j)<0) temp%c(i,k,j)=1.0E-6
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             temp%INb(i) = intg%INb(i) + dt/2 * ak2dINb(i)
             temp%IPb(i) = intg%IPb(i) + dt/2 * ak2dIPb(i)
@@ -3577,19 +3577,19 @@ CONTAINS
         DO i=1, nr
 
             !gp 28-Oct-04 DO j=1, nv
-            !gp 	temp%c(i,j) = intg%c(i,j) + dt *  ak3dc(i,j)
-            !gp 	IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
+            !gp temp%c(i,j) = intg%c(i,j) + dt * ak3dc(i,j)
+            !gp IF (temp%c(i,j)<0) temp%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	temp%Te(i, k) = intg%Te(i, k) + dt * ak3dTe(i,k)
+            !gp temp%Te(i, k) = intg%Te(i, k) + dt * ak3dTe(i,k)
             !gp END DO
             DO j=1, nl
                 temp%Te(i,j) = intg%Te(i,j) + dt * ak3dTe(i,j)
                 DO k=1, nv
-                    temp%c(i,k,j) = intg%c(i,k,j) + dt *  ak3dc(i,k,j)
+                    temp%c(i,k,j) = intg%c(i,k,j) + dt * ak3dc(i,k,j)
                     IF (temp%c(i,k,j)<0) temp%c(i,k,j)=1.0E-6
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             temp%INb(i) = intg%INb(i) + dt * ak3dINb(i)
             temp%IPb(i) = intg%IPb(i) + dt * ak3dIPb(i)
@@ -3604,22 +3604,22 @@ CONTAINS
         DO i=1, nr
 
             !gp 28-Oct-04 DO j=1, nv
-            !gp 	intg%c(i, j) = intg%c(i, j) + dt/6 * (dc(i, j) + &
-            !gp 			2 * ak2dc(i, j) + 2 * ak3dc(i, j) +	ak4dc(i, j))
-            !gp 	IF (intg%c(i,j)<0) intg%c(i,j)=1.0E-6
+            !gp intg%c(i, j) = intg%c(i, j) + dt/6 * (dc(i, j) + &
+            !gp 2 * ak2dc(i, j) + 2 * ak3dc(i, j) + ak4dc(i, j))
+            !gp IF (intg%c(i,j)<0) intg%c(i,j)=1.0E-6
             !gp END DO
             !gp DO k=1, nl
-            !gp 	intg%Te(i, k) = intg%Te(i, k) + dt/6 * (dTe(i, k) + &
-            !gp 			2 * ak2dTe(i, k) + 2 * ak3dTe(i, k) +	ak4dTe(i, k))
+            !gp intg%Te(i, k) = intg%Te(i, k) + dt/6 * (dTe(i, k) + &
+            !gp 2 * ak2dTe(i, k) + 2 * ak3dTe(i, k) + ak4dTe(i, k))
             !gp END DO
             DO j=1, nl
 
                 !gp 08-Jan-10
                 !intg%Te(i,j) = intg%Te(i,j) + dt/6 * (dTe(i,j) + &
-                !		2 * ak2dTe(i,j) + 2 * ak3dTe(i,j) +	ak4dTe(i,j))
+                ! 2 * ak2dTe(i,j) + 2 * ak3dTe(i,j) + ak4dTe(i,j))
                 If (stateVariables /= "All except temperature") Then
                     intg%Te(i,j) = intg%Te(i,j) + dt/6 * (dTe(i,j) + &
-                        2 * ak2dTe(i,j) + 2 * ak3dTe(i,j) +	ak4dTe(i,j))
+                        2 * ak2dTe(i,j) + 2 * ak3dTe(i,j) + ak4dTe(i,j))
 
                     !gp 12-Jan-10
                 Else
@@ -3636,10 +3636,10 @@ CONTAINS
 
                 DO k=1, nv
                     intg%c(i,k,j) = intg%c(i,k,j) + dt/6 * (dc(i,k,j) + &
-                        2 * ak2dc(i,k,j) + 2 * ak3dc(i,k,j) +	ak4dc(i,k,j))
+                        2 * ak2dc(i,k,j) + 2 * ak3dc(i,k,j) + ak4dc(i,k,j))
                     IF (intg%c(i,k,j)<0) intg%c(i,k,j)=1.0E-6
                 END DO
-            END DO		!gp end new block
+            END DO !gp end new block
 
             intg%INb(i) = intg%INb(i) + dt/6 * (dINb(i) + &
                 2 * ak2dINb(i) + 2 * ak3dINb(i) + ak4dINb(i))
