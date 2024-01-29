@@ -1,458 +1,430 @@
-
-!classoutput.f90
-
-MODULE Class_Output
+module class_output
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
-    USE nrtype
-    USE Class_SourceIn
-    USE Class_IntegrationData
+    use class_hydraulics
+    use class_integrationdata
+    use class_phsolve
+    use class_sourcein
+    use class_systemparams
+    use m_rates
+    use m_rivertopo
+    use nrtype
 
-    IMPLICIT NONE
+    implicit none
 
-    TYPE Outdata_type
-        !gp 24-Oct-04 INTEGER(i32) nj
-        INTEGER(i32) nj !gp need long integer for nj
-        REAL(r64), DIMENSION(:), POINTER :: tdy
-        !gp 27-Oct-04 add dimension for nl
-        !gp REAL(r64), DIMENSION(:,:), POINTER :: cmn, cmx, cav !constituents concentrations
-        !gp REAL(r64), DIMENSION(:), POINTER :: Temn, Temx, Teav, osav !temperature, saturated DO
-        !gp REAL(r64), DIMENSION(:), POINTER :: pHmn, pHmx, pHav, pHsav !pH
-        !gp REAL(r64), DIMENSION(:), POINTER :: TNmn, TNmx, TNav !Total nitrogen
-        !gp REAL(r64), DIMENSION(:), POINTER :: TPmn, TPmx, TPav !Total Phosphorus
-        !gp REAL(r64), DIMENSION(:), POINTER :: NH3mn, NH3mx, NH3av !NH3
-        !gp REAL(r64), DIMENSION(:,:), POINTER :: pHpr, NINbpr, NIPbpr !bottom algae luxury update
-        !gp REAL(r64), DIMENSION(:,:), POINTER :: phitotalSavepr, phitSavepr, philSavepr, &
-        !gp phinSavepr, phipSavepr, phicSavepr !gp 20-Oct-04 bottom algae growth limitation factors
-        !gp REAL(r64), DIMENSION(:,:,:), POINTER :: cpr, Tepr !Print out
-        REAL(r64), DIMENSION(:,:,:), POINTER :: cmn, cmx, cav !constituents concentrations (nr, nv, nl)
-        REAL(r64), DIMENSION(:,:), POINTER :: Temn, Temx, Teav, osav !temperature, saturated DO (nr, nl)
-        REAL(r64), DIMENSION(:,:), POINTER :: pHmn, pHmx, pHav, pHsav !pH (nr, nl)
-        REAL(r64), DIMENSION(:,:), POINTER :: TNmn, TNmx, TNav !Total nitrogen (nr, nl)
-        REAL(r64), DIMENSION(:,:), POINTER :: TPmn, TPmx, TPav !Total Phosphorus (nr, nl)
-        REAL(r64), DIMENSION(:,:), POINTER :: NH3mn, NH3mx, NH3av !NH3 (nr, nl)
-        REAL(r64), DIMENSION(:,:,:), POINTER :: pHpr !bottom algae luxury update (nr, nj, nl)
-        REAL(r64), DIMENSION(:,:), POINTER :: NINbpr, NIPbpr !bottom algae luxury update (nr, nj)
+    type outdata_type
+        !gp 24-oct-04 integer(i32) nj
+        integer(i32) nj !gp need long integer for nj
+        real(r64), dimension(:), pointer :: tdy
+        !gp 27-oct-04 add dimension for nl
+        !gp real(r64), dimension(:,:), pointer :: cmn, cmx, cav !constituents concentrations
+        !gp real(r64), dimension(:), pointer :: temn, temx, teav, osav !temperature, saturated do
+        !gp real(r64), dimension(:), pointer :: phmn, phmx, phav, phsav !ph
+        !gp real(r64), dimension(:), pointer :: tnmn, tnmx, tnav !total nitrogen
+        !gp real(r64), dimension(:), pointer :: tpmn, tpmx, tpav !total phosphorus
+        !gp real(r64), dimension(:), pointer :: nh3mn, nh3mx, nh3av !nh3
+        !gp real(r64), dimension(:,:), pointer :: phpr, ninbpr, nipbpr !bottom algae luxury update
+        !gp real(r64), dimension(:,:), pointer :: phitotalsavepr, phitsavepr, philsavepr, &
+        !gp phinsavepr, phipsavepr, phicsavepr !gp 20-oct-04 bottom algae growth limitation factors
+        !gp real(r64), dimension(:,:,:), pointer :: cpr, tepr !print out
+        real(r64), dimension(:,:,:), pointer :: cmn, cmx, cav !constituents concentrations (nr, nv, nl)
+        real(r64), dimension(:,:), pointer :: temn, temx, teav, osav !temperature, saturated do (nr, nl)
+        real(r64), dimension(:,:), pointer :: phmn, phmx, phav, phsav !ph (nr, nl)
+        real(r64), dimension(:,:), pointer :: tnmn, tnmx, tnav !total nitrogen (nr, nl)
+        real(r64), dimension(:,:), pointer :: tpmn, tpmx, tpav !total phosphorus (nr, nl)
+        real(r64), dimension(:,:), pointer :: nh3mn, nh3mx, nh3av !nh3 (nr, nl)
+        real(r64), dimension(:,:,:), pointer :: phpr !bottom algae luxury update (nr, nj, nl)
+        real(r64), dimension(:,:), pointer :: ninbpr, nipbpr !bottom algae luxury update (nr, nj)
 
-        !gp 20-Oct-04 growth limitation factors for bottom algae (nr, nj)
-        REAL(r64), DIMENSION(:,:), POINTER :: phitotalSavepr, phitSavepr, philSavepr, phinSavepr, phipSavepr, phicSavepr
+        !gp 20-oct-04 growth limitation factors for bottom algae (nr, nj)
+        real(r64), dimension(:,:), pointer :: phitotalsavepr, phitsavepr, philsavepr, phinsavepr, phipsavepr, phicsavepr
 
-        !gp 28-Oct-04 diagenesis flux between sediment/water (nr, nj)
-        REAL(r64), DIMENSION(:,:), POINTER :: DiagFluxDOpr, DiagFluxCBODpr, DiagFluxNH4pr, DiagFluxNO3pr, &
-            DiagFluxSRPpr, DiagFluxICpr
+        !gp 28-oct-04 diagenesis flux between sediment/water (nr, nj)
+        real(r64), dimension(:,:), pointer :: diagfluxdopr, diagfluxcbodpr, diagfluxnh4pr, diagfluxno3pr, &
+            diagfluxsrppr, diagfluxicpr
 
-        !gp 28-Oct-04 hyporheic exchange flux between sediment/water (nr, nj)
-        REAL(r64), DIMENSION(:,:), POINTER :: HypoFluxDOpr, HypoFluxCBODpr, HypoFluxNH4pr, HypoFluxNO3pr, HypoFluxSRPpr, &
-            HypoFluxICpr
+        !gp 28-oct-04 hyporheic exchange flux between sediment/water (nr, nj)
+        real(r64), dimension(:,:), pointer :: hypofluxdopr, hypofluxcbodpr, hypofluxnh4pr, hypofluxno3pr, hypofluxsrppr, &
+            hypofluxicpr
 
-        !gp 15-Nov-04 reach-average daily-average flux between sediment/water (nr)
-        REAL(r64), DIMENSION(:), POINTER :: DiagFluxDOav, DiagFluxCBODav, DiagFluxNH4av, DiagFluxNO3av, DiagFluxSRPav
-        REAL(r64), DIMENSION(:), POINTER :: HypoFluxDOav, HypoFluxCBODav, HypoFluxNH4av, HypoFluxNO3av, HypoFluxSRPav
+        !gp 15-nov-04 reach-average daily-average flux between sediment/water (nr)
+        real(r64), dimension(:), pointer :: diagfluxdoav, diagfluxcbodav, diagfluxnh4av, diagfluxno3av, diagfluxsrpav
+        real(r64), dimension(:), pointer :: hypofluxdoav, hypofluxcbodav, hypofluxnh4av, hypofluxno3av, hypofluxsrpav
 
-        !gp 11-Jan-05 reach-min/max/mean cell quota mgN/gD and mgP/gD (nr)
-        REAL(r64), DIMENSION(:), POINTER :: NINbmn, NINbmx, NINbav, NIPbmn, NIPbmx, NIPbav
+        !gp 11-jan-05 reach-min/max/mean cell quota mgn/gd and mgp/gd (nr)
+        real(r64), dimension(:), pointer :: ninbmn, ninbmx, ninbav, nipbmn, nipbmx, nipbav
 
-        REAL(r64), DIMENSION(:,:,:), POINTER :: Tepr !Print out (nr, nj, nl)
-        REAL(r64), DIMENSION(:,:,:,:), POINTER :: cpr !Print out (nr, nv, nj, nl)
+        real(r64), dimension(:,:,:), pointer :: tepr !print out (nr, nj, nl)
+        real(r64), dimension(:,:,:,:), pointer :: cpr !print out (nr, nv, nj, nl)
 
-        !gp 05-Jul-05 heat/DO/CO2 fluxes
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveHeatFluxJsnt, pr_saveHeatFluxLongat, pr_saveHeatFluxBack, pr_saveHeatFluxConv
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveHeatFluxEvap, pr_saveHeatFluxJsed, pr_saveHeatFluxJhyporheic, &
-            pr_saveHeatFluxTribs
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveHeatFluxAdvecDisp
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveDOfluxReaer, pr_saveDOfluxCBODfast, pr_saveDOfluxCBODslow, pr_saveDOfluxNitrif
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveDOfluxPhytoResp, pr_saveDOfluxPhytoPhoto, pr_saveDOfluxBotalgResp, &
-            pr_saveDOfluxBotalgPhoto
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveDOfluxSOD, pr_saveDOfluxCOD, pr_saveDOfluxHyporheic, pr_saveDOfluxTribs
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveDOfluxAdvecDisp
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveCO2fluxReaer, pr_saveCO2fluxCBODfast, pr_saveCO2fluxCBODslow
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveCO2fluxPhytoResp, pr_saveCO2fluxPhytoPhoto, pr_saveCO2fluxBotalgResp, &
-            pr_saveCO2fluxBotalgPhoto
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveCO2fluxSOD, pr_saveCO2fluxHyporheic, pr_saveCO2fluxTribs
-        REAL(r64), DIMENSION(:,:), POINTER :: pr_saveCO2fluxAdvecDisp
+        !gp 05-jul-05 heat/do/co2 fluxes
+        real(r64), dimension(:,:), pointer :: pr_saveheatfluxjsnt, pr_saveheatfluxlongat, pr_saveheatfluxback, pr_saveheatfluxconv
+        real(r64), dimension(:,:), pointer :: pr_saveheatfluxevap, pr_saveheatfluxjsed, pr_saveheatfluxjhyporheic, &
+            pr_saveheatfluxtribs
+        real(r64), dimension(:,:), pointer :: pr_saveheatfluxadvecdisp
+        real(r64), dimension(:,:), pointer :: pr_savedofluxreaer, pr_savedofluxcbodfast, pr_savedofluxcbodslow, pr_savedofluxnitrif
+        real(r64), dimension(:,:), pointer :: pr_savedofluxphytoresp, pr_savedofluxphytophoto, pr_savedofluxbotalgresp, &
+            pr_savedofluxbotalgphoto
+        real(r64), dimension(:,:), pointer :: pr_savedofluxsod, pr_savedofluxcod, pr_savedofluxhyporheic, pr_savedofluxtribs
+        real(r64), dimension(:,:), pointer :: pr_savedofluxadvecdisp
+        real(r64), dimension(:,:), pointer :: pr_saveco2fluxreaer, pr_saveco2fluxcbodfast, pr_saveco2fluxcbodslow
+        real(r64), dimension(:,:), pointer :: pr_saveco2fluxphytoresp, pr_saveco2fluxphytophoto, pr_saveco2fluxbotalgresp, &
+            pr_saveco2fluxbotalgphoto
+        real(r64), dimension(:,:), pointer :: pr_saveco2fluxsod, pr_saveco2fluxhyporheic, pr_saveco2fluxtribs
+        real(r64), dimension(:,:), pointer :: pr_saveco2fluxadvecdisp
 
-        !gp 25-Jun-09
-        REAL(r64), DIMENSION(:), POINTER :: av_BotAlgPhoto, av_BotAlgResp, av_BotAlgDeath, av_BotAlgNetGrowth
+        !gp 25-jun-09
+        real(r64), dimension(:), pointer :: av_botalgphoto, av_botalgresp, av_botalgdeath, av_botalgnetgrowth
 
-    END TYPE
+    end type
 
-CONTAINS
+contains
 
-!gp 17-Nov-04 FUNCTION outData_(nr) RESULT(pr)
-    FUNCTION outData_(nr, sys) RESULT(pr) !gp 17-Nov-04 pass sys to minimize size of dynamic diel arrays
+!gp 17-nov-04 function outdata_(nr) result(pr)
+    function outdata_(nr, sys) result(pr) !gp 17-nov-04 pass sys to minimize size of dynamic diel arrays
 
-        !gp 17-Nov-04
-        USE Class_SystemParams
+        !gp 17-nov-04
 
-        INTEGER(i32), INTENT(IN) :: nr
-        TYPE(OutData_type) pr
+        integer(i32), intent(in) :: nr
+        type(outdata_type) pr
 
-        !gp 05-Jul-05 INTEGER(i32) i,status(0:60) !gp 11-Jan-05
-        !gp 25-Jun-09 INTEGER(i32) i,status(0:93) !gp 05-Jul-05
-        INTEGER(i32) i,status(0:97) !gp 25-Jun-09
+        !gp 05-jul-05 integer(i32) i,status(0:60) !gp 11-jan-05
+        !gp 25-jun-09 integer(i32) i,status(0:93) !gp 05-jul-05
+        integer(i32) i,status(0:97) !gp 25-jun-09
 
-        !gp 17-Nov-04
-        TYPE(SystemParams) sys
-        INTEGER(i32) nsteps
-        IF (sys%Imeth == "Adaptive step") THEN
+        !gp 17-nov-04
+        type(systemparams) sys
+        integer(i32) nsteps
+        if (sys%imeth == "Adaptive step") then
             nsteps = 2400
-        ELSE
-            nsteps = sys%nc !minimizes array sizes for Euler and RK4 integration
-        END IF
+        else
+            nsteps = sys%nc !minimizes array sizes for euler and rk4 integration
+        end if
 
         status=0
 
-        !gp 17-Nov-04 ALLOCATE(pr%tdy(0:2400), STAT=status(0))
-        ALLOCATE(pr%tdy(0:nsteps), STAT=status(0)) !gp 17-Nov-04 replace 2400 with nsteps for all dynamic diel output arrays below
+        !gp 17-nov-04 allocate(pr%tdy(0:2400), stat=status(0))
+        allocate(pr%tdy(0:nsteps), stat=status(0)) !gp 17-nov-04 replace 2400 with nsteps for all dynamic diel output arrays below
 
-        !gp ALLOCATE(pr%cpr(0:nr, nv, 0:2400), STAT=status(1))
-        !gp ALLOCATE(pr%Tepr(0:nr, 0:2400, 2), STAT=status(2))
-        !gp ALLOCATE(pr%pHpr(0:nr, 0:2400), STAT=status(3))
-        ALLOCATE(pr%cpr(0:nr, nv, 0:nsteps, nl), STAT=status(1))
-        ALLOCATE(pr%Tepr(0:nr, 0:nsteps, nl), STAT=status(2))
-        ALLOCATE(pr%pHpr(0:nr, 0:nsteps, nl), STAT=status(3)) !gp end new block
+        !gp allocate(pr%cpr(0:nr, nv, 0:2400), stat=status(1))
+        !gp allocate(pr%tepr(0:nr, 0:2400, 2), stat=status(2))
+        !gp allocate(pr%phpr(0:nr, 0:2400), stat=status(3))
+        allocate(pr%cpr(0:nr, nv, 0:nsteps, nl), stat=status(1))
+        allocate(pr%tepr(0:nr, 0:nsteps, nl), stat=status(2))
+        allocate(pr%phpr(0:nr, 0:nsteps, nl), stat=status(3)) !gp end new block
 
-        ALLOCATE(pr%NINbpr(0:nr, 0:nsteps), STAT=status(4))
-        ALLOCATE(pr%NIPbpr(0:nr, 0:nsteps), STAT=status(5))
+        allocate(pr%ninbpr(0:nr, 0:nsteps), stat=status(4))
+        allocate(pr%nipbpr(0:nr, 0:nsteps), stat=status(5))
 
-        !gp ALLOCATE(pr%Temn(0:nr), STAT=status(7))
-        !gp ALLOCATE(pr%Temx(0:nr), STAT=status(8))
-        !gp ALLOCATE(pr%Teav(0:nr), STAT=status(9))
-        !gp ALLOCATE(pr%osav(0:nr), STAT=status(10))
-        !gp ALLOCATE(pr%pHsav(0:nr), STAT=status(11))
-        !gp ALLOCATE(pr%cmn(0:nr,nv), STAT=status(12))
-        !gp ALLOCATE(pr%cmx(0:nr,nv), STAT=status(13))
-        !gp ALLOCATE(pr%cav(0:nr,nv), STAT=status(14))
-        !gp ALLOCATE(pr%pHmn(0:nr), STAT=status(15))
-        !gp ALLOCATE(pr%pHmx(0:nr), STAT=status(16))
-        !gp ALLOCATE(pr%pHav(0:nr), STAT=status(17))
-        !gp ALLOCATE(pr%TNmn(0:nr), STAT=status(18))
-        !gp ALLOCATE(pr%TNmx(0:nr), STAT=status(19))
-        !gp ALLOCATE(pr%TNav(0:nr), STAT=status(20))
-        !gp ALLOCATE(pr%TPmn(0:nr), STAT=status(21))
-        !gp ALLOCATE(pr%TPmx(0:nr), STAT=status(22))
-        !gp ALLOCATE(pr%TPav(0:nr), STAT=status(23))
-        !gp ALLOCATE(pr%NH3mn(0:nr), STAT=status(24))
-        !gp ALLOCATE(pr%NH3mx(0:nr), STAT=status(25))
-        !gp ALLOCATE(pr%NH3av(0:nr), STAT=status(26))
-        ALLOCATE(pr%Temn(0:nr, nl), STAT=status(7))
-        ALLOCATE(pr%Temx(0:nr, nl), STAT=status(8))
-        ALLOCATE(pr%Teav(0:nr, nl), STAT=status(9))
-        ALLOCATE(pr%osav(0:nr, nl), STAT=status(10))
-        ALLOCATE(pr%pHsav(0:nr, nl), STAT=status(11))
-        ALLOCATE(pr%cmn(0:nr,nv, nl), STAT=status(12))
-        ALLOCATE(pr%cmx(0:nr,nv, nl), STAT=status(13))
-        ALLOCATE(pr%cav(0:nr,nv, nl), STAT=status(14))
-        ALLOCATE(pr%pHmn(0:nr, nl), STAT=status(15))
-        ALLOCATE(pr%pHmx(0:nr, nl), STAT=status(16))
-        ALLOCATE(pr%pHav(0:nr, nl), STAT=status(17))
-        ALLOCATE(pr%TNmn(0:nr, nl), STAT=status(18))
-        ALLOCATE(pr%TNmx(0:nr, nl), STAT=status(19))
-        ALLOCATE(pr%TNav(0:nr, nl), STAT=status(20))
-        ALLOCATE(pr%TPmn(0:nr, nl), STAT=status(21))
-        ALLOCATE(pr%TPmx(0:nr, nl), STAT=status(22))
-        ALLOCATE(pr%TPav(0:nr, nl), STAT=status(23))
-        ALLOCATE(pr%NH3mn(0:nr, nl), STAT=status(24))
-        ALLOCATE(pr%NH3mx(0:nr, nl), STAT=status(25))
-        ALLOCATE(pr%NH3av(0:nr, nl), STAT=status(26)) !gp end new block
+        !gp allocate(pr%temn(0:nr), stat=status(7))
+        !gp allocate(pr%temx(0:nr), stat=status(8))
+        !gp allocate(pr%teav(0:nr), stat=status(9))
+        !gp allocate(pr%osav(0:nr), stat=status(10))
+        !gp allocate(pr%phsav(0:nr), stat=status(11))
+        !gp allocate(pr%cmn(0:nr,nv), stat=status(12))
+        !gp allocate(pr%cmx(0:nr,nv), stat=status(13))
+        !gp allocate(pr%cav(0:nr,nv), stat=status(14))
+        !gp allocate(pr%phmn(0:nr), stat=status(15))
+        !gp allocate(pr%phmx(0:nr), stat=status(16))
+        !gp allocate(pr%phav(0:nr), stat=status(17))
+        !gp allocate(pr%tnmn(0:nr), stat=status(18))
+        !gp allocate(pr%tnmx(0:nr), stat=status(19))
+        !gp allocate(pr%tnav(0:nr), stat=status(20))
+        !gp allocate(pr%tpmn(0:nr), stat=status(21))
+        !gp allocate(pr%tpmx(0:nr), stat=status(22))
+        !gp allocate(pr%tpav(0:nr), stat=status(23))
+        !gp allocate(pr%nh3mn(0:nr), stat=status(24))
+        !gp allocate(pr%nh3mx(0:nr), stat=status(25))
+        !gp allocate(pr%nh3av(0:nr), stat=status(26))
+        allocate(pr%temn(0:nr, nl), stat=status(7))
+        allocate(pr%temx(0:nr, nl), stat=status(8))
+        allocate(pr%teav(0:nr, nl), stat=status(9))
+        allocate(pr%osav(0:nr, nl), stat=status(10))
+        allocate(pr%phsav(0:nr, nl), stat=status(11))
+        allocate(pr%cmn(0:nr,nv, nl), stat=status(12))
+        allocate(pr%cmx(0:nr,nv, nl), stat=status(13))
+        allocate(pr%cav(0:nr,nv, nl), stat=status(14))
+        allocate(pr%phmn(0:nr, nl), stat=status(15))
+        allocate(pr%phmx(0:nr, nl), stat=status(16))
+        allocate(pr%phav(0:nr, nl), stat=status(17))
+        allocate(pr%tnmn(0:nr, nl), stat=status(18))
+        allocate(pr%tnmx(0:nr, nl), stat=status(19))
+        allocate(pr%tnav(0:nr, nl), stat=status(20))
+        allocate(pr%tpmn(0:nr, nl), stat=status(21))
+        allocate(pr%tpmx(0:nr, nl), stat=status(22))
+        allocate(pr%tpav(0:nr, nl), stat=status(23))
+        allocate(pr%nh3mn(0:nr, nl), stat=status(24))
+        allocate(pr%nh3mx(0:nr, nl), stat=status(25))
+        allocate(pr%nh3av(0:nr, nl), stat=status(26)) !gp end new block
 
-        !gp 20-Oct-04 growth limitation factors for bottom algae
-        ALLOCATE(pr%phitotalSavepr(0:nr, 0:nsteps), STAT=status(27))
-        ALLOCATE(pr%phitSavepr(0:nr, 0:nsteps), STAT=status(28))
-        ALLOCATE(pr%philSavepr(0:nr, 0:nsteps), STAT=status(29))
-        ALLOCATE(pr%phinSavepr(0:nr, 0:nsteps), STAT=status(30))
-        ALLOCATE(pr%phipSavepr(0:nr, 0:nsteps), STAT=status(31))
-        ALLOCATE(pr%phicSavepr(0:nr, 0:nsteps), STAT=status(32)) !gp 20-Oct-04 end new block
+        !gp 20-oct-04 growth limitation factors for bottom algae
+        allocate(pr%phitotalsavepr(0:nr, 0:nsteps), stat=status(27))
+        allocate(pr%phitsavepr(0:nr, 0:nsteps), stat=status(28))
+        allocate(pr%philsavepr(0:nr, 0:nsteps), stat=status(29))
+        allocate(pr%phinsavepr(0:nr, 0:nsteps), stat=status(30))
+        allocate(pr%phipsavepr(0:nr, 0:nsteps), stat=status(31))
+        allocate(pr%phicsavepr(0:nr, 0:nsteps), stat=status(32)) !gp 20-oct-04 end new block
 
-        !gp 28-Oct-04 diagenesis flux between sediment/water
-        ALLOCATE(pr%DiagFluxDOpr(0:nr, 0:nsteps), STAT=status(33))
-        ALLOCATE(pr%DiagFluxCBODpr(0:nr, 0:nsteps), STAT=status(34))
-        ALLOCATE(pr%DiagFluxNH4pr(0:nr, 0:nsteps), STAT=status(35))
-        ALLOCATE(pr%DiagFluxNO3pr(0:nr, 0:nsteps), STAT=status(36))
-        ALLOCATE(pr%DiagFluxSRPpr(0:nr, 0:nsteps), STAT=status(37))
-        ALLOCATE(pr%DiagFluxICpr(0:nr, 0:nsteps), STAT=status(38)) !gp end new block
+        !gp 28-oct-04 diagenesis flux between sediment/water
+        allocate(pr%diagfluxdopr(0:nr, 0:nsteps), stat=status(33))
+        allocate(pr%diagfluxcbodpr(0:nr, 0:nsteps), stat=status(34))
+        allocate(pr%diagfluxnh4pr(0:nr, 0:nsteps), stat=status(35))
+        allocate(pr%diagfluxno3pr(0:nr, 0:nsteps), stat=status(36))
+        allocate(pr%diagfluxsrppr(0:nr, 0:nsteps), stat=status(37))
+        allocate(pr%diagfluxicpr(0:nr, 0:nsteps), stat=status(38)) !gp end new block
 
-        !gp 28-Oct-04 diagenesis flux between sediment/water
-        ALLOCATE(pr%HypoFluxDOpr(0:nr, 0:nsteps), STAT=status(39))
-        ALLOCATE(pr%HypoFluxCBODpr(0:nr, 0:nsteps), STAT=status(40))
-        ALLOCATE(pr%HypoFluxNH4pr(0:nr, 0:nsteps), STAT=status(41))
-        ALLOCATE(pr%HypoFluxNO3pr(0:nr, 0:nsteps), STAT=status(42))
-        ALLOCATE(pr%HypoFluxSRPpr(0:nr, 0:nsteps), STAT=status(43))
-        ALLOCATE(pr%HypoFluxICpr(0:nr, 0:nsteps), STAT=status(44)) !gp end new block
+        !gp 28-oct-04 diagenesis flux between sediment/water
+        allocate(pr%hypofluxdopr(0:nr, 0:nsteps), stat=status(39))
+        allocate(pr%hypofluxcbodpr(0:nr, 0:nsteps), stat=status(40))
+        allocate(pr%hypofluxnh4pr(0:nr, 0:nsteps), stat=status(41))
+        allocate(pr%hypofluxno3pr(0:nr, 0:nsteps), stat=status(42))
+        allocate(pr%hypofluxsrppr(0:nr, 0:nsteps), stat=status(43))
+        allocate(pr%hypofluxicpr(0:nr, 0:nsteps), stat=status(44)) !gp end new block
 
-        !gp 15-Nov-04 reach-average daily-average flux between sediment/water
-        ALLOCATE(pr%DiagFluxDOav(0:nr), STAT=status(45))
-        ALLOCATE(pr%DiagFluxCBODav(0:nr), STAT=status(46))
-        ALLOCATE(pr%DiagFluxNH4av(0:nr), STAT=status(47))
-        ALLOCATE(pr%DiagFluxNO3av(0:nr), STAT=status(48))
-        ALLOCATE(pr%DiagFluxSRPav(0:nr), STAT=status(49))
-        ALLOCATE(pr%HypoFluxDOav(0:nr), STAT=status(50))
-        ALLOCATE(pr%HypoFluxCBODav(0:nr), STAT=status(51))
-        ALLOCATE(pr%HypoFluxNH4av(0:nr), STAT=status(52))
-        ALLOCATE(pr%HypoFluxNO3av(0:nr), STAT=status(53))
-        ALLOCATE(pr%HypoFluxSRPav(0:nr), STAT=status(54))
+        !gp 15-nov-04 reach-average daily-average flux between sediment/water
+        allocate(pr%diagfluxdoav(0:nr), stat=status(45))
+        allocate(pr%diagfluxcbodav(0:nr), stat=status(46))
+        allocate(pr%diagfluxnh4av(0:nr), stat=status(47))
+        allocate(pr%diagfluxno3av(0:nr), stat=status(48))
+        allocate(pr%diagfluxsrpav(0:nr), stat=status(49))
+        allocate(pr%hypofluxdoav(0:nr), stat=status(50))
+        allocate(pr%hypofluxcbodav(0:nr), stat=status(51))
+        allocate(pr%hypofluxnh4av(0:nr), stat=status(52))
+        allocate(pr%hypofluxno3av(0:nr), stat=status(53))
+        allocate(pr%hypofluxsrpav(0:nr), stat=status(54))
 
-        !gp 11-Jan-05 cell quota mgN/gD and mgP/gD
-        ALLOCATE(pr%NINbmn(0:nr), STAT=status(55))
-        ALLOCATE(pr%NINbmx(0:nr), STAT=status(56))
-        ALLOCATE(pr%NINbav(0:nr), STAT=status(57))
-        ALLOCATE(pr%NIPbmn(0:nr), STAT=status(58))
-        ALLOCATE(pr%NIPbmx(0:nr), STAT=status(59))
-        ALLOCATE(pr%NIPbav(0:nr), STAT=status(60))
+        !gp 11-jan-05 cell quota mgn/gd and mgp/gd
+        allocate(pr%ninbmn(0:nr), stat=status(55))
+        allocate(pr%ninbmx(0:nr), stat=status(56))
+        allocate(pr%ninbav(0:nr), stat=status(57))
+        allocate(pr%nipbmn(0:nr), stat=status(58))
+        allocate(pr%nipbmx(0:nr), stat=status(59))
+        allocate(pr%nipbav(0:nr), stat=status(60))
 
-        !gp 05-Jul-05 heat/DO/CO2 fluxes
-        ALLOCATE(pr%pr_saveHeatFluxJsnt(0:nr, 0:nsteps), STAT=status(61))
-        ALLOCATE(pr%pr_saveHeatFluxLongat(0:nr, 0:nsteps), STAT=status(62))
-        ALLOCATE(pr%pr_saveHeatFluxBack(0:nr, 0:nsteps), STAT=status(63))
-        ALLOCATE(pr%pr_saveHeatFluxConv(0:nr, 0:nsteps), STAT=status(64))
-        ALLOCATE(pr%pr_saveHeatFluxEvap(0:nr, 0:nsteps), STAT=status(65))
-        ALLOCATE(pr%pr_saveHeatFluxJsed(0:nr, 0:nsteps), STAT=status(66))
-        ALLOCATE(pr%pr_saveHeatFluxJhyporheic(0:nr, 0:nsteps), STAT=status(67))
-        ALLOCATE(pr%pr_saveHeatFluxTribs(0:nr, 0:nsteps), STAT=status(68))
-        ALLOCATE(pr%pr_saveHeatFluxAdvecDisp(0:nr, 0:nsteps), STAT=status(69))
-        ALLOCATE(pr%pr_saveDOfluxReaer(0:nr, 0:nsteps), STAT=status(70))
-        ALLOCATE(pr%pr_saveDOfluxCBODfast(0:nr, 0:nsteps), STAT=status(71))
-        ALLOCATE(pr%pr_saveDOfluxCBODslow(0:nr, 0:nsteps), STAT=status(72))
-        ALLOCATE(pr%pr_saveDOfluxCOD(0:nr, 0:nsteps), STAT=status(73))
-        ALLOCATE(pr%pr_saveDOfluxNitrif(0:nr, 0:nsteps), STAT=status(74))
-        ALLOCATE(pr%pr_saveDOfluxPhytoResp(0:nr, 0:nsteps), STAT=status(75))
-        ALLOCATE(pr%pr_saveDOfluxPhytoPhoto(0:nr, 0:nsteps), STAT=status(76))
-        ALLOCATE(pr%pr_saveDOfluxBotalgResp(0:nr, 0:nsteps), STAT=status(77))
-        ALLOCATE(pr%pr_saveDOfluxBotalgPhoto(0:nr, 0:nsteps), STAT=status(78))
-        ALLOCATE(pr%pr_saveDOfluxSOD(0:nr, 0:nsteps), STAT=status(79))
-        ALLOCATE(pr%pr_saveDOfluxHyporheic(0:nr, 0:nsteps), STAT=status(80))
-        ALLOCATE(pr%pr_saveDOfluxTribs(0:nr, 0:nsteps), STAT=status(81))
-        ALLOCATE(pr%pr_saveDOfluxAdvecDisp(0:nr, 0:nsteps), STAT=status(82))
-        ALLOCATE(pr%pr_saveCO2fluxReaer(0:nr, 0:nsteps), STAT=status(83))
-        ALLOCATE(pr%pr_saveCO2fluxCBODfast(0:nr, 0:nsteps), STAT=status(84))
-        ALLOCATE(pr%pr_saveCO2fluxCBODslow(0:nr, 0:nsteps), STAT=status(85))
-        ALLOCATE(pr%pr_saveCO2fluxPhytoResp(0:nr, 0:nsteps), STAT=status(86))
-        ALLOCATE(pr%pr_saveCO2fluxPhytoPhoto(0:nr, 0:nsteps), STAT=status(87))
-        ALLOCATE(pr%pr_saveCO2fluxBotalgResp(0:nr, 0:nsteps), STAT=status(88))
-        ALLOCATE(pr%pr_saveCO2fluxBotalgPhoto(0:nr, 0:nsteps), STAT=status(89))
-        ALLOCATE(pr%pr_saveCO2fluxSOD(0:nr, 0:nsteps), STAT=status(90))
-        ALLOCATE(pr%pr_saveCO2fluxHyporheic(0:nr, 0:nsteps), STAT=status(91))
-        ALLOCATE(pr%pr_saveCO2fluxTribs(0:nr, 0:nsteps), STAT=status(92))
-        ALLOCATE(pr%pr_saveCO2fluxAdvecDisp(0:nr, 0:nsteps), STAT=status(93))
+        !gp 05-jul-05 heat/do/co2 fluxes
+        allocate(pr%pr_saveheatfluxjsnt(0:nr, 0:nsteps), stat=status(61))
+        allocate(pr%pr_saveheatfluxlongat(0:nr, 0:nsteps), stat=status(62))
+        allocate(pr%pr_saveheatfluxback(0:nr, 0:nsteps), stat=status(63))
+        allocate(pr%pr_saveheatfluxconv(0:nr, 0:nsteps), stat=status(64))
+        allocate(pr%pr_saveheatfluxevap(0:nr, 0:nsteps), stat=status(65))
+        allocate(pr%pr_saveheatfluxjsed(0:nr, 0:nsteps), stat=status(66))
+        allocate(pr%pr_saveheatfluxjhyporheic(0:nr, 0:nsteps), stat=status(67))
+        allocate(pr%pr_saveheatfluxtribs(0:nr, 0:nsteps), stat=status(68))
+        allocate(pr%pr_saveheatfluxadvecdisp(0:nr, 0:nsteps), stat=status(69))
+        allocate(pr%pr_savedofluxreaer(0:nr, 0:nsteps), stat=status(70))
+        allocate(pr%pr_savedofluxcbodfast(0:nr, 0:nsteps), stat=status(71))
+        allocate(pr%pr_savedofluxcbodslow(0:nr, 0:nsteps), stat=status(72))
+        allocate(pr%pr_savedofluxcod(0:nr, 0:nsteps), stat=status(73))
+        allocate(pr%pr_savedofluxnitrif(0:nr, 0:nsteps), stat=status(74))
+        allocate(pr%pr_savedofluxphytoresp(0:nr, 0:nsteps), stat=status(75))
+        allocate(pr%pr_savedofluxphytophoto(0:nr, 0:nsteps), stat=status(76))
+        allocate(pr%pr_savedofluxbotalgresp(0:nr, 0:nsteps), stat=status(77))
+        allocate(pr%pr_savedofluxbotalgphoto(0:nr, 0:nsteps), stat=status(78))
+        allocate(pr%pr_savedofluxsod(0:nr, 0:nsteps), stat=status(79))
+        allocate(pr%pr_savedofluxhyporheic(0:nr, 0:nsteps), stat=status(80))
+        allocate(pr%pr_savedofluxtribs(0:nr, 0:nsteps), stat=status(81))
+        allocate(pr%pr_savedofluxadvecdisp(0:nr, 0:nsteps), stat=status(82))
+        allocate(pr%pr_saveco2fluxreaer(0:nr, 0:nsteps), stat=status(83))
+        allocate(pr%pr_saveco2fluxcbodfast(0:nr, 0:nsteps), stat=status(84))
+        allocate(pr%pr_saveco2fluxcbodslow(0:nr, 0:nsteps), stat=status(85))
+        allocate(pr%pr_saveco2fluxphytoresp(0:nr, 0:nsteps), stat=status(86))
+        allocate(pr%pr_saveco2fluxphytophoto(0:nr, 0:nsteps), stat=status(87))
+        allocate(pr%pr_saveco2fluxbotalgresp(0:nr, 0:nsteps), stat=status(88))
+        allocate(pr%pr_saveco2fluxbotalgphoto(0:nr, 0:nsteps), stat=status(89))
+        allocate(pr%pr_saveco2fluxsod(0:nr, 0:nsteps), stat=status(90))
+        allocate(pr%pr_saveco2fluxhyporheic(0:nr, 0:nsteps), stat=status(91))
+        allocate(pr%pr_saveco2fluxtribs(0:nr, 0:nsteps), stat=status(92))
+        allocate(pr%pr_saveco2fluxadvecdisp(0:nr, 0:nsteps), stat=status(93))
 
-        !gp 25-Jun-09
-        ALLOCATE(pr%av_BotAlgPhoto(0:nr), STAT=status(94))
-        ALLOCATE(pr%av_BotAlgResp(0:nr), STAT=status(95))
-        ALLOCATE(pr%av_BotAlgDeath(0:nr), STAT=status(96))
-        ALLOCATE(pr%av_BotAlgNetGrowth(0:nr), STAT=status(97))
+        !gp 25-jun-09
+        allocate(pr%av_botalgphoto(0:nr), stat=status(94))
+        allocate(pr%av_botalgresp(0:nr), stat=status(95))
+        allocate(pr%av_botalgdeath(0:nr), stat=status(96))
+        allocate(pr%av_botalgnetgrowth(0:nr), stat=status(97))
 
-        pr%Temn=0; pr%Temx=0; pr%Teav=0
-        pr%osav=0; pr%pHsav=0; pr%cmn=0
-        pr%cmx=0; pr%cav=0; pr%pHmn=0
-        pr%pHmx=0; pr%pHav=0; pr%TNmn=0
-        pr%TNmx=0; pr%TNav=0; pr%TPmn=0
-        pr%TPmx=0; pr%TPav=0; pr%NH3mn=0
-        pr%NH3mx=0; pr%NH3av=0;
-        pr%cpr=0; pr%Tepr=0; pr%pHpr=0
-        pr%NINbpr=0; pr%NIPbpr=0
+        pr%temn=0; pr%temx=0; pr%teav=0
+        pr%osav=0; pr%phsav=0; pr%cmn=0
+        pr%cmx=0; pr%cav=0; pr%phmn=0
+        pr%phmx=0; pr%phav=0; pr%tnmn=0
+        pr%tnmx=0; pr%tnav=0; pr%tpmn=0
+        pr%tpmx=0; pr%tpav=0; pr%nh3mn=0
+        pr%nh3mx=0; pr%nh3av=0;
+        pr%cpr=0; pr%tepr=0; pr%phpr=0
+        pr%ninbpr=0; pr%nipbpr=0
 
-        !gp 20-Oct-04
-        pr%phitotalSavepr=0; pr%phitSavepr=0; pr%philSavepr=0; pr%phinSavepr=0; pr%phipSavepr=0; pr%phicSavepr=0
+        !gp 20-oct-04
+        pr%phitotalsavepr=0; pr%phitsavepr=0; pr%philsavepr=0; pr%phinsavepr=0; pr%phipsavepr=0; pr%phicsavepr=0
 
-        !gp 28-Oct-04 sed fluxes at each calc step
-        pr%DiagFluxDOpr=0; pr%DiagFluxCBODpr=0; pr%DiagFluxNH4pr=0; pr%DiagFluxNO3pr=0; pr%DiagFluxSRPpr=0; pr%DiagFluxICpr=0
-        pr%HypoFluxDOpr=0; pr%HypoFluxCBODpr=0; pr%HypoFluxNH4pr=0; pr%HypoFluxNO3pr=0; pr%HypoFluxSRPpr=0; pr%HypoFluxICpr=0
+        !gp 28-oct-04 sed fluxes at each calc step
+        pr%diagfluxdopr=0; pr%diagfluxcbodpr=0; pr%diagfluxnh4pr=0; pr%diagfluxno3pr=0; pr%diagfluxsrppr=0; pr%diagfluxicpr=0
+        pr%hypofluxdopr=0; pr%hypofluxcbodpr=0; pr%hypofluxnh4pr=0; pr%hypofluxno3pr=0; pr%hypofluxsrppr=0; pr%hypofluxicpr=0
 
-        !gp 15-Nov-04 reach-average daily average sed fluxes
-        pr%DiagFluxDOav=0; pr%DiagFluxCBODav=0; pr%DiagFluxNH4av=0; pr%DiagFluxNO3av=0; pr%DiagFluxSRPav=0
-        pr%HypoFluxDOav=0; pr%HypoFluxCBODav=0; pr%HypoFluxNH4av=0; pr%HypoFluxNO3av=0; pr%HypoFluxSRPav=0
+        !gp 15-nov-04 reach-average daily average sed fluxes
+        pr%diagfluxdoav=0; pr%diagfluxcbodav=0; pr%diagfluxnh4av=0; pr%diagfluxno3av=0; pr%diagfluxsrpav=0
+        pr%hypofluxdoav=0; pr%hypofluxcbodav=0; pr%hypofluxnh4av=0; pr%hypofluxno3av=0; pr%hypofluxsrpav=0
 
-        !gp 11-Jan-05 cell quota mgN/gD and mgP/gD
-        pr%NINbmn=0; pr%NINbmx=0; pr%NINbav=0; pr%NIPbmn=0; pr%NIPbmx=0; pr%NIPbav=0
+        !gp 11-jan-05 cell quota mgn/gd and mgp/gd
+        pr%ninbmn=0; pr%ninbmx=0; pr%ninbav=0; pr%nipbmn=0; pr%nipbmx=0; pr%nipbav=0
 
 
-        !gp 05-Jul-05
-        pr%pr_saveHeatFluxJsnt=0; pr%pr_saveHeatFluxLongat=0; pr%pr_saveHeatFluxBack=0; pr%pr_saveHeatFluxConv=0
-        pr%pr_saveHeatFluxEvap=0; pr%pr_saveHeatFluxJsed=0; pr%pr_saveHeatFluxJhyporheic=0; pr%pr_saveHeatFluxTribs=0
-        pr%pr_saveHeatFluxAdvecDisp=0
-        pr%pr_saveDOfluxReaer=0; pr%pr_saveDOfluxCBODfast=0; pr%pr_saveDOfluxCBODslow=0; pr%pr_saveDOfluxNitrif=0
-        pr%pr_saveDOfluxPhytoResp=0; pr%pr_saveDOfluxPhytoPhoto=0; pr%pr_saveDOfluxBotalgResp=0; pr%pr_saveDOfluxBotalgPhoto=0
-        pr%pr_saveDOfluxSOD=0; pr%pr_saveDOfluxCOD=0; pr%pr_saveDOfluxHyporheic=0; pr%pr_saveDOfluxTribs=0
-        pr%pr_saveDOfluxAdvecDisp=0
-        pr%pr_saveCO2fluxReaer=0; pr%pr_saveCO2fluxCBODfast=0; pr%pr_saveCO2fluxCBODslow=0
-        pr%pr_saveCO2fluxPhytoResp=0; pr%pr_saveCO2fluxPhytoPhoto=0; pr%pr_saveCO2fluxBotalgResp=0; pr%pr_saveCO2fluxBotalgPhoto=0
-        pr%pr_saveCO2fluxSOD=0; pr%pr_saveCO2fluxHyporheic=0; pr%pr_saveCO2fluxTribs=0
-        pr%pr_saveCO2fluxAdvecDisp=0
+        !gp 05-jul-05
+        pr%pr_saveheatfluxjsnt=0; pr%pr_saveheatfluxlongat=0; pr%pr_saveheatfluxback=0; pr%pr_saveheatfluxconv=0
+        pr%pr_saveheatfluxevap=0; pr%pr_saveheatfluxjsed=0; pr%pr_saveheatfluxjhyporheic=0; pr%pr_saveheatfluxtribs=0
+        pr%pr_saveheatfluxadvecdisp=0
+        pr%pr_savedofluxreaer=0; pr%pr_savedofluxcbodfast=0; pr%pr_savedofluxcbodslow=0; pr%pr_savedofluxnitrif=0
+        pr%pr_savedofluxphytoresp=0; pr%pr_savedofluxphytophoto=0; pr%pr_savedofluxbotalgresp=0; pr%pr_savedofluxbotalgphoto=0
+        pr%pr_savedofluxsod=0; pr%pr_savedofluxcod=0; pr%pr_savedofluxhyporheic=0; pr%pr_savedofluxtribs=0
+        pr%pr_savedofluxadvecdisp=0
+        pr%pr_saveco2fluxreaer=0; pr%pr_saveco2fluxcbodfast=0; pr%pr_saveco2fluxcbodslow=0
+        pr%pr_saveco2fluxphytoresp=0; pr%pr_saveco2fluxphytophoto=0; pr%pr_saveco2fluxbotalgresp=0; pr%pr_saveco2fluxbotalgphoto=0
+        pr%pr_saveco2fluxsod=0; pr%pr_saveco2fluxhyporheic=0; pr%pr_saveco2fluxtribs=0
+        pr%pr_saveco2fluxadvecdisp=0
 
-        !gp 25-Jun-09
-        pr%av_BotAlgPhoto=0; pr%av_BotAlgResp=0; pr%av_BotAlgDeath=0; pr%av_BotAlgNetGrowth=0
+        !gp 25-jun-09
+        pr%av_botalgphoto=0; pr%av_botalgresp=0; pr%av_botalgdeath=0; pr%av_botalgnetgrowth=0
 
-        !gp 15-Nov-04 DO i=0, 26
-        !gp 05-Jul-05 DO i=0, 60
-        DO i=0, 93
-            IF (status(i)==1) THEN
-                WRITE(8,*) '** Class_Output:outData_ failed. Insufficient memory for dynamic diel output arrays. **'
-                CLOSE (8) !gp 17-Nov-04
-                STOP !Class_Integration:Integration_ failed. Insufficient Memory!'
-            END IF
+        !gp 15-nov-04 do i=0, 26
+        !gp 05-jul-05 do i=0, 60
+        do i=0, 93
+            if (status(i)==1) then
+                write(8,*) '** Class_Output:outData_ failed. Insufficient memory for dynamic diel output arrays. **'
+                close (8) !gp 17-nov-04
+                stop !class_integration:integration_ failed. insufficient memory!'
+            end if
 
             !gp debug
-            !OPEN (unit=9, FILE='debug2.out', status='REPLACE', ACTION='WRITE')
-            !WRITE(9,*) 'status(', i, ') =', status(i)
-            !CLOSE (9)
+            !open (unit=9, file='debug2.out', status='replace', action='write')
+            !write(9,*) 'status(', i, ') =', status(i)
+            !close (9)
 
-        END DO
+        end do
 
-    END FUNCTION outData_
+    end function outdata_
 
-    SUBROUTINE Output(pr, nr, topo, hydrau, Rates, system)
-        USE Class_Hydraulics
-        USE m_rates
-        USE m_RiverTopo
-        USE Class_SystemParams
-        USE Class_Phsolve
-! USE Class_Integration
+    subroutine output(pr, nr, topo, hydrau, rates, system)
 
-        TYPE(Outdata_type), INTENT(IN) :: pr
-        TYPE(t_rivertopo) Topo
-        TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
-        TYPE(rates_t) Rates
-        TYPE(SystemParams) system
+        type(outdata_type), intent(in) :: pr
+        type(t_rivertopo) topo
+        type(riverhydraulics_type), intent(in) :: hydrau
+        type(rates_t) rates
+        type(systemparams) system
 
-        INTEGER(i32), INTENT(IN) :: nr
-        !gp INTEGER(i32) i, j, nrp
-        INTEGER(i32) i, j, nrp, k !gp
-        REAL(r64) TOC, TKN, TSS, TP, TN, BottomAlgae, DOSat, NH3
-        REAL(r64) kawind, ka
-        CHARACTER(LEN=30) reaFormular
-        INTEGER(i32) ihour
-        REAL(r64) t, pH, CBODu, tdy
+        integer(i32), intent(in) :: nr
+        !gp integer(i32) i, j, nrp
+        integer(i32) i, j, nrp, k !gp
+        real(r64) toc, tkn, tss, tp, tn, bottomalgae, dosat, nh3
+        real(r64) kawind, ka
+        integer(i32) ihour
+        real(r64) t, ph, cbodu, tdy
         !gp output of hydraulics
-        !Sheets("Hydraulics Summary")
+        !sheets("hydraulics summary")
 
-        !calculate ka(0) for output, not used in calculations
-        !kawind = 0.728_r64 * Uw(0) ** 0.5_r64 - 0.317_r64 * Uw(0) + 0.0372_r64 * Uw(0) ** 2
-        !ka(0) = kau(0) + kawind / depth(0)
-        WRITE(8,*) '** Hydraulics Summary **'
-        WRITE (8,'(A9, 9A12, A25)')'Downstream', 'Hydraulics', "E'", 'H', 'B', 'Ac', 'U', 'trav time', &
-            'slope', 'Reaeration', 'Reaeration formulas'
-        WRITE (8,'(A9, 9A12, A25)') 'distance', 'Q,m3/s', 'm3/s', 'm', 'm', 'm2', 'mps', 'd', '', &
-            'ka,20,/d', 'water/wind'
-        DO i = 0, nr
-            IF (i==0) THEN
-                reaFormular =''
-            ELSE
-                IF (Rates%kawindmethod=='None') THEN
-                    reaFormular = TRIM(hydrau%reach(i)%kaf) // '/No wind'
-                ELSE
-                    reaFormular = TRIM(hydrau%reach(i)%kaf) // Rates%kawindmethod
-                END IF
-            END IF
-            WRITE(8,'(F9.4, 9F12.5, 1A35)') topo%reach(i)%xrdn, hydrau%reach(i)%Q, hydrau%reach(i)%Epout, &
-                hydrau%reach(i)%depth, hydrau%reach(i)%b, hydrau%reach(i)%Ac, &
-                hydrau%reach(i)%U, hydrau%reach(i)%trav, hydrau%reach(i)%s, &
-                hydrau%reach(i)%ka, reaFormular
-        END DO
+        call hydraulics_summary(topo, hydrau, rates, nr)
 
-!output of Hourly summary of loads
-!sheets("Source Summary")
-        WRITE(8,*)
-        WRITE(8,*) '** Source summary **'
+!output of hourly summary of loads
+!sheets("source summary")
+        write(8,*)
+        write(8,*) '** Source summary **'
         !gp 30-Nov-04
-        !gp WRITE(8,'(A6, A2, 2A15, 20A12)') 'Time', '', 'Reach', 'Downstream', 'UpDist', 'Down Dist', 'Abstraction', 'Inflow', &
+        !gp write(8,'(A6, A2, 2A15, 20A12)') 'Time', '', 'Reach', 'Downstream', 'UpDist', 'Down Dist', 'Abstraction', 'Inflow', &
         !gp 'Temp', 'Cond', 'Iss', 'Oxygen', 'CBODs', 'CBODf', 'No', 'NH4', &
         !gp 'NO3', 'Po', 'InorgP', 'Phyto', 'Detritus', 'Pathogens', 'Alk', 'pH'
-        !gp WRITE(8,'(A8, 2A15, 20A12)') '', 'Label', 'Label', 'x(km)', 'x(km)', 'cms', 'cms', 'C', 'umhos', 'mgD/L', &
+        !gp write(8,'(A8, 2A15, 20A12)') '', 'Label', 'Label', 'x(km)', 'x(km)', 'cms', 'cms', 'C', 'umhos', 'mgD/L', &
         !gp 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', 'ugN/L', 'ugN/L', &
         !gp 'ugN/L', 'ugN/L', 'ugN/L', 'mgD/L', 'cfu/100mL', 'mgCaCO3/L'
-        WRITE(8,'(A6, A2, 2A15, 21A12)') 'Time', '', 'Reach', 'Downstream', 'UpDist', 'Down Dist', 'Abstraction', 'Inflow', &
+        write(8,'(A6, A2, 2A15, 21A12)') 'Time', '', 'Reach', 'Downstream', 'UpDist', 'Down Dist', 'Abstraction', 'Inflow', &
             'Temp', 'Cond', 'Iss', 'Oxygen', 'CBODs', 'CBODf', 'No', 'NH4', &
             'NO3', 'Po', 'InorgP', 'Phyto', 'Detritus', 'Pathogens', 'Generic', 'Alk', 'pH'
-        WRITE(8,'(A8, 2A15, 21A12)') '', 'Label', 'Label', 'x(km)', 'x(km)', 'cms', 'cms', 'C', 'umhos', 'mgD/L', &
+        write(8,'(A8, 2A15, 21A12)') '', 'Label', 'Label', 'x(km)', 'x(km)', 'cms', 'cms', 'C', 'umhos', 'mgD/L', &
             'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', 'ugN/L', 'ugN/L', &
             'ugN/L', 'ugN/L', 'ugN/L', 'mgD/L', 'cfu/100mL', 'user define', 'mgCaCO3/L' !gp 30-Nov-04 end new block
-        IF (npt /= 0 .OR. ndiff /= 0) THEN
+        if (npt /= 0 .or. ndiff /= 0) then
             ! rlab2(0) = rlab1(1)
-            DO ihour = 0, 23 !loop through output of hourly sources
+            do ihour = 0, 23 !loop through output of hourly sources
                 t = ihour / 24.0_r64 !current output time in days
                 !evaluate sine functions and distribute loads to reaches at time t
-                CALL SourcesCalc(t, nr, Hydrau%flag)
+                call sourcescalc(t, nr, hydrau%flag)
 
                 !output of simulation date+time
-                !ActiveCell.Value = DateSerial(xyear, xmon, xday) + t
+                !activecell.value = dateserial(xyear, xmon, xday) + t
 
-                DO i = 1, nr
+                do i = 1, nr
 
-                    IF (load(i)%c(nv - 2) > 0 .AND. load(i)%c(nv - 1) > 0) THEN !gp 03-Dec-04
+                    if (load(i)%c(nv - 2) > 0 .and. load(i)%c(nv - 1) > 0) then !gp 03-dec-04
 
-                        !gp 23-Nov-09
-                        !IF (system%IMethpH == "Newton-Raphson") THEN
-                        ! CALL phsolNewton(pH, load(i)%c(nv - 1), load(i)%Te, load(i)%c(nv - 2), load(i)%c(1)) !gp 03-Dec-04
-                        !ELSE
-                        ! CALL phsolBisect(pH, load(i)%c(nv - 1), load(i)%Te, load(i)%c(nv - 2), load(i)%c(1)) !gp 03-Dec-04
-                        !END IF
-                        IF (system%IMethpH == "Newton-Raphson") THEN
-                            CALL phsolNewton(pH, load(i)%c(nv - 1), load(i)%Te, load(i)%c(nv - 2), load(i)%c(1))
-                        ELSEIF (system%IMethpH == "Bisection") THEN
-                            CALL phsolBisect(pH, load(i)%c(nv - 1), load(i)%Te, load(i)%c(nv - 2), load(i)%c(1))
-                        ELSE
-                            CALL phsolBrent(pH, load(i)%c(nv - 1), load(i)%Te, load(i)%c(nv - 2), load(i)%c(1))
-                        END IF
+                        !gp 23-nov-09
+                        !if (system%imethph == "newton-raphson") then
+                        ! call phsolnewton(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1)) !gp 03-dec-04
+                        !else
+                        ! call phsolbisect(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1)) !gp 03-dec-04
+                        !end if
+                        if (system%imethph == "Newton-Raphson") Then
+                            call phsolnewton(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1))
+                        elseif (system%imethph == "Bisection") then
+                            call phsolbisect(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1))
+                        else
+                            call phsolbrent(ph, load(i)%c(nv - 1), load(i)%te, load(i)%c(nv - 2), load(i)%c(1))
+                        end if
 
-                    ELSE
-                        pH=0.0
-                    END IF
-                    !gp 30-Nov-04
-                    !gp WRITE(8,'(F6.5, A2, 2A15, 20F12.4)') t,'', Topo%reach(i)%rname, Topo%reach(i)%rlab, Topo%reach(i-1)%xrdn, &
-                    !gp Topo%reach(i)%xrdn, hydrau%reach(i)%Qpta, hydrau%reach(i)%Qpt, &
-                    !gp load(i)%Te, (load(i)%c(j), j=1, nv-2), pH
-                    WRITE(8,'(F6.5, A2, 2A15, 21F12.4)') t,'', Topo%reach(i)%rname, Topo%reach(i)%rlab, Topo%reach(i-1)%xrdn, &
-                        Topo%reach(i)%xrdn, hydrau%reach(i)%Qpta, hydrau%reach(i)%Qpt, &
-                        load(i)%Te, (load(i)%c(j), j=1, nv-2), pH !gp 30-Nov-04 add generic constituent
-                END DO
-            END DO
-        END IF
+                    else
+                        ph=0.0
+                    end if
+                    !gp 30-nov-04
+                    !gp write(8,'(f6.5, a2, 2a15, 20f12.4)') t,'', topo%reach(i)%rname, topo%reach(i)%rlab, topo%reach(i-1)%xrdn, &
+                    !gp topo%reach(i)%xrdn, hydrau%reach(i)%qpta, hydrau%reach(i)%qpt, &
+                    !gp load(i)%te, (load(i)%c(j), j=1, nv-2), ph
+                    write(8,'(F6.5, A2, 2A15, 21F12.4)') t,'', topo%reach(i)%rname, topo%reach(i)%rlab, topo%reach(i-1)%xrdn, &
+                        topo%reach(i)%xrdn, hydrau%reach(i)%qpta, hydrau%reach(i)%qpt, &
+                        load(i)%te, (load(i)%c(j), j=1, nv-2), ph !gp 30-nov-04 add generic constituent
+                end do
+            end do
+        end if
 
-! Output temperature for the water column
-! Sheets("Temperature Output")
-        WRITE(8,*)
-        WRITE(8,*) '** Temperature summary (water column temperature) **'
-        WRITE(8,'(A5, A10, 4A10)') 'Reach', '', 'Distance','Temp(C)', 'Temp(C)', 'Temp(C)'
-        WRITE(8,'(A5, A10, 4A10)') 'Label', '', 'x(km)','Average', 'Minimum', 'Maximum'
-        j = 1 !gp 27-Oct-04 water column is layer 1
-        DO i=0, nr
-            !gp 27-Oct-04 WRITE (8,'(A15, 4F10.4)') Topo%reach(i)%rname, Topo%reach(i)%xpm, pr%Teav(i), &
-            !gp pr%Temn(i), pr%Temx(i)
-            WRITE (8,'(A15, 4F10.4)') Topo%reach(i)%rname, Topo%reach(i)%xpm, pr%Teav(i, j), &
-                pr%Temn(i, j), pr%Temx(i, j) !gp add nl dimension
-        END DO
+! output temperature for the water column
+! sheets("temperature output")
+        write(8,*)
+        write(8,*) '** Temperature summary (water column temperature) **'
+        write(8,'(A5, A10, 4A10)') 'Reach', '', 'Distance','Temp(C)', 'Temp(C)', 'Temp(C)'
+        write(8,'(A5, A10, 4A10)') 'Label', '', 'x(km)','Average', 'Minimum', 'Maximum'
+        j = 1 !gp 27-oct-04 water column is layer 1
+        do i=0, nr
+            !gp 27-oct-04 write (8,'(a15, 4f10.4)') topo%reach(i)%rname, topo%reach(i)%xpm, pr%teav(i), &
+            !gp pr%temn(i), pr%temx(i)
+            write (8,'(A15, 4F10.4)') topo%reach(i)%rname, topo%reach(i)%xpm, pr%teav(i, j), &
+                pr%temn(i, j), pr%temx(i, j) !gp add nl dimension
+        end do
 
-! Output concentrations for the water column
-        WRITE(8,*)
-        WRITE(8,*) '** Daily average water quality summary (water column constituents) **'
-        !gp 30-Nov-04
-        !gp WRITE(8,'(A5, A10, 27A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
-        !gp 'PO', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Alk', 'pH', &
-        !gp 'Bot Alg', 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', 'Bot Alg', &
-        !gpWRITE(8,'(A5, A10, 27A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
-        !gp 'ugN/L', 'ugN/L', &
-        !gp 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', 'Alk', 'pH', &
-        !gp 'gD/m2', '', '', '', '', 'mgD/L', '', 'mgA/m2', &
+! output concentrations for the water column
+        write(8,*)
+        write(8,*) '** Daily average water quality summary (water column constituents) **'
+        !gp 30-nov-04
+        !gp write(8,'(a5, a10, 27a13)') 'reach', '', 'x', 'cond', 'iss', 'do', 'cbods', 'cbodf', 'no', 'nh4', 'no3', &
+        !gp 'po', 'inorgp', 'phyto', 'detritus', 'pathogen', 'alk', 'ph', &
+        !gp 'bot alg', 'toc', 'tn', 'tp', 'tkn', 'tss', 'cbodu', 'bot alg', &
+        !gpwrite(8,'(a5, a10, 27a13)') 'label', '', 'km', 'umhos', 'mgd/l', 'mgo2/l', 'mgo2/l', 'mgo2/l', 'ugn/l', &
+        !gp 'ugn/l', 'ugn/l', &
+        !gp 'ugp/l', 'ugp/l', 'uga/l', 'mgd/l', '', 'alk', 'ph', &
+        !gp 'gd/m2', '', '', '', '', 'mgd/l', '', 'mga/m2', &
         !gp '', '', ''
 
-        !gp 25-Jun-09
-        !WRITE(8,'(A5, A10, 33A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'Norg', 'NH4', 'NO3', &
-        ! 'Porg', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
-        ! 'Bot Alg', 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', 'Bot Alg', &
-        ! 'NH3', 'DO sat', 'pH sat', 'Hypo biofilm', &
-        ! 'NINbav', 'NIPbav', 'NINbav', 'NIPbav'
-        !WRITE(8,'(A5, A10, 33A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
-        ! 'ugN/L', 'ugN/L', &
-        ! 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', 'user defined', 'mgCaCO3/L', 's.u.', &
-        ! 'gD/m2', '', '', '', '', 'mgD/L', '', 'mgA/m2', &
-        ! '', '', '', 'gD/m2', 'mgN/mgA', 'mgP/mgA', 'mgN/gD', 'mgP/gD' !gp 11-Jan-05 end new block
-        WRITE(8,'(A5, A10, 41A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'Norg', 'NH4', 'NO3', &
+        !gp 25-jun-09
+        !write(8,'(a5, a10, 33a13)') 'reach', '', 'x', 'cond', 'iss', 'do', 'cbods', 'cbodf', 'norg', 'nh4', 'no3', &
+        ! 'porg', 'inorgp', 'phyto', 'detritus', 'pathogen', 'generic', 'alk', 'ph', &
+        ! 'bot alg', 'toc', 'tn', 'tp', 'tkn', 'tss', 'cbodu', 'bot alg', &
+        ! 'nh3', 'do sat', 'ph sat', 'hypo biofilm', &
+        ! 'ninbav', 'nipbav', 'ninbav', 'nipbav'
+        !write(8,'(a5, a10, 33a13)') 'label', '', 'km', 'umhos', 'mgd/l', 'mgo2/l', 'mgo2/l', 'mgo2/l', 'ugn/l', &
+        ! 'ugn/l', 'ugn/l', &
+        ! 'ugp/l', 'ugp/l', 'uga/l', 'mgd/l', '', 'user defined', 'mgcaco3/l', 's.u.', &
+        ! 'gd/m2', '', '', '', '', 'mgd/l', '', 'mga/m2', &
+        ! '', '', '', 'gd/m2', 'mgn/mga', 'mgp/mga', 'mgn/gd', 'mgp/gd' !gp 11-jan-05 end new block
+        write(8,'(A5, A10, 41A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'Norg', 'NH4', 'NO3', &
             'Porg', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
             'Bot Alg', 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', 'Bot Alg', &
             'NH3', 'DO sat', 'pH sat', 'Hypo biofilm', &
             'NINbav', 'NIPbav', 'NINbav', 'NIPbav', &
             'BotAlgPhoto', 'BotAlgResp', 'BotAlgDeath', 'BotAlgGrow', &
             'BotAlgPhoto', 'BotAlgResp', 'BotAlgDeath', 'BotAlgGrow'
-        WRITE(8,'(A5, A10, 41A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
+        write(8,'(A5, A10, 41A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
             'ugN/L', 'ugN/L', &
             'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', 'user defined', 'mgCaCO3/L', 's.u.', &
             'gD/m2', '', '', '', '', 'mgD/L', '', 'mgA/m2', &
@@ -460,309 +432,309 @@ CONTAINS
             'gD/m2/d', 'gD/m2/d', 'gD/m2/d', 'gD/m2/d', &
             'mgA/m2/d', 'mgA/m2/d', 'mgA/m2/d', 'mgA/m2/d'
 
-        DO i = 0, nr
-            !gp 27-Oct-04 add nl dimension
-            !gpTOC = (pr%cav(i, 4) + pr%cav(i, 5)) / Rates%roc + &
-            !gp Rates%aca * pr%cav(i, 11) + Rates%aca / Rates%ada * pr%cav(i, 12)
-            !gpTKN = pr%cav(i, 6) + pr%cav(i, 7) + Rates%ana * pr%cav(i, 11)
-            !gpTSS = Rates%ada * pr%cav(i, 11) + pr%cav(i, 2) + pr%cav(i, 12)
-            !gpCBODu = pr%cav(i, 4) + pr%cav(i, 5) + Rates%roa * pr%cav(i, 11) + &
-            !gp Rates%roc * Rates%aca / Rates%ada * pr%cav(i, 12)
-            !gp!Bottom Algae as Chl a
-            !gpBottomAlgae= pr%cav(i, 16) / (Rates%adc * Rates%aca)
-            !gpWRITE(8,'(A15, 27F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cav(i, j), j=1, nv-2), pr%pHav(i) , &
-            !gp pr%cav(i, nv), TOC, pr%TNav(i), pr%TPav(i), &
-            !gp TKN, TSS, CBODu, BottomAlgae, pr%NH3av(i), pr%osav(i), &
-            !gp pr%pHsav(i)
+        do i = 0, nr
+            !gp 27-oct-04 add nl dimension
+            !gptoc = (pr%cav(i, 4) + pr%cav(i, 5)) / rates%roc + &
+            !gp rates%aca * pr%cav(i, 11) + rates%aca / rates%ada * pr%cav(i, 12)
+            !gptkn = pr%cav(i, 6) + pr%cav(i, 7) + rates%ana * pr%cav(i, 11)
+            !gptss = rates%ada * pr%cav(i, 11) + pr%cav(i, 2) + pr%cav(i, 12)
+            !gpcbodu = pr%cav(i, 4) + pr%cav(i, 5) + rates%roa * pr%cav(i, 11) + &
+            !gp rates%roc * rates%aca / rates%ada * pr%cav(i, 12)
+            !gp!bottom algae as chl a
+            !gpbottomalgae= pr%cav(i, 16) / (rates%adc * rates%aca)
+            !gpwrite(8,'(a15, 27f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cav(i, j), j=1, nv-2), pr%phav(i) , &
+            !gp pr%cav(i, nv), toc, pr%tnav(i), pr%tpav(i), &
+            !gp tkn, tss, cbodu, bottomalgae, pr%nh3av(i), pr%osav(i), &
+            !gp pr%phsav(i)
             j = 1 !gp water column is layer 1
-            TOC = (pr%cav(i, 4, j) + pr%cav(i, 5, j)) / Rates%roc + &
-                Rates%aca * pr%cav(i, 11, j) + Rates%aca / Rates%ada * pr%cav(i, 12, j)
-            TKN = pr%cav(i, 6, j) + pr%cav(i, 7, j) + Rates%ana * pr%cav(i, 11, j)
-            TSS = Rates%ada * pr%cav(i, 11, j) + pr%cav(i, 2, j) + pr%cav(i, 12, j)
-            CBODu = pr%cav(i, 4, j) + pr%cav(i, 5, j) + Rates%roa * pr%cav(i, 11, j) + &
-                Rates%roc * Rates%aca / Rates%ada * pr%cav(i, 12, j)
-            !Bottom Algae as Chl a
-            BottomAlgae= pr%cav(i, nv, j) / (Rates%adc * Rates%aca)
-            !gp 30-Nov-04
-            !gp WRITE(8,'(A15, 27F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%pHav(i, j) , &
-            !gp pr%cav(i, nv, j), TOC, pr%TNav(i, j), pr%TPav(i, j), &
-            !gp TKN, TSS, CBODu, BottomAlgae, pr%NH3av(i, j), pr%osav(i, j), &
-            !gp pr%pHsav(i, j)
+            toc = (pr%cav(i, 4, j) + pr%cav(i, 5, j)) / rates%roc + &
+                rates%aca * pr%cav(i, 11, j) + rates%aca / rates%ada * pr%cav(i, 12, j)
+            tkn = pr%cav(i, 6, j) + pr%cav(i, 7, j) + rates%ana * pr%cav(i, 11, j)
+            tss = rates%ada * pr%cav(i, 11, j) + pr%cav(i, 2, j) + pr%cav(i, 12, j)
+            cbodu = pr%cav(i, 4, j) + pr%cav(i, 5, j) + rates%roa * pr%cav(i, 11, j) + &
+                rates%roc * rates%aca / rates%ada * pr%cav(i, 12, j)
+            !bottom algae as chl a
+            bottomalgae= pr%cav(i, nv, j) / (rates%adc * rates%aca)
+            !gp 30-nov-04
+            !gp write(8,'(a15, 27f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%phav(i, j) , &
+            !gp pr%cav(i, nv, j), toc, pr%tnav(i, j), pr%tpav(i, j), &
+            !gp tkn, tss, cbodu, bottomalgae, pr%nh3av(i, j), pr%osav(i, j), &
+            !gp pr%phsav(i, j)
 
-            !gp 25-Jun-09
-            !IF (i == 0) THEN !make the reach 0 bottom algae and biofilm equal to reach 1 for output charts to look good
-            ! WRITE(8,'(A15, 33F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%pHav(i, j) , &
-            ! pr%cav(1, nv, j), TOC, pr%TNav(i, j), pr%TPav(i, j), &
-            ! TKN, TSS, CBODu, pr%cav(1, nv, j) / (Rates%adc * Rates%aca), pr%NH3av(i, j), pr%osav(i, j), &
-            ! pr%pHsav(i, j), pr%cav(1, nv, 2), &
-            ! pr%NINbav(1) * Rates%mgD / Rates%mgA / 1000, pr%NIPbav(1) * Rates%mgD / Rates%mgA / 1000, &
-            ! pr%NINbav(1), pr%NIPbav(1) !gp 11-Jan-05 end new block
-            !ELSE
-            ! WRITE(8,'(A15, 33F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%pHav(i, j) , &
-            ! pr%cav(i, nv, j), TOC, pr%TNav(i, j), pr%TPav(i, j), &
-            ! TKN, TSS, CBODu, BottomAlgae, pr%NH3av(i, j), pr%osav(i, j), &
-            ! pr%pHsav(i, j), pr%cav(i, nv, 2), &
-            ! pr%NINbav(i) * Rates%mgD / Rates%mgA / 1000, pr%NIPbav(i) * Rates%mgD / Rates%mgA / 1000, &
-            ! pr%NINbav(i), pr%NIPbav(i) !gp 11-Jan-05 end new block
-            !END IF
-            IF (i == 0) THEN !make the reach 0 bottom algae and biofilm equal to reach 1 for output charts to look good
-                WRITE(8,'(A15, 41F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%pHav(i, j) , &
-                    pr%cav(1, nv, j), TOC, pr%TNav(i, j), pr%TPav(i, j), &
-                    TKN, TSS, CBODu, pr%cav(1, nv, j) / (Rates%adc * Rates%aca), pr%NH3av(i, j), pr%osav(i, j), &
-                    pr%pHsav(i, j), pr%cav(1, nv, 2), &
-                    pr%NINbav(1) * Rates%mgD / Rates%mgA / 1000, pr%NIPbav(1) * Rates%mgD / Rates%mgA / 1000, &
-                    pr%NINbav(1), pr%NIPbav(1), &
-                    pr%av_BotAlgPhoto(1), pr%av_BotAlgResp(1), pr%av_BotAlgDeath(1), pr%av_BotAlgNetGrowth(1), &
-                    pr%av_BotAlgPhoto(1)/Rates%ada, pr%av_BotAlgResp(1)/Rates%ada, &
-                    pr%av_BotAlgDeath(1)/Rates%ada, pr%av_BotAlgNetGrowth(1)/Rates%ada
-            ELSE
-                WRITE(8,'(A15, 41F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%pHav(i, j) , &
-                    pr%cav(i, nv, j), TOC, pr%TNav(i, j), pr%TPav(i, j), &
-                    TKN, TSS, CBODu, BottomAlgae, pr%NH3av(i, j), pr%osav(i, j), &
-                    pr%pHsav(i, j), pr%cav(i, nv, 2), &
-                    pr%NINbav(i) * Rates%mgD / Rates%mgA / 1000, pr%NIPbav(i) * Rates%mgD / Rates%mgA / 1000, &
-                    pr%NINbav(i), pr%NIPbav(i), &
-                    pr%av_BotAlgPhoto(i), pr%av_BotAlgResp(i), pr%av_BotAlgDeath(i), pr%av_BotAlgNetGrowth(i), &
-                    pr%av_BotAlgPhoto(i)/Rates%ada, pr%av_BotAlgResp(i)/Rates%ada, &
-                    pr%av_BotAlgDeath(i)/Rates%ada, pr%av_BotAlgNetGrowth(i)/Rates%ada
-            END IF
+            !gp 25-jun-09
+            !if (i == 0) then !make the reach 0 bottom algae and biofilm equal to reach 1 for output charts to look good
+            ! write(8,'(a15, 33f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%phav(i, j) , &
+            ! pr%cav(1, nv, j), toc, pr%tnav(i, j), pr%tpav(i, j), &
+            ! tkn, tss, cbodu, pr%cav(1, nv, j) / (rates%adc * rates%aca), pr%nh3av(i, j), pr%osav(i, j), &
+            ! pr%phsav(i, j), pr%cav(1, nv, 2), &
+            ! pr%ninbav(1) * rates%mgd / rates%mga / 1000, pr%nipbav(1) * rates%mgd / rates%mga / 1000, &
+            ! pr%ninbav(1), pr%nipbav(1) !gp 11-jan-05 end new block
+            !else
+            ! write(8,'(a15, 33f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%phav(i, j) , &
+            ! pr%cav(i, nv, j), toc, pr%tnav(i, j), pr%tpav(i, j), &
+            ! tkn, tss, cbodu, bottomalgae, pr%nh3av(i, j), pr%osav(i, j), &
+            ! pr%phsav(i, j), pr%cav(i, nv, 2), &
+            ! pr%ninbav(i) * rates%mgd / rates%mga / 1000, pr%nipbav(i) * rates%mgd / rates%mga / 1000, &
+            ! pr%ninbav(i), pr%nipbav(i) !gp 11-jan-05 end new block
+            !end if
+            if (i == 0) then !make the reach 0 bottom algae and biofilm equal to reach 1 for output charts to look good
+                write(8,'(A15, 41F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%phav(i, j) , &
+                    pr%cav(1, nv, j), toc, pr%tnav(i, j), pr%tpav(i, j), &
+                    tkn, tss, cbodu, pr%cav(1, nv, j) / (rates%adc * rates%aca), pr%nh3av(i, j), pr%osav(i, j), &
+                    pr%phsav(i, j), pr%cav(1, nv, 2), &
+                    pr%ninbav(1) * rates%mgd / rates%mga / 1000, pr%nipbav(1) * rates%mgd / rates%mga / 1000, &
+                    pr%ninbav(1), pr%nipbav(1), &
+                    pr%av_botalgphoto(1), pr%av_botalgresp(1), pr%av_botalgdeath(1), pr%av_botalgnetgrowth(1), &
+                    pr%av_botalgphoto(1)/rates%ada, pr%av_botalgresp(1)/rates%ada, &
+                    pr%av_botalgdeath(1)/rates%ada, pr%av_botalgnetgrowth(1)/rates%ada
+            else
+                write(8,'(A15, 41F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%phav(i, j) , &
+                    pr%cav(i, nv, j), toc, pr%tnav(i, j), pr%tpav(i, j), &
+                    tkn, tss, cbodu, bottomalgae, pr%nh3av(i, j), pr%osav(i, j), &
+                    pr%phsav(i, j), pr%cav(i, nv, 2), &
+                    pr%ninbav(i) * rates%mgd / rates%mga / 1000, pr%nipbav(i) * rates%mgd / rates%mga / 1000, &
+                    pr%ninbav(i), pr%nipbav(i), &
+                    pr%av_botalgphoto(i), pr%av_botalgresp(i), pr%av_botalgdeath(i), pr%av_botalgnetgrowth(i), &
+                    pr%av_botalgphoto(i)/rates%ada, pr%av_botalgresp(i)/rates%ada, &
+                    pr%av_botalgdeath(i)/rates%ada, pr%av_botalgnetgrowth(i)/rates%ada
+            end if
 
-        END DO
+        end do
 
-! Output min concentrations
-        WRITE(8,*)
-        WRITE(8,*) '** Daily minimum water quality summary (water column constituents) **'
-        !gp 15-Nov-04
-        !gp WRITE(8,'(A5, A10, 27A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
-        !gp 'PO', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Alk', 'pH', &
-        !gp 'Bot Alg', 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', 'Bot Alg', &
-        !gp 'NH3'
-        !gp WRITE(8,'(A5, A10, 27A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
-        !gp 'ugN/L', 'ugN/L', &
-        !gp 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', 'Alk', 'pH', &
-        !gp 'gD/m2', '', '', '', '', 'mgD/L', '', 'mgA/m2', ''
-        !WRITE(8,'(A5, A10, 31A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
-        WRITE(8,'(A5, A10, 31A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'Norg', 'NH4', 'NO3', &
+! output min concentrations
+        write(8,*)
+        write(8,*) '** Daily minimum water quality summary (water column constituents) **'
+        !gp 15-nov-04
+        !gp write(8,'(a5, a10, 27a13)') 'reach', '', 'x', 'cond', 'iss', 'do', 'cbods', 'cbodf', 'no', 'nh4', 'no3', &
+        !gp 'po', 'inorgp', 'phyto', 'detritus', 'pathogen', 'alk', 'ph', &
+        !gp 'bot alg', 'toc', 'tn', 'tp', 'tkn', 'tss', 'cbodu', 'bot alg', &
+        !gp 'nh3'
+        !gp write(8,'(a5, a10, 27a13)') 'label', '', 'km', 'umhos', 'mgd/l', 'mgo2/l', 'mgo2/l', 'mgo2/l', 'ugn/l', &
+        !gp 'ugn/l', 'ugn/l', &
+        !gp 'ugp/l', 'ugp/l', 'uga/l', 'mgd/l', '', 'alk', 'ph', &
+        !gp 'gd/m2', '', '', '', '', 'mgd/l', '', 'mga/m2', ''
+        !write(8,'(a5, a10, 31a13)') 'reach', '', 'x', 'cond', 'iss', 'do', 'cbods', 'cbodf', 'no', 'nh4', 'no3', &
+        write(8,'(A5, A10, 31A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'Norg', 'NH4', 'NO3', &
             'Porg', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
             'Bot Alg', 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', 'Bot Alg', &
             'NH3', 'Hypo biofilm', 'NINbmn', 'NIPbmn', 'NINbmn', 'NIPbmn'
-        !WRITE(8,'(A5, A10, 31A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
-        WRITE(8,'(A5, A10, 31A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
+        !write(8,'(A5, A10, 31A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
+        write(8,'(A5, A10, 31A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
             'ugN/L', 'ugN/L', &
             'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', 'user defined', 'Alk', 'pH', &
             'gD/m2', '', '', '', '', 'mgD/L', '', 'mgA/m2', '', 'gD/m2', &
             'mgN/mgA', 'mgP/mgA', 'mgN/gD', 'mgP/gD' !30-Nov-04 add hypo biofilm and generic const
-        DO i = 0, nr
-            !gp 27-Oct-04 add dimension for nl
-            !gp TOC = (pr%cmn(i, 4) + pr%cmn(i, 5)) / Rates%roc + &
-            !gp Rates%aca * pr%cmn(i, 11) + Rates%aca / Rates%ada * pr%cmn(i, 12)
-            !gp TKN = pr%cmn(i, 6) + pr%cmn(i, 7) + Rates%ana * pr%cmn(i, 11)
-            !gp TSS = Rates%ada * pr%cmn(i, 11) + pr%cmn(i, 2) + pr%cmn(i, 12)
-            !gp CBODu = pr%cmn(i, 4) + pr%cmn(i, 5) + Rates%roa * pr%cmn(i, 11) + &
-            !gp Rates%roc * Rates%aca / Rates%ada * pr%cmn(i, 12)
-            !gp !Bottom Algae as Chl a
-            !gp BottomAlgae= pr%cmn(i, 16) / (Rates%adc * Rates%aca)
-            !gp WRITE(8,'(A15, 25F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmn(i, j), j=1, nv-2), pr%pHmn(i) , &
-            !gp pr%cmn(i, nv), TOC, pr%TNmn(i), pr%TPmn(i), &
-            !gp TKN, TSS, CBODu, BottomAlgae, pr%NH3mn(i)
+        do i = 0, nr
+            !gp 27-oct-04 add dimension for nl
+            !gp toc = (pr%cmn(i, 4) + pr%cmn(i, 5)) / rates%roc + &
+            !gp rates%aca * pr%cmn(i, 11) + rates%aca / rates%ada * pr%cmn(i, 12)
+            !gp tkn = pr%cmn(i, 6) + pr%cmn(i, 7) + rates%ana * pr%cmn(i, 11)
+            !gp tss = rates%ada * pr%cmn(i, 11) + pr%cmn(i, 2) + pr%cmn(i, 12)
+            !gp cbodu = pr%cmn(i, 4) + pr%cmn(i, 5) + rates%roa * pr%cmn(i, 11) + &
+            !gp rates%roc * rates%aca / rates%ada * pr%cmn(i, 12)
+            !gp !bottom algae as chl a
+            !gp bottomalgae= pr%cmn(i, 16) / (rates%adc * rates%aca)
+            !gp write(8,'(a15, 25f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmn(i, j), j=1, nv-2), pr%phmn(i) , &
+            !gp pr%cmn(i, nv), toc, pr%tnmn(i), pr%tpmn(i), &
+            !gp tkn, tss, cbodu, bottomalgae, pr%nh3mn(i)
             j = 1 !gp water column is layer 1
-            TOC = (pr%cmn(i, 4, j) + pr%cmn(i, 5, j)) / Rates%roc + &
-                Rates%aca * pr%cmn(i, 11, j) + Rates%aca / Rates%ada * pr%cmn(i, 12, j)
-            TKN = pr%cmn(i, 6, j) + pr%cmn(i, 7, j) + Rates%ana * pr%cmn(i, 11, j)
-            TSS = Rates%ada * pr%cmn(i, 11, j) + pr%cmn(i, 2, j) + pr%cmn(i, 12, j)
-            CBODu = pr%cmn(i, 4, j) + pr%cmn(i, 5, j) + Rates%roa * pr%cmn(i, 11, j) + &
-                Rates%roc * Rates%aca / Rates%ada * pr%cmn(i, 12, j)
-            !Bottom Algae as Chl a
-            BottomAlgae= pr%cmn(i, nv, j) / (Rates%adc * Rates%aca)
-            !gp 30-Nov-04
-            !gp WRITE(8,'(A15, 25F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmn(i, k, j), k=1, nv-2), pr%pHmn(i, j) , &
-            !gp pr%cmn(i, nv, j), TOC, pr%TNmn(i, j), pr%TPmn(i, j), &
-            !gp TKN, TSS, CBODu, BottomAlgae, pr%NH3mn(i, j)
-            IF (i == 0) THEN !make the reach 0 bottom algae and biofilm equal to reach 1 for output charts to look good
-                WRITE(8,'(A15, 31F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmn(i, k, j), k=1, nv-2), pr%pHmn(i, j) , &
-                    pr%cmn(1, nv, j), TOC, pr%TNmn(i, j), pr%TPmn(i, j), &
-                    TKN, TSS, CBODu, pr%cmn(1, nv, j) / (Rates%adc * Rates%aca), pr%NH3mn(i, j), pr%cmn(1, nv, 2), & !gp 15-Nov-04 end new block
-                    pr%NINbmn(1) * Rates%mgD / Rates%mgA / 1000, pr%NIPbmn(1) * Rates%mgD / Rates%mgA / 1000, &
-                    pr%NINbmn(1), pr%NIPbmn(1) !gp 11-Jan-05 end new block
-            ELSE
-                WRITE(8,'(A15, 31F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmn(i, k, j), k=1, nv-2), pr%pHmn(i, j) , &
-                    pr%cmn(i, nv, j), TOC, pr%TNmn(i, j), pr%TPmn(i, j), &
-                    TKN, TSS, CBODu, BottomAlgae, pr%NH3mn(i, j), pr%cmn(i, nv, 2), &
-                    pr%NINbmn(i) * Rates%mgD / Rates%mgA / 1000, pr%NIPbmn(i) * Rates%mgD / Rates%mgA / 1000, &
-                    pr%NINbmn(i), pr%NIPbmn(i) !gp 11-Jan-05 end new block
-            END IF
-        END DO
+            toc = (pr%cmn(i, 4, j) + pr%cmn(i, 5, j)) / rates%roc + &
+                rates%aca * pr%cmn(i, 11, j) + rates%aca / rates%ada * pr%cmn(i, 12, j)
+            tkn = pr%cmn(i, 6, j) + pr%cmn(i, 7, j) + rates%ana * pr%cmn(i, 11, j)
+            tss = rates%ada * pr%cmn(i, 11, j) + pr%cmn(i, 2, j) + pr%cmn(i, 12, j)
+            cbodu = pr%cmn(i, 4, j) + pr%cmn(i, 5, j) + rates%roa * pr%cmn(i, 11, j) + &
+                rates%roc * rates%aca / rates%ada * pr%cmn(i, 12, j)
+            !bottom algae as chl a
+            bottomalgae= pr%cmn(i, nv, j) / (rates%adc * rates%aca)
+            !gp 30-nov-04
+            !gp write(8,'(a15, 25f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmn(i, k, j), k=1, nv-2), pr%phmn(i, j) , &
+            !gp pr%cmn(i, nv, j), toc, pr%tnmn(i, j), pr%tpmn(i, j), &
+            !gp tkn, tss, cbodu, bottomalgae, pr%nh3mn(i, j)
+            if (i == 0) then !make the reach 0 bottom algae and biofilm equal to reach 1 for output charts to look good
+                write(8,'(A15, 31F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmn(i, k, j), k=1, nv-2), pr%phmn(i, j) , &
+                    pr%cmn(1, nv, j), toc, pr%tnmn(i, j), pr%tpmn(i, j), &
+                    tkn, tss, cbodu, pr%cmn(1, nv, j) / (rates%adc * rates%aca), pr%nh3mn(i, j), pr%cmn(1, nv, 2), & !gp 15-nov-04 end new block
+                    pr%ninbmn(1) * rates%mgd / rates%mga / 1000, pr%nipbmn(1) * rates%mgd / rates%mga / 1000, &
+                    pr%ninbmn(1), pr%nipbmn(1) !gp 11-jan-05 end new block
+            else
+                write(8,'(A15, 31F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmn(i, k, j), k=1, nv-2), pr%phmn(i, j) , &
+                    pr%cmn(i, nv, j), toc, pr%tnmn(i, j), pr%tpmn(i, j), &
+                    tkn, tss, cbodu, bottomalgae, pr%nh3mn(i, j), pr%cmn(i, nv, 2), &
+                    pr%ninbmn(i) * rates%mgd / rates%mga / 1000, pr%nipbmn(i) * rates%mgd / rates%mga / 1000, &
+                    pr%ninbmn(i), pr%nipbmn(i) !gp 11-jan-05 end new block
+            end if
+        end do
 
 ! Output max concentrations
-        WRITE(8,*)
-        WRITE(8,*) '** Daily maximum water quality summary (water column constituents) **'
+        write(8,*)
+        write(8,*) '** Daily maximum water quality summary (water column constituents) **'
         !gp 30-Nov-04
-        !gp WRITE(8,'(A5, A10, 27A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
+        !gp write(8,'(A5, A10, 27A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
         !gp 'PO', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Alk', 'pH', &
         !gp 'Bot Alg', 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', 'Bot Alg', &
         !gp 'NH3'
-        !gp WRITE(8,'(A5, A10, 27A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
+        !gp write(8,'(A5, A10, 27A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
         !gp 'ugN/L', 'ugN/L', &
         !gp 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', 'Alk', 'pH', &
         !gp 'gD/m2', '', '', '', '', 'mgD/L', '', 'mgA/m2', ''
-        WRITE(8,'(A5, A10, 31A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'Norg', 'NH4', 'NO3', &
+        write(8,'(A5, A10, 31A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'Norg', 'NH4', 'NO3', &
             'Porg', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
             'Bot Alg', 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', 'Bot Alg', &
             'NH3', 'Hypo biofilm', 'NINbmx', 'NIPbmx', 'NINbmx', 'NIPbmx'
-        WRITE(8,'(A5, A10, 31A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
+        write(8,'(A5, A10, 31A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
             'ugN/L', 'ugN/L', &
             'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', 'user defined', 'mgCaCO3/L', 's.u.', &
             'gD/m2', '', '', '', '', 'mgD/L', '', 'mgA/m2', '', 'gD/m2', &
             'mgN/mgA', 'mgP/mgA', 'mgN/gD', 'mgP/gD' !gp 11-Jan-05 end new block
-        DO i = 0, nr
-            !gp 27-Oct-04 add dimension for nl
-            !gp TOC = (pr%cmx(i, 4) + pr%cmx(i, 5)) / Rates%roc + &
-            !gp Rates%aca * pr%cmx(i, 11) + Rates%aca / Rates%ada * pr%cmx(i, 12)
-            !gp TKN = pr%cmx(i, 6) + pr%cmx(i, 7) + Rates%ana * pr%cmx(i, 11)
-            !gp TSS = Rates%ada * pr%cmx(i, 11) + pr%cmx(i, 2) + pr%cmx(i, 12)
-            !gp CBODu = pr%cmx(i, 4) + pr%cmx(i, 5) + Rates%roa * pr%cmx(i, 11) + &
-            !gp Rates%roc * Rates%aca / Rates%ada * pr%cmx(i, 12)
-            !gp !Bottom Algae as Chl a
-            !gp BottomAlgae= pr%cmx(i, 16) / (Rates%adc * Rates%aca)
-            !gp WRITE(8,'(A15, 25F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmx(i, j), j=1, nv-2), pr%pHmx(i) , &
-            !gp pr%cmx(i, nv), TOC, pr%TNmx(i), pr%TPmx(i), &
-            !gp TKN, TSS, CBODu, BottomAlgae, pr%NH3mx(i)
+        do i = 0, nr
+            !gp 27-oct-04 add dimension for nl
+            !gp toc = (pr%cmx(i, 4) + pr%cmx(i, 5)) / rates%roc + &
+            !gp rates%aca * pr%cmx(i, 11) + rates%aca / rates%ada * pr%cmx(i, 12)
+            !gp tkn = pr%cmx(i, 6) + pr%cmx(i, 7) + rates%ana * pr%cmx(i, 11)
+            !gp tss = rates%ada * pr%cmx(i, 11) + pr%cmx(i, 2) + pr%cmx(i, 12)
+            !gp cbodu = pr%cmx(i, 4) + pr%cmx(i, 5) + rates%roa * pr%cmx(i, 11) + &
+            !gp rates%roc * rates%aca / rates%ada * pr%cmx(i, 12)
+            !gp !bottom algae as chl a
+            !gp bottomalgae= pr%cmx(i, 16) / (rates%adc * rates%aca)
+            !gp write(8,'(a15, 25f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmx(i, j), j=1, nv-2), pr%phmx(i) , &
+            !gp pr%cmx(i, nv), toc, pr%tnmx(i), pr%tpmx(i), &
+            !gp tkn, tss, cbodu, bottomalgae, pr%nh3mx(i)
             j = 1 !gp water column is layer 1
-            TOC = (pr%cmx(i, 4, j) + pr%cmx(i, 5, j)) / Rates%roc + &
-                Rates%aca * pr%cmx(i, 11, j) + Rates%aca / Rates%ada * pr%cmx(i, 12, j)
-            TKN = pr%cmx(i, 6, j) + pr%cmx(i, 7, j) + Rates%ana * pr%cmx(i, 11, j)
-            TSS = Rates%ada * pr%cmx(i, 11, j) + pr%cmx(i, 2, j) + pr%cmx(i, 12, j)
-            CBODu = pr%cmx(i, 4, j) + pr%cmx(i, 5, j) + Rates%roa * pr%cmx(i, 11, j) + &
-                Rates%roc * Rates%aca / Rates%ada * pr%cmx(i, 12, j)
-            !Bottom Algae as Chl a
-            BottomAlgae= pr%cmx(i, nv, j) / (Rates%adc * Rates%aca)
-            !gp 30-Nov-04
-            !gp WRITE(8,'(A15, 25F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmx(i, k, j), k=1, nv-2), pr%pHmx(i, j) , &
-            !gp pr%cmx(i, nv, j), TOC, pr%TNmx(i, j), pr%TPmx(i, j), &
-            !gp TKN, TSS, CBODu, BottomAlgae, pr%NH3mx(i, j)
-            IF (i == 0) THEN !make the reach 0 bottom algae and biofilm equal to reach 1 for output charts to look good
-                WRITE(8,'(A15, 31F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmx(i, k, j), k=1, nv-2), pr%pHmx(i, j) , &
-                    pr%cmx(1, nv, j), TOC, pr%TNmx(i, j), pr%TPmx(i, j), &
-                    TKN, TSS, CBODu, pr%cmx(1, nv, j) / (Rates%adc * Rates%aca), pr%NH3mx(i, j), pr%cmx(1, nv, 2), &
-                    pr%NINbmx(1) * Rates%mgD / Rates%mgA / 1000, pr%NIPbmx(1) * Rates%mgD / Rates%mgA / 1000, &
-                    pr%NINbmx(1), pr%NIPbmx(1) !gp 11-Jan-05 end new block
-            ELSE
-                WRITE(8,'(A15, 31F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmx(i, k, j), k=1, nv-2), pr%pHmx(i, j), &
-                    pr%cmx(i, nv, j), TOC, pr%TNmx(i, j), pr%TPmx(i, j), &
-                    TKN, TSS, CBODu, BottomAlgae, pr%NH3mx(i, j), pr%cmx(i, nv, 2), &
-                    pr%NINbmx(i) * Rates%mgD / Rates%mgA / 1000, pr%NIPbmx(i) * Rates%mgD / Rates%mgA / 1000, &
-                    pr%NINbmx(i), pr%NIPbmx(i) !gp 11-Jan-05 end new block
-            END IF
-        END DO
+            toc = (pr%cmx(i, 4, j) + pr%cmx(i, 5, j)) / rates%roc + &
+                rates%aca * pr%cmx(i, 11, j) + rates%aca / rates%ada * pr%cmx(i, 12, j)
+            tkn = pr%cmx(i, 6, j) + pr%cmx(i, 7, j) + rates%ana * pr%cmx(i, 11, j)
+            tss = rates%ada * pr%cmx(i, 11, j) + pr%cmx(i, 2, j) + pr%cmx(i, 12, j)
+            cbodu = pr%cmx(i, 4, j) + pr%cmx(i, 5, j) + rates%roa * pr%cmx(i, 11, j) + &
+                rates%roc * rates%aca / rates%ada * pr%cmx(i, 12, j)
+            !bottom algae as chl a
+            bottomalgae= pr%cmx(i, nv, j) / (rates%adc * rates%aca)
+            !gp 30-nov-04
+            !gp write(8,'(a15, 25f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmx(i, k, j), k=1, nv-2), pr%phmx(i, j) , &
+            !gp pr%cmx(i, nv, j), toc, pr%tnmx(i, j), pr%tpmx(i, j), &
+            !gp tkn, tss, cbodu, bottomalgae, pr%nh3mx(i, j)
+            if (i == 0) then !make the reach 0 bottom algae and biofilm equal to reach 1 for output charts to look good
+                write(8,'(A15, 31F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmx(i, k, j), k=1, nv-2), pr%phmx(i, j) , &
+                    pr%cmx(1, nv, j), toc, pr%tnmx(i, j), pr%tpmx(i, j), &
+                    tkn, tss, cbodu, pr%cmx(1, nv, j) / (rates%adc * rates%aca), pr%nh3mx(i, j), pr%cmx(1, nv, 2), &
+                    pr%ninbmx(1) * rates%mgd / rates%mga / 1000, pr%nipbmx(1) * rates%mgd / rates%mga / 1000, &
+                    pr%ninbmx(1), pr%nipbmx(1) !gp 11-jan-05 end new block
+            else
+                write(8,'(A15, 31F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmx(i, k, j), k=1, nv-2), pr%phmx(i, j), &
+                    pr%cmx(i, nv, j), toc, pr%tnmx(i, j), pr%tpmx(i, j), &
+                    tkn, tss, cbodu, bottomalgae, pr%nh3mx(i, j), pr%cmx(i, nv, 2), &
+                    pr%ninbmx(i) * rates%mgd / rates%mga / 1000, pr%nipbmx(i) * rates%mgd / rates%mga / 1000, &
+                    pr%ninbmx(i), pr%nipbmx(i) !gp 11-jan-05 end new block
+            end if
+        end do
 
-! Output sediment fluxes !gp 15-Nov-04 reach-averaged and daily-averaged and include hyporheic and total flux
-        WRITE(8,*)
-        WRITE(8,*) '** Sediment fluxes (reach-average daily-average) **'
-        !gp 15-Nov-04
-        !gp WRITE(8,'(A5, A10, 6A13)') 'Reach', '', 'Distance', 'SOD', 'Flux CH4', 'Flux NH4', &
-        !gp 'Flux InorgP', 'Flux NO3'
-        !gp WRITE(8,'(A5, A10, 6A13)') 'Label', '', 'x(km)', 'gO2/m2/d', 'gO2/m2/d', 'mgN/m2/d', &
-        !gp 'mgP/m2/d', 'mgN/m2/d'
-        WRITE(8,'(A5, A10, 16A13)') 'Reach', '', 'Distance', &
+! output sediment fluxes !gp 15-nov-04 reach-averaged and daily-averaged and include hyporheic and total flux
+        write(8,*)
+        write(8,*) '** Sediment fluxes (reach-average daily-average) **'
+        !gp 15-nov-04
+        !gp write(8,'(a5, a10, 6a13)') 'reach', '', 'distance', 'sod', 'flux ch4', 'flux nh4', &
+        !gp 'flux inorgp', 'flux no3'
+        !gp write(8,'(a5, a10, 6a13)') 'label', '', 'x(km)', 'go2/m2/d', 'go2/m2/d', 'mgn/m2/d', &
+        !gp 'mgp/m2/d', 'mgn/m2/d'
+        write(8,'(A5, A10, 16A13)') 'Reach', '', 'Distance', &
             'DiagFluxDO', 'DiagFluxCBOD', 'DiagFluxNH4', 'DiagFluxSRP', 'DiagFluxNO3', &
             'HypoFluxDO', 'HypoFluxCBOD', 'HypoFluxNH4', 'HypoFluxSRP', 'HypoFluxNO3', &
             'TotFluxDO', 'TotFluxCBOD', 'TotFluxNH4', 'TotFluxSRP', 'TotFluxNO3'
-        WRITE(8,'(A5, A10, 16A13)') 'Label', '', 'x(km)', &
+        write(8,'(A5, A10, 16A13)') 'Label', '', 'x(km)', &
             'gO2/m2/d', 'gO2/m2/d', 'mgN/m2/d', 'mgP/m2/d', 'mgN/m2/d', &
             'gO2/m2/d', 'gO2/m2/d', 'mgN/m2/d', 'mgP/m2/d', 'mgN/m2/d', &
             'gO2/m2/d', 'gO2/m2/d', 'mgN/m2/d', 'mgP/m2/d', 'mgN/m2/d' !gp 15-Nov-04 end new block
-        DO i=1, nr
-            !gp 15-Nov-04 reach-average daily-average sediment fluxes
-            !gp WRITE(8,'(A15, 6F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, SODpr(i), &
-            !gp JCH4pr(i), JNH4pr(i), JSRPpr(i), JNO3pr(i)
-            WRITE(8,'(A15, 16F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, &
-                pr%DiagFluxDOav(i), pr%DiagFluxCBODav(i), pr%DiagFluxNH4av(i), pr%DiagFluxSRPav(i), pr%DiagFluxNO3av(i), &
-                pr%HypoFluxDOav(i), pr%HypoFluxCBODav(i), pr%HypoFluxNH4av(i), pr%HypoFluxSRPav(i), pr%HypoFluxNO3av(i), &
-                pr%DiagFluxDOav(i) + pr%HypoFluxDOav(i), &
-                pr%DiagFluxCBODav(i) + pr%HypoFluxCBODav(i), &
-                pr%DiagFluxNH4av(i) + pr%HypoFluxNH4av(i), &
-                pr%DiagFluxSRPav(i) + pr%HypoFluxSRPav(i), &
-                pr%DiagFluxNO3av(i) + pr%HypoFluxNO3av(i) !gp 15-Nov-04 end new block
-        END DO
+        do i=1, nr
+            !gp 15-nov-04 reach-average daily-average sediment fluxes
+            !gp write(8,'(a15, 6f13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, sodpr(i), &
+            !gp jch4pr(i), jnh4pr(i), jsrppr(i), jno3pr(i)
+            write(8,'(A15, 16F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, &
+                pr%diagfluxdoav(i), pr%diagfluxcbodav(i), pr%diagfluxnh4av(i), pr%diagfluxsrpav(i), pr%diagfluxno3av(i), &
+                pr%hypofluxdoav(i), pr%hypofluxcbodav(i), pr%hypofluxnh4av(i), pr%hypofluxsrpav(i), pr%hypofluxno3av(i), &
+                pr%diagfluxdoav(i) + pr%hypofluxdoav(i), &
+                pr%diagfluxcbodav(i) + pr%hypofluxcbodav(i), &
+                pr%diagfluxnh4av(i) + pr%hypofluxnh4av(i), &
+                pr%diagfluxsrpav(i) + pr%hypofluxsrpav(i), &
+                pr%diagfluxno3av(i) + pr%hypofluxno3av(i) !gp 15-nov-04 end new block
+        end do
 
 
-!gp 17-Feb-05
-!only output diel if showDielResults = "Yes"
+!gp 17-feb-05
+!only output diel if showdielresults = "yes"
 !
-!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-        If (system%showDielResults == "Yes") Then
+        if (system%showdielresults == "Yes") then
 
 !x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
 !x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
 
 !diel output result for water column
-            WRITE(8,*)
-            WRITE(8,*) '** Diel water quality in the water column **'
+            write(8,*)
+            write(8,*) '** Diel water quality in the water column **'
 
-            !gp 01-Nov-04 WRITE(8,'(32A13)') 't', 'Tempw', ' Temps', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', &
-            WRITE(8,'(32A13)') 't', 'Tempw', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', & !gp 30-Nov-04
+            !gp 01-nov-04 write(8,'(32a13)') 't', 'tempw', ' temps', 'cond', 'iss', 'do', 'cbods', 'cbodf', 'no', &
+            write(8,'(32A13)') 't', 'Tempw', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', & !gp 30-Nov-04
                 'NH4', 'NO3', 'Po', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', & !gp 30-Nov-04
                 'Bot Algae', 'TSS', 'TP', 'TN', 'DOsat', 'NH3', 'IntN', 'Int P', &
                 'phiTemp', 'phiLight', 'phiNitr', 'phiPhos', 'phiCarb', 'phiTotal' !gp 20-Oct-04
 
-            !gp 01-Nov-04 WRITE(8,'(32A13)') 'hr', 'c', 'c', 'umhos', 'mg/L', 'mg/L', 'mgO2/L', 'ugN/L', 'ugN/L', &
-            WRITE(8,'(32A13)') 'hr', 'c', 'umhos', 'mg/L', 'mg/L', 'mgO2/L', 'ugN/L', 'ugN/L', & !gp 32-Nov-04
+            !gp 01-Nov-04 write(8,'(32A13)') 'hr', 'c', 'c', 'umhos', 'mg/L', 'mg/L', 'mgO2/L', 'ugN/L', 'ugN/L', &
+            write(8,'(32A13)') 'hr', 'c', 'umhos', 'mg/L', 'mg/L', 'mgO2/L', 'ugN/L', 'ugN/L', & !gp 32-Nov-04
                 'ugN/L', 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', '', '', '', '', 'gD/m2', 'mgD/L', & !gp 30-Nov-04
                 'ugP/L', 'ugN/L', 'mg/L', 'ugN/L', 'mgN/mgA', 'mgP/mgA', &
                 'frac', 'frac', 'frac', 'frac', 'frac', 'frac' !gp 20-Oct-04
 
-            !gp WRITE(8,*) pr%nj
-            WRITE(8,'(I13)') pr%nj
-            DO nrp=0, nr
+            !gp write(8,*) pr%nj
+            write(8,'(I13)') pr%nj
+            do nrp=0, nr
                 !tdy=0
-                DO i=0, pr%nj
-                    !gp 27-Oct-04 add dimension for nl
-                    !gp TSS = pr%cpr(nrp, 11, i) * Rates%ada + pr%cpr(nrp, 2, i) + &
+                do i=0, pr%nj
+                    !gp 27-oct-04 add dimension for nl
+                    !gp tss = pr%cpr(nrp, 11, i) * rates%ada + pr%cpr(nrp, 2, i) + &
                     !gp pr%cpr(nrp, 12, i)
-                    !gp TP = pr%cpr(nrp, 11, i) * Rates%apa + pr%cpr(nrp, 9, i) + &
+                    !gp tp = pr%cpr(nrp, 11, i) * rates%apa + pr%cpr(nrp, 9, i) + &
                     !gp pr%cpr(nrp, 10, i)
-                    !gp TN = pr%cpr(nrp, 11, i) * Rates%ana + pr%cpr(nrp, 6, i) + &
+                    !gp tn = pr%cpr(nrp, 11, i) * rates%ana + pr%cpr(nrp, 6, i) + &
                     !gp pr%cpr(nrp, 7, i) + pr%cpr(nrp, 8, i)
-                    !gp DOSat = oxsat(pr%Tepr(nrp, i, 1), hydrau%reach(nrp)%elev)
-                    !gp NH3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%pHpr(nrp, i))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
-                    !gp (pr%Tepr(nrp, i, 1) + 273.15_r64))) * pr%cpr(nrp, 7, i)
-                    !gp WRITE(8, '(32F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, 1), pr%Tepr(nrp, i, 2), &
-                    !gp (pr%cpr(nrp, j, i), j=1, nv-2), pr%pHpr(nrp, i), &
-                    !gp pr%cpr(nrp, nv, i)* Rates%mgA / Rates%mgD * 1000, & !SCC 08/09/2004
-                    !gp TSS, TP, TN , DOSat, NH3, &
-                    !gp pr%NINbpr(nrp, i)* Rates%mgD / Rates%mgA / 1000, & !SCC 08/09/2004
-                    !gp pr%NIPbpr(nrp, i)* Rates%mgD / Rates%mgA / 1000, & !SCC 08/09/2004
-                    !gp pr%phitSavepr(nrp, i), pr%philSavepr(nrp, i), & !gp 20-Oct-04
-                    !gp pr%phinSavepr(nrp, i), pr%phipSavepr(nrp, i), & !gp 20-Oct-04
-                    !gp pr%phicSavepr(nrp, i), pr%phitotalSavepr(nrp, i) !gp 20-Oct-04
+                    !gp dosat = oxsat(pr%tepr(nrp, i, 1), hydrau%reach(nrp)%elev)
+                    !gp nh3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%phpr(nrp, i))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
+                    !gp (pr%tepr(nrp, i, 1) + 273.15_r64))) * pr%cpr(nrp, 7, i)
+                    !gp write(8, '(32f13.4)') pr%tdy(i)*24, pr%tepr(nrp, i, 1), pr%tepr(nrp, i, 2), &
+                    !gp (pr%cpr(nrp, j, i), j=1, nv-2), pr%phpr(nrp, i), &
+                    !gp pr%cpr(nrp, nv, i)* rates%mga / rates%mgd * 1000, & !scc 08/09/2004
+                    !gp tss, tp, tn , dosat, nh3, &
+                    !gp pr%ninbpr(nrp, i)* rates%mgd / rates%mga / 1000, & !scc 08/09/2004
+                    !gp pr%nipbpr(nrp, i)* rates%mgd / rates%mga / 1000, & !scc 08/09/2004
+                    !gp pr%phitsavepr(nrp, i), pr%philsavepr(nrp, i), & !gp 20-oct-04
+                    !gp pr%phinsavepr(nrp, i), pr%phipsavepr(nrp, i), & !gp 20-oct-04
+                    !gp pr%phicsavepr(nrp, i), pr%phitotalsavepr(nrp, i) !gp 20-oct-04
                     !gp ! tdy=tdy+ system%dt * 24
                     j = 1 !gp water column is layer 1
-                    TSS = pr%cpr(nrp, 11, i, j) * Rates%ada + pr%cpr(nrp, 2, i, j) + &
+                    tss = pr%cpr(nrp, 11, i, j) * rates%ada + pr%cpr(nrp, 2, i, j) + &
                         pr%cpr(nrp, 12, i, j)
-                    TP = pr%cpr(nrp, 11, i, j) * Rates%apa + pr%cpr(nrp, 9, i, j) + &
+                    tp = pr%cpr(nrp, 11, i, j) * rates%apa + pr%cpr(nrp, 9, i, j) + &
                         pr%cpr(nrp, 10, i, j)
-                    TN = pr%cpr(nrp, 11, i, j) * Rates%ana + pr%cpr(nrp, 6, i, j) + &
+                    tn = pr%cpr(nrp, 11, i, j) * rates%ana + pr%cpr(nrp, 6, i, j) + &
                         pr%cpr(nrp, 7, i, j) + pr%cpr(nrp, 8, i, j)
-                    DOSat = oxsat(pr%Tepr(nrp, i, j), hydrau%reach(nrp)%elev)
-                    NH3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%pHpr(nrp, i, j))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
-                        (pr%Tepr(nrp, i, j) + 273.15_r64))) * pr%cpr(nrp, 7, i, j)
+                    dosat = oxsat(pr%tepr(nrp, i, j), hydrau%reach(nrp)%elev)
+                    nh3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%phpr(nrp, i, j))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
+                        (pr%tepr(nrp, i, j) + 273.15_r64))) * pr%cpr(nrp, 7, i, j)
 
-                    !gp 01-Nov-04 WRITE(8, '(32F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, 1), pr%Tepr(nrp, i, 2), &
-                    !gp 05-Jul-05 WRITE(8, '(33F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, j), &
-                    WRITE(8, '(32F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, j), & !gp 05-Jul-05
-                        (pr%cpr(nrp, k, i, j), k=1, nv-2), pr%pHpr(nrp, i, j), &
-                        pr%cpr(nrp, nv, i, j)* Rates%mgA / Rates%mgD * 1000, & !SCC 08/09/2004
-                        TSS, TP, TN , DOSat, NH3, &
-                        pr%NINbpr(nrp, i)* Rates%mgD / Rates%mgA / 1000, & !SCC 08/09/2004
-                        pr%NIPbpr(nrp, i)* Rates%mgD / Rates%mgA / 1000, & !SCC 08/09/2004
-                        pr%phitSavepr(nrp, i), pr%philSavepr(nrp, i), & !gp 20-Oct-04
-                        pr%phinSavepr(nrp, i), pr%phipSavepr(nrp, i), & !gp 20-Oct-04
-                        pr%phicSavepr(nrp, i), pr%phitotalSavepr(nrp, i) !gp 20-Oct-04
+                    !gp 01-nov-04 write(8, '(32f13.4)') pr%tdy(i)*24, pr%tepr(nrp, i, 1), pr%tepr(nrp, i, 2), &
+                    !gp 05-jul-05 write(8, '(33f13.4)') pr%tdy(i)*24, pr%tepr(nrp, i, j), &
+                    write(8, '(32F13.4)') pr%tdy(i)*24, pr%tepr(nrp, i, j), & !gp 05-jul-05
+                        (pr%cpr(nrp, k, i, j), k=1, nv-2), pr%phpr(nrp, i, j), &
+                        pr%cpr(nrp, nv, i, j)* rates%mga / rates%mgd * 1000, & !scc 08/09/2004
+                        tss, tp, tn , dosat, nh3, &
+                        pr%ninbpr(nrp, i)* rates%mgd / rates%mga / 1000, & !scc 08/09/2004
+                        pr%nipbpr(nrp, i)* rates%mgd / rates%mga / 1000, & !scc 08/09/2004
+                        pr%phitsavepr(nrp, i), pr%philsavepr(nrp, i), & !gp 20-oct-04
+                        pr%phinsavepr(nrp, i), pr%phipsavepr(nrp, i), & !gp 20-oct-04
+                        pr%phicsavepr(nrp, i), pr%phitotalsavepr(nrp, i) !gp 20-oct-04
 
-                END DO
-            END DO
+                end do
+            end do
 
             !gp 27-Oct-04 (all code below here is new)
             !
@@ -772,70 +744,70 @@ CONTAINS
             !
 
             !gp diel output result for hyporheic pore water
-            WRITE(8,*)
-            WRITE(8,*) '** Diel hyporheic pore water and sediment flux **'
+            write(8,*)
+            write(8,*) '** Diel hyporheic pore water and sediment flux **'
 
-            WRITE(8,'(41A13)') 't', ' Temps', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', &
+            write(8,'(41A13)') 't', ' Temps', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', &
                 'NH4', 'NO3', 'Po', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
                 'TSS', 'TP', 'TN', 'DOsat', 'NH3', &
                 'DiagFluxDO', 'DiagFluxCBOD', 'DiagFluxNH4', 'DiagFluxNO3', 'DiagFluxSRP', 'DiagFluxIC', &
                 'HypoFluxDO', 'HypoFluxCBOD', 'HypoFluxNH4', 'HypoFluxNO3', 'HypoFluxSRP', 'DiagFluxIC', &
                 'TotFluxDO', 'TotFluxCBOD', 'TotFluxNH4', 'TotFluxNO3', 'TotFluxSRP', 'TotFluxIC'
-            WRITE(8,'(41A13)') 'hr', 'c', 'umhos', 'mg/L', 'mg/L', 'mgO2/L', 'ugN/L', 'ugN/L', &
+            write(8,'(41A13)') 'hr', 'c', 'umhos', 'mg/L', 'mg/L', 'mgO2/L', 'ugN/L', 'ugN/L', &
                 'ugN/L', 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', '', '', '', '', 'mgD/L', &
                 'ugP/L', 'ugN/L', 'mg/L', 'ugN/L', &
                 'gO2/m2/d', 'gO2/m2/d', 'mgN/m2/d','mgN/m2/d','mgP/m2/d','gC/m2/d', &
                 'gO2/m2/d', 'gO2/m2/d', 'mgN/m2/d','mgN/m2/d','mgP/m2/d','gC/m2/d', &
                 'gO2/m2/d', 'gO2/m2/d', 'mgN/m2/d','mgN/m2/d','mgP/m2/d','gC/m2/d'
-            WRITE(8,*) pr%nj
-            DO nrp=0, nr
-                DO i=0, pr%nj
-                    SELECT CASE (system%simHyporheicWQ)
-                      CASE ('Level 1', 'Level 2')
+            write(8,*) pr%nj
+            do nrp=0, nr
+                do i=0, pr%nj
+                    select case (system%simhyporheicwq)
+                      case ('Level 1', 'Level 2')
                         j = 2 !gp hyporheic pore water is layer 2
-                        TSS = pr%cpr(nrp, 11, i, j) * Rates%ada + pr%cpr(nrp, 2, i, j) + &
+                        tss = pr%cpr(nrp, 11, i, j) * rates%ada + pr%cpr(nrp, 2, i, j) + &
                             pr%cpr(nrp, 12, i, j)
-                        TP = pr%cpr(nrp, 11, i, j) * Rates%apa + pr%cpr(nrp, 9, i, j) + &
+                        tp = pr%cpr(nrp, 11, i, j) * rates%apa + pr%cpr(nrp, 9, i, j) + &
                             pr%cpr(nrp, 10, i, j)
-                        TN = pr%cpr(nrp, 11, i, j) * Rates%ana + pr%cpr(nrp, 6, i, j) + &
+                        tn = pr%cpr(nrp, 11, i, j) * rates%ana + pr%cpr(nrp, 6, i, j) + &
                             pr%cpr(nrp, 7, i, j) + pr%cpr(nrp, 8, i, j)
-                        NH3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%pHpr(nrp, i, j))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
-                            (pr%Tepr(nrp, i, j) + 273.15_r64))) * pr%cpr(nrp, 7, i, j)
-                        DOSat = oxsat(pr%Tepr(nrp, i, j), hydrau%reach(nrp)%elev)
-                        WRITE(8, '(41F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, j), &
-                            (pr%cpr(nrp, k, i, j), k=1, nv-2), pr%pHpr(nrp, i, j), &
-                            TSS, TP, TN , DOSat, NH3, &
-                            pr%DiagFluxDOpr(nrp, i), pr%DiagFluxCBODpr(nrp, i), pr%DiagFluxNH4pr(nrp, i), &
-                            pr%DiagFluxNO3pr(nrp, i), pr%DiagFluxSRPpr(nrp, i), pr%DiagFluxICpr(nrp, i), &
-                            pr%HypoFluxDOpr(nrp, i), pr%HypoFluxCBODpr(nrp, i), pr%HypoFluxNH4pr(nrp, i), &
-                            pr%HypoFluxNO3pr(nrp, i), pr%HypoFluxSRPpr(nrp, i), pr%HypoFluxICpr(nrp, i), &
-                            pr%DiagFluxDOpr(nrp, i) + pr%HypoFluxDOpr(nrp, i), &
-                            pr%DiagFluxCBODpr(nrp, i) + pr%HypoFluxCBODpr(nrp, i), &
-                            pr%DiagFluxNH4pr(nrp, i) + pr%HypoFluxNH4pr(nrp, i), &
-                            pr%DiagFluxNO3pr(nrp, i) + pr%HypoFluxNO3pr(nrp, i), &
-                            pr%DiagFluxSRPpr(nrp, i) + pr%HypoFluxSRPpr(nrp, i), &
-                            pr%DiagFluxICpr(nrp, i) + pr%HypoFluxICpr(nrp, i)
-                      CASE DEFAULT !gp only write sediment temperatures and diagenesis fluxes if hyporheic wq is not being simulated
-                        WRITE(8, '(41F13.4)') pr%tdy(i)*24, pr%Tepr(nrp, i, 2), (0.0*k,k=3,23), &
-                            pr%DiagFluxDOpr(nrp, i), pr%DiagFluxCBODpr(nrp, i), pr%DiagFluxNH4pr(nrp, i), &
-                            pr%DiagFluxNO3pr(nrp, i), pr%DiagFluxSRPpr(nrp, i), pr%DiagFluxICpr(nrp, i), &
+                        nh3 = 1.0_r64/(1 + 10.0_r64 ** (-pr%phpr(nrp, i, j))/10.0_r64** -(0.09018_r64 + 2729.92_r64 / &
+                            (pr%tepr(nrp, i, j) + 273.15_r64))) * pr%cpr(nrp, 7, i, j)
+                        dosat = oxsat(pr%tepr(nrp, i, j), hydrau%reach(nrp)%elev)
+                        write(8, '(41F13.4)') pr%tdy(i)*24, pr%tepr(nrp, i, j), &
+                            (pr%cpr(nrp, k, i, j), k=1, nv-2), pr%phpr(nrp, i, j), &
+                            tss, tp, tn , dosat, nh3, &
+                            pr%diagfluxdopr(nrp, i), pr%diagfluxcbodpr(nrp, i), pr%diagfluxnh4pr(nrp, i), &
+                            pr%diagfluxno3pr(nrp, i), pr%diagfluxsrppr(nrp, i), pr%diagfluxicpr(nrp, i), &
+                            pr%hypofluxdopr(nrp, i), pr%hypofluxcbodpr(nrp, i), pr%hypofluxnh4pr(nrp, i), &
+                            pr%hypofluxno3pr(nrp, i), pr%hypofluxsrppr(nrp, i), pr%hypofluxicpr(nrp, i), &
+                            pr%diagfluxdopr(nrp, i) + pr%hypofluxdopr(nrp, i), &
+                            pr%diagfluxcbodpr(nrp, i) + pr%hypofluxcbodpr(nrp, i), &
+                            pr%diagfluxnh4pr(nrp, i) + pr%hypofluxnh4pr(nrp, i), &
+                            pr%diagfluxno3pr(nrp, i) + pr%hypofluxno3pr(nrp, i), &
+                            pr%diagfluxsrppr(nrp, i) + pr%hypofluxsrppr(nrp, i), &
+                            pr%diagfluxicpr(nrp, i) + pr%hypofluxicpr(nrp, i)
+                      case default !gp only write sediment temperatures and diagenesis fluxes if hyporheic wq is not being simulated
+                        write(8, '(41F13.4)') pr%tdy(i)*24, pr%tepr(nrp, i, 2), (0.0*k,k=3,23), &
+                            pr%diagfluxdopr(nrp, i), pr%diagfluxcbodpr(nrp, i), pr%diagfluxnh4pr(nrp, i), &
+                            pr%diagfluxno3pr(nrp, i), pr%diagfluxsrppr(nrp, i), pr%diagfluxicpr(nrp, i), &
                             0.0,0.0,0.0,0.0,0.0,0.0, &
-                            pr%DiagFluxDOpr(nrp, i), pr%DiagFluxCBODpr(nrp, i), pr%DiagFluxNH4pr(nrp, i), &
-                            pr%DiagFluxNO3pr(nrp, i), pr%DiagFluxSRPpr(nrp, i), pr%DiagFluxICpr(nrp, i)
-                    END SELECT
-                END DO
-            END DO
+                            pr%diagfluxdopr(nrp, i), pr%diagfluxcbodpr(nrp, i), pr%diagfluxnh4pr(nrp, i), &
+                            pr%diagfluxno3pr(nrp, i), pr%diagfluxsrppr(nrp, i), pr%diagfluxicpr(nrp, i)
+                    end select
+                end do
+            end do
 
 
-!gp 05-Jul-05 diel fluxes for heat/DO/CO2
-            WRITE(8,*)
-            WRITE(8,*) '** Diel fluxes of heat (W/m^2), DO (gO2/m^2/d), and CO2 (gC/m^2/d) **'
+!gp 05-jul-05 diel fluxes for heat/do/co2
+            write(8,*)
+            write(8,*) '** Diel fluxes of heat (W/m^2), DO (gO2/m^2/d), and CO2 (gC/m^2/d) **'
 
-            WRITE(8,'(34A13)') 't', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', &
+            write(8,'(34A13)') 't', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', 'Heat', &
                 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', 'DO', &
                 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2'
 
-            WRITE(8,'(34A13)') 'hr', 'solar', 'longat', 'back', 'air conv', 'evap', 'sed cond', 'hyporheic', 'tribs/GW', &
+            write(8,'(34A13)') 'hr', 'solar', 'longat', 'back', 'air conv', 'evap', 'sed cond', 'hyporheic', 'tribs/GW', &
                 'advec/disp', 'reaeration', 'fast CBOD', 'slow CBOD', 'COD', 'nitrif', &
                 'phyto resp', 'phyto photo', 'botalg resp', 'botalg photo', &
                 'SOD', 'hyporheic', 'tribs/GW', 'advec/disp', &
@@ -843,149 +815,212 @@ CONTAINS
                 'phyto resp', 'phyto photo', 'botalg resp', 'botalg photo', &
                 'SOD', 'hyporheic', 'tribs/GW', 'advec/disp'
 
-            WRITE(8,'(I13)') pr%nj
-            DO nrp=0, nr
-                DO i=0, pr%nj
-                    WRITE(8, '(34F13.4)') pr%tdy(i)*24, &
-                        pr%pr_saveHeatFluxJsnt(nrp, i), & !'heat fluxes
-                        pr%pr_saveHeatFluxLongat(nrp, i), &
-                        pr%pr_saveHeatFluxBack(nrp, i), &
-                        pr%pr_saveHeatFluxConv(nrp, i), &
-                        pr%pr_saveHeatFluxEvap(nrp, i), &
-                        pr%pr_saveHeatFluxJsed(nrp, i), &
-                        pr%pr_saveHeatFluxJhyporheic(nrp, i), &
-                        pr%pr_saveHeatFluxTribs(nrp, i), &
-                        pr%pr_saveHeatFluxAdvecDisp(nrp, i), &
-                        pr%pr_saveDOfluxReaer(nrp, i), & !'DO fluxes
-                        pr%pr_saveDOfluxCBODfast(nrp, i), &
-                        pr%pr_saveDOfluxCBODslow(nrp, i), &
-                        pr%pr_saveDOfluxCOD(nrp, i), &
-                        pr%pr_saveDOfluxNitrif(nrp, i), &
-                        pr%pr_saveDOfluxPhytoResp(nrp, i), &
-                        pr%pr_saveDOfluxPhytoPhoto(nrp, i), &
-                        pr%pr_saveDOfluxBotalgResp(nrp, i), &
-                        pr%pr_saveDOfluxBotalgPhoto(nrp, i), &
-                        pr%pr_saveDOfluxSOD(nrp, i), &
-                        pr%pr_saveDOfluxHyporheic(nrp, i), &
-                        pr%pr_saveDOfluxTribs(nrp, i), &
-                        pr%pr_saveDOfluxAdvecDisp(nrp, i), &
-                        pr%pr_saveCO2fluxReaer(nrp, i), & !'CO2 fluxes
-                        pr%pr_saveCO2fluxCBODfast(nrp, i), &
-                        pr%pr_saveCO2fluxCBODslow(nrp, i), &
-                        pr%pr_saveCO2fluxPhytoResp(nrp, i), &
-                        pr%pr_saveCO2fluxPhytoPhoto(nrp, i), &
-                        pr%pr_saveCO2fluxBotalgResp(nrp, i), &
-                        pr%pr_saveCO2fluxBotalgPhoto(nrp, i), &
-                        pr%pr_saveCO2fluxSOD(nrp, i), &
-                        pr%pr_saveCO2fluxHyporheic(nrp, i), &
-                        pr%pr_saveCO2fluxTribs(nrp, i), &
-                        pr%pr_saveCO2fluxAdvecDisp(nrp, i)
+            write(8,'(I13)') pr%nj
+            do nrp=0, nr
+                do i=0, pr%nj
+                    write(8, '(34F13.4)') pr%tdy(i)*24, &
+                        pr%pr_saveheatfluxjsnt(nrp, i), & !'heat fluxes
+                        pr%pr_saveheatfluxlongat(nrp, i), &
+                        pr%pr_saveheatfluxback(nrp, i), &
+                        pr%pr_saveheatfluxconv(nrp, i), &
+                        pr%pr_saveheatfluxevap(nrp, i), &
+                        pr%pr_saveheatfluxjsed(nrp, i), &
+                        pr%pr_saveheatfluxjhyporheic(nrp, i), &
+                        pr%pr_saveheatfluxtribs(nrp, i), &
+                        pr%pr_saveheatfluxadvecdisp(nrp, i), &
+                        pr%pr_savedofluxreaer(nrp, i), & !'do fluxes
+                        pr%pr_savedofluxcbodfast(nrp, i), &
+                        pr%pr_savedofluxcbodslow(nrp, i), &
+                        pr%pr_savedofluxcod(nrp, i), &
+                        pr%pr_savedofluxnitrif(nrp, i), &
+                        pr%pr_savedofluxphytoresp(nrp, i), &
+                        pr%pr_savedofluxphytophoto(nrp, i), &
+                        pr%pr_savedofluxbotalgresp(nrp, i), &
+                        pr%pr_savedofluxbotalgphoto(nrp, i), &
+                        pr%pr_savedofluxsod(nrp, i), &
+                        pr%pr_savedofluxhyporheic(nrp, i), &
+                        pr%pr_savedofluxtribs(nrp, i), &
+                        pr%pr_savedofluxadvecdisp(nrp, i), &
+                        pr%pr_saveco2fluxreaer(nrp, i), & !'co2 fluxes
+                        pr%pr_saveco2fluxcbodfast(nrp, i), &
+                        pr%pr_saveco2fluxcbodslow(nrp, i), &
+                        pr%pr_saveco2fluxphytoresp(nrp, i), &
+                        pr%pr_saveco2fluxphytophoto(nrp, i), &
+                        pr%pr_saveco2fluxbotalgresp(nrp, i), &
+                        pr%pr_saveco2fluxbotalgphoto(nrp, i), &
+                        pr%pr_saveco2fluxsod(nrp, i), &
+                        pr%pr_saveco2fluxhyporheic(nrp, i), &
+                        pr%pr_saveco2fluxtribs(nrp, i), &
+                        pr%pr_saveco2fluxadvecdisp(nrp, i)
 
-                END DO
-            END DO
+                end do
+            end do
 
 
-!gp 17-Feb-05
-!only output diel if showDielResults = "Yes"
+!gp 17-feb-05
+!only output diel if showdielresults = "yes"
 !
 !x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
 !x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
 
-        End If
+        end if
 
-!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+!xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+
+        !hyporheic pore water
+        call hyporheic_pore_water(pr, topo, system, rates, nr)
+
+
+    end subroutine
+
+
+
+    Subroutine hydraulics_summary(topo, hydrau, rates, nr)
+
+        type(riverhydraulics_type), intent(in) :: hydrau
+        type(t_rivertopo), intent(in) :: topo
+        type(rates_t), intent(in) :: rates
+        integer(i32), intent(in) :: nr
+
+        character(len=30) reaformular
+        integer(i32) i
+
+        !calculate ka(0) for output, not used in calculations
+        !kawind = 0.728_r64 * uw(0) ** 0.5_r64 - 0.317_r64 * uw(0) + 0.0372_r64 * uw(0) ** 2
+        !ka(0) = kau(0) + kawind / depth(0)
+        write(8,*) '** Hydraulics Summary **'
+        write (8,'(A9, 9A12, A25)')'Downstream', 'Hydraulics', "E'", 'H', 'B', 'Ac', 'U', 'trav time', &
+            'slope', 'Reaeration', 'Reaeration formulas'
+        write (8,'(A9, 9A12, A25)') 'distance', 'Q,m3/s', 'm3/s', 'm', 'm', 'm2', 'mps', 'd', '', &
+            'ka,20,/d', 'water/wind'
+        do i = 0, nr
+            if (i==0) then
+                reaformular =''
+            else
+                if (rates%kawindmethod=='None') then
+                    reaformular = trim(hydrau%reach(i)%kaf) // '/No wind'
+                else
+                    reaformular = trim(hydrau%reach(i)%kaf) // rates%kawindmethod
+                end if
+            end if
+            write(8,'(F9.4, 9F12.5, 1A35)') topo%reach(i)%xrdn, hydrau%reach(i)%q, hydrau%reach(i)%epout, &
+                hydrau%reach(i)%depth, hydrau%reach(i)%b, hydrau%reach(i)%ac, &
+                hydrau%reach(i)%u, hydrau%reach(i)%trav, hydrau%reach(i)%s, &
+                hydrau%reach(i)%ka, reaformular
+        end do
+
+    end subroutine hydraulics_summary
+
+
+
+
+
+
+
+    subroutine hyporheic_pore_water(pr, topo, system, rates, nr)
+
+        type(outdata_type), intent(in) :: pr
+        type(t_rivertopo), intent(in) :: topo
+        type(systemparams), intent(in) :: system
+        type(rates_t), intent(in) :: rates
+        integer(i32), intent(in) :: nr
+
+        real(r64) cbodu, tkn, toc, tss
+        integer(i32) i, j, k
 
         ! Output temperature for the hyporheic pore water
-        WRITE(8,*)
-        WRITE(8,*) '** Temperature summary (hyporheic pore water temperature) **'
-        WRITE(8,'(A5, A10, 4A10)') 'Reach', '', 'Distance','Temp(C)', 'Temp(C)', 'Temp(C)'
-        WRITE(8,'(A5, A10, 4A10)') 'Label', '', 'x(km)','Average', 'Minimum', 'Maximum'
-        j = 2 !gp 27-Oct-04 hypoprheic pore water is layer 2
-        DO i=0, nr
-            WRITE (8,'(A15, 4F10.4)') Topo%reach(i)%rname, Topo%reach(i)%xpm, pr%Teav(i, j), &
-                pr%Temn(i, j), pr%Temx(i, j) !gp add nl dimension
-        END DO
+        write(8,*)
+        write(8,*) '** Temperature summary (hyporheic pore water temperature) **'
+        write(8,'(A5, A10, 4A10)') 'Reach', '', 'Distance','Temp(C)', 'Temp(C)', 'Temp(C)'
+        write(8,'(A5, A10, 4A10)') 'Label', '', 'x(km)','Average', 'Minimum', 'Maximum'
+        j = 2 !gp 27-oct-04 hypoprheic pore water is layer 2
+        do i=0, nr
+            write (8,'(A15, 4F10.4)') topo%reach(i)%rname, topo%reach(i)%xpm, pr%teav(i, j), &
+                pr%temn(i, j), pr%temx(i, j) !gp add nl dimension
+        end do
 
-        SELECT CASE (system%simHyporheicWQ)
-          CASE ('Level 1', 'Level 2')
+        select case (system%simhyporheicwq)
+          case ('Level 1', 'Level 2')
 
             ! Output concentrations for the hyporheic pore water constituents
-            WRITE(8,*)
-            WRITE(8,*) '** Daily average water quality summary (hyporheic pore water constituents) **'
-            WRITE(8,'(A5, A10, 26A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
+            write(8,*)
+            write(8,*) '** Daily average water quality summary (hyporheic pore water constituents) **'
+            write(8,'(A5, A10, 26A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
                 'PO', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
                 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', &
                 'NH3', 'DO sat', 'pH sat'
-            WRITE(8,'(A5, A10, 26A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
+            write(8,'(A5, A10, 26A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
                 'ugN/L', 'ugN/L', &
                 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', '', 'user defined', 'mgCaCO3/L', 's.u.', &
                 '', '', '', '', 'mgD/L', '', &
                 '', '', ''
-            DO i = 0, nr
+            do i = 0, nr
                 j = 2 !gp hyporheic pore water is layer 2
-                TOC = (pr%cav(i, 4, j) + pr%cav(i, 5, j)) / Rates%roc + &
-                    Rates%aca * pr%cav(i, 11, j) + Rates%aca / Rates%ada * pr%cav(i, 12, j)
-                TKN = pr%cav(i, 6, j) + pr%cav(i, 7, j) + Rates%ana * pr%cav(i, 11, j)
-                TSS = Rates%ada * pr%cav(i, 11, j) + pr%cav(i, 2, j) + pr%cav(i, 12, j)
-                CBODu = pr%cav(i, 4, j) + pr%cav(i, 5, j) + Rates%roa * pr%cav(i, 11, j) + &
-                    Rates%roc * Rates%aca / Rates%ada * pr%cav(i, 12, j)
-                WRITE(8,'(A15, 26F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%pHav(i, j) , &
-                    TOC, pr%TNav(i, j), pr%TPav(i, j), &
-                    TKN, TSS, CBODu, pr%NH3av(i, j), pr%osav(i, j), &
-                    pr%pHsav(i, j)
-            END DO
+                toc = (pr%cav(i, 4, j) + pr%cav(i, 5, j)) / rates%roc + &
+                    rates%aca * pr%cav(i, 11, j) + rates%aca / rates%ada * pr%cav(i, 12, j)
+                tkn = pr%cav(i, 6, j) + pr%cav(i, 7, j) + rates%ana * pr%cav(i, 11, j)
+                tss = rates%ada * pr%cav(i, 11, j) + pr%cav(i, 2, j) + pr%cav(i, 12, j)
+                cbodu = pr%cav(i, 4, j) + pr%cav(i, 5, j) + rates%roa * pr%cav(i, 11, j) + &
+                    rates%roc * rates%aca / rates%ada * pr%cav(i, 12, j)
+                write(8,'(A15, 26F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cav(i, k, j), k=1, nv-2), pr%phav(i, j) , &
+                    toc, pr%tnav(i, j), pr%tpav(i, j), &
+                    tkn, tss, cbodu, pr%nh3av(i, j), pr%osav(i, j), &
+                    pr%phsav(i, j)
+            end do
 
-            ! Output min concentrations
-            WRITE(8,*)
-            WRITE(8,*) '** Daily minimum water quality summary (hyporheic pore water constituents) **'
-            WRITE(8,'(A5, A10, 24A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
+            ! output min concentrations
+            write(8,*)
+            write(8,*) '** Daily minimum water quality summary (hyporheic pore water constituents) **'
+            write(8,'(A5, A10, 24A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
                 'PO', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
                 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', &
                 'NH3'
-            WRITE(8,'(A5, A10, 24A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
+            write(8,'(A5, A10, 24A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
                 'ugN/L', 'ugN/L', &
                 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', 'cfu/100mL', 'user defined', 'mgCaCO3/L', 's.u.', &
                 '', '', '', '', 'mgD/L', '', ''
-            DO i = 0, nr
+            do i = 0, nr
                 j = 2 !gp hyporheic pore water is layer 2
-                TOC = (pr%cmn(i, 4, j) + pr%cmn(i, 5, j)) / Rates%roc + &
-                    Rates%aca * pr%cmn(i, 11, j) + Rates%aca / Rates%ada * pr%cmn(i, 12, j)
-                TKN = pr%cmn(i, 6, j) + pr%cmn(i, 7, j) + Rates%ana * pr%cmn(i, 11, j)
-                TSS = Rates%ada * pr%cmn(i, 11, j) + pr%cmn(i, 2, j) + pr%cmn(i, 12, j)
-                CBODu = pr%cmn(i, 4, j) + pr%cmn(i, 5, j) + Rates%roa * pr%cmn(i, 11, j) + &
-                    Rates%roc * Rates%aca / Rates%ada * pr%cmn(i, 12, j)
-                WRITE(8,'(A15, 24F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmn(i, k, j), k=1, nv-2), pr%pHmn(i, j) , &
-                    TOC, pr%TNmn(i, j), pr%TPmn(i, j), &
-                    TKN, TSS, CBODu, pr%NH3mn(i, j)
-            END DO
+                toc = (pr%cmn(i, 4, j) + pr%cmn(i, 5, j)) / rates%roc + &
+                    rates%aca * pr%cmn(i, 11, j) + rates%aca / rates%ada * pr%cmn(i, 12, j)
+                tkn = pr%cmn(i, 6, j) + pr%cmn(i, 7, j) + rates%ana * pr%cmn(i, 11, j)
+                tss = rates%ada * pr%cmn(i, 11, j) + pr%cmn(i, 2, j) + pr%cmn(i, 12, j)
+                cbodu = pr%cmn(i, 4, j) + pr%cmn(i, 5, j) + rates%roa * pr%cmn(i, 11, j) + &
+                    rates%roc * rates%aca / rates%ada * pr%cmn(i, 12, j)
+                write(8,'(A15, 24F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmn(i, k, j), k=1, nv-2), pr%phmn(i, j) , &
+                    toc, pr%tnmn(i, j), pr%tpmn(i, j), &
+                    tkn, tss, cbodu, pr%nh3mn(i, j)
+            end do
 
             ! Output max concentrations
-            WRITE(8,*)
-            WRITE(8,*) '** Daily maximum water quality summary (hyporheic pore water constituents) **'
-            WRITE(8,'(A5, A10, 24A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
+            write(8,*)
+            write(8,*) '** Daily maximum water quality summary (hyporheic pore water constituents) **'
+            write(8,'(A5, A10, 24A13)') 'Reach', '', 'x', 'cond', 'ISS', 'DO', 'CBODs', 'CBODf', 'No', 'NH4', 'NO3', &
                 'PO', 'InorgP', 'Phyto', 'Detritus', 'Pathogen', 'Generic', 'Alk', 'pH', &
                 'TOC', 'TN', 'TP', 'TKN', 'TSS', 'CBODu', &
                 'NH3'
-            WRITE(8,'(A5, A10, 24A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
+            write(8,'(A5, A10, 24A13)') 'Label', '', 'km', 'umhos', 'mgD/L', 'mgO2/L', 'mgO2/L', 'mgO2/L', 'ugN/L', &
                 'ugN/L', 'ugN/L', &
                 'ugP/L', 'ugP/L', 'ugA/L', 'mgD/L', 'cfu/100mL', 'user defined', 'mgCaCO3/L', 's.u.', &
                 '', '', '', '', 'mgD/L', '', ''
-            DO i = 0, nr
+            do i = 0, nr
                 j = 2 !gp hyporheic pore water is layer 2
-                TOC = (pr%cmx(i, 4, j) + pr%cmx(i, 5, j)) / Rates%roc + &
-                    Rates%aca * pr%cmx(i, 11, j) + Rates%aca / Rates%ada * pr%cmx(i, 12, j)
-                TKN = pr%cmx(i, 6, j) + pr%cmx(i, 7, j) + Rates%ana * pr%cmx(i, 11, j)
-                TSS = Rates%ada * pr%cmx(i, 11, j) + pr%cmx(i, 2, j) + pr%cmx(i, 12, j)
-                CBODu = pr%cmx(i, 4, j) + pr%cmx(i, 5, j) + Rates%roa * pr%cmx(i, 11, j) + &
-                    Rates%roc * Rates%aca / Rates%ada * pr%cmx(i, 12, j)
-                WRITE(8,'(A15, 24F13.6)')Topo%reach(i)%rname, Topo%reach(i)%xpm, (pr%cmx(i, k, j), k=1, nv-2), pr%pHmx(i, j) , &
-                    TOC, pr%TNmx(i, j), pr%TPmx(i, j), &
-                    TKN, TSS, CBODu, pr%NH3mx(i, j)
-            END DO
+                toc = (pr%cmx(i, 4, j) + pr%cmx(i, 5, j)) / rates%roc + &
+                    rates%aca * pr%cmx(i, 11, j) + rates%aca / rates%ada * pr%cmx(i, 12, j)
+                tkn = pr%cmx(i, 6, j) + pr%cmx(i, 7, j) + rates%ana * pr%cmx(i, 11, j)
+                tss = rates%ada * pr%cmx(i, 11, j) + pr%cmx(i, 2, j) + pr%cmx(i, 12, j)
+                cbodu = pr%cmx(i, 4, j) + pr%cmx(i, 5, j) + rates%roa * pr%cmx(i, 11, j) + &
+                    rates%roc * rates%aca / rates%ada * pr%cmx(i, 12, j)
+                write(8,'(A15, 24F13.6)')topo%reach(i)%rname, topo%reach(i)%xpm, (pr%cmx(i, k, j), k=1, nv-2), pr%phmx(i, j) , &
+                    toc, pr%tnmx(i, j), pr%tpmx(i, j), &
+                    tkn, tss, cbodu, pr%nh3mx(i, j)
+            end do
 
-        END SELECT
+        end select
 
-    END SUBROUTINE
-END MODULE
+    end subroutine hyporheic_pore_water
+
+
+end module
