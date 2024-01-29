@@ -212,7 +212,7 @@ contains
             c13_ini(0:), c14_ini(0:), c15_ini(0:), &
             ph_ini(0:), c17_ini(0:), ninb_ini(0:), nipb_ini(0:)
 
-        integer(i32) i, j
+        integer(i32) i
 
         call allocatehydrauarrays(nr, hydrau)
 
@@ -422,7 +422,7 @@ contains
         character(len=30) kai !reaeration model
 
         integer(i32) i
-        real(r64) travel, width1, width2, edif, en
+        real(r64) travel, edif, en
         real(r64) eout, dxint, btop, ctsiv
         real(r64) ushear, fn, pwet, rh, hd
 
