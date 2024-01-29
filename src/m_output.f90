@@ -346,7 +346,7 @@ contains
             do ihour = 0, 23 !loop through output of hourly sources
                 t = ihour / 24.0_r64 !current output time in days
                 !evaluate sine functions and distribute loads to reaches at time t
-                call sourcescalc(t, nr, hydrau%flag)
+                call sourcescalc(t, nr)
 
                 !output of simulation date+time
                 !activecell.value = dateserial(xyear, xmon, xday) + t

@@ -253,11 +253,11 @@ contains
 
 
 !calculate instanteneous sources for time t
-    subroutine sourcescalc(t, nr, flag)
+    subroutine sourcescalc(t, nr)
         !gp new sub to evaluate point source sine functions and distribute loads to reaches at time t
 
         real(r64), intent(in) :: t
-        integer(i32), intent(in) :: nr, flag
+        integer(i32), intent(in) :: nr
 ! type(rivertopo_type) topo !river topology
         integer(i32) i, j, k
         real(r64) :: heat(nr)

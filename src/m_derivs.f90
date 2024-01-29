@@ -162,7 +162,7 @@ contains
         ! uw(0) = uw(1)
 
         !gp evaluate point source sine functions and distribute loads to reaches for the current time t
-        call sourcescalc(t, nr, hydrau%flag)
+        call sourcescalc(t, nr)
 
         call solarcalc(nr, solar, meteo, hydrau, sys) !solarcalc(tday, i)
 
