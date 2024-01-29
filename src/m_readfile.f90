@@ -1,7 +1,7 @@
 module m_readfile
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: lgt, hrsday, nv
-    use class_systemparams, only: systemparams, SystemParams_
+    use m_system_params, only: system_params_t
     use m_rivertopo, only: t_rivertopo
     use m_hydraulics, only: riverhydraulics_type, hydraulics_, makehydraulics
     use m_meteorology, only: meteorology_t
@@ -17,7 +17,7 @@ module m_readfile
     public :: readinputfile
 contains
     subroutine readinputfile(system, hydrau, sitemeteo, hw, db, stochrate, topo, sitesolar)
-        type(systemparams), intent(out) :: system
+        type(system_params_t), intent(out) :: system
         type(riverhydraulics_type), intent(out) :: hydrau
         type(meteorology_t), intent(out) :: sitemeteo
         type(upstream_boundary_t) hw
@@ -188,7 +188,7 @@ contains
 
         !read(8,*) imeth, imethph
 
-        system= systemparams_(basinname, filename, path, title, year, month, day, &
+        system = system_params_t(basinname, filename, path, title, year, month, day, &
             timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
             showdielresults, statevariables, calcsedflux, simalk, writedynamic)
 

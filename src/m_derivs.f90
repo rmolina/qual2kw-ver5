@@ -18,7 +18,7 @@ module m_derivs
     use class_phsolve, only: chemrates, modfp2, ph_solver, ct
     use class_solarcalc, only: solar_type, solarcalc
     use class_sourcein, only: load, sourcescalc
-    use class_systemparams, only: systemparams
+    use m_system_params, only: system_params_t
     use m_downstream_boundary, only: downstream_boundary_t, instanteousdownstreamboundary
     use m_meteorology, only: meteorology_t, instanteousmeteo
     use m_output, only: outdata_t, output
@@ -44,7 +44,7 @@ contains
         type(upstream_boundary_t) hw !headwater
         type(downstream_boundary_t) db !downstream boundary
         type(riverhydraulics_type) hydrau !channel dimensions, hydraulics, physical characters
-        type(systemparams) sys
+        type(system_params_t) sys
         real(r64), dimension(:), pointer :: inb, ipb
         !real(r64), dimension(:), pointer :: phitotalsave, phitsave, philsave, phinsave, phipsave, phicsave !gp 20-oct-04
         !gp 27-oct-04 real(r64), dimension(:,:), pointer :: te, c

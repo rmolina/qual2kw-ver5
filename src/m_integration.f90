@@ -21,7 +21,7 @@ module m_integration
     use class_phsolve, only: chemrates, modfp2, ph_solver, ct
     use class_solarcalc, only: solar_type, solarcalc
     use class_sourcein, only: load, sourcescalc
-    use class_systemparams, only: systemparams
+    use m_system_params, only: system_params_t
     use m_downstream_boundary, only: downstream_boundary_t, instanteousdownstreamboundary
     use m_meteorology, only: meteorology_t, instanteousmeteo
     use m_output, only: outdata_t, output
@@ -40,7 +40,7 @@ contains
 
 
         type(integral_type) intg !integral data structure
-        type(systemparams) sys
+        type(system_params_t) sys
         type(rates_t), intent(in) :: rates
         type(meteorology_t) meteo
         type(solar_type) solar !solar radiation
@@ -907,7 +907,7 @@ contains
         type(upstream_boundary_t) hw !headwater
         type(downstream_boundary_t) db !downstream boundary
         type(riverhydraulics_type), intent(in) :: hydrau !channel dimensions, hydraulics, physical characters
-        type(systemparams) sys
+        type(system_params_t) sys
         type(integral_type), intent(inout) :: begin
         type(rates_t), intent(in) :: rates
         type(outdata_t), intent(out) :: pr !output data
@@ -995,7 +995,7 @@ contains
         type(upstream_boundary_t), intent(in) :: hw !headwater
         type(downstream_boundary_t), intent(in) :: db !downstream boundary
         type(riverhydraulics_type), intent(in) :: hydrau !channel dimensions, hydraulics, physical characters
-        type(systemparams) sys
+        type(system_params_t) sys
         type(integral_type), intent(inout) :: intg
         type(integral_type), intent(in) :: scal
         type(rates_t), intent(in) :: rates
@@ -1112,7 +1112,7 @@ contains
         type(upstream_boundary_t), intent(in) :: hw !headwater
         type(downstream_boundary_t), intent(in) :: db !downstream boundary
         type(riverhydraulics_type), intent(in) :: hydrau !channel dimensions, hydraulics, physical characters
-        type(systemparams) sys
+        type(system_params_t) sys
         type(integral_type), intent(in) :: intg
         type(integral_type), intent(out) :: outintg, err !current value and incremented value
         type(rates_t), intent(in) :: rates
@@ -1343,7 +1343,7 @@ contains
         type(upstream_boundary_t), intent(in) :: hw
         type(downstream_boundary_t), intent(in) :: db
         type(riverhydraulics_type), intent(in) :: hydrau
-        type(systemparams) sys
+        type(system_params_t) sys
         type(integral_type), intent(inout) :: intg
         type(rates_t), intent(in) :: rates
 

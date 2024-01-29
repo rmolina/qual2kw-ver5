@@ -6,7 +6,7 @@ MODULE Class_SolarCalc
     USE nrtype
     use m_date, only: date_t
     USE Class_SolarPosition, only: calcJD, degToRad, radToDeg, solarposition, sunrise, sunset
-    USE Class_SystemParams
+    USE m_system_params
     USE m_RiverTopo
     IMPLICIT NONE
     PRIVATE SolarCalcHelper
@@ -136,7 +136,7 @@ CONTAINS
     End SUBROUTINE SunriseSunset
 
     SUBROUTINE SolarCalc(nr, Solar, siteMeteo, hydrau, system)
-        USE Class_SystemParams
+        USE m_system_params
         USE m_hydraulics
         USE m_meteorology
 
@@ -144,7 +144,7 @@ CONTAINS
         TYPE(solar_type), INTENT(INOUT) :: Solar
         TYPE(meteorology_t) siteMeteo								!meteology information
         TYPE(RiverHydraulics_type), INTENT(IN) :: hydrau
-        TYPE(SystemParams), INTENT(IN) :: system
+        TYPE(system_params_t), INTENT(IN) :: system
 
         INTEGER(I4B) i, j
 

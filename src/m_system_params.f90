@@ -1,12 +1,12 @@
-module class_systemparams
+module m_system_params
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: lgt
     use m_date, only: date_t
     implicit none
     private
-    public :: systemparams, systemparams_
+    public :: system_params_t
 
-    type systemparams
+    type system_params_t
 
         !gp 23-nov-09
         !character(len=30) basinname, filename, path, title, timezone
@@ -45,10 +45,11 @@ module class_systemparams
         !gp 24-jun-96
         character(len=30) :: writedynamic !yes or no
 
-    end type systemparams
+    end type system_params_t
 
-    !declare the system parameter variables
-! type(systemparams) system
+    interface system_params_t
+        procedure :: system_params_ctor
+    end interface system_params_t
 
 contains
     !/* external functions */
@@ -61,12 +62,12 @@ contains
     !function systemparams_(basinname, filename, path, title, year, month, day, &
     ! timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
     ! showdielresults, statevariables, calcsedflux, simalk) result(system) !gp 26-oct-07
-    function systemparams_(basinname, filename, path, title, year, month, day, &
+    function system_params_ctor(basinname, filename, path, title, year, month, day, &
         timezone, dtuser, tf, imeth, imethph, simhyporheicwq, &
         showdielresults, statevariables, calcsedflux, simalk, writedynamic) result(system)
         implicit none
 
-        type(systemparams) system
+        type(system_params_t) system
 
         !gp 23-nov-09
         !character(len=30), intent(in) :: basinname, filename, path, title, timezone
@@ -160,12 +161,12 @@ contains
         !print *, !warning: wrong inputs
 ! end if
 
-    end function systemparams_
+    end function system_params_ctor
 
     subroutine nexttimestep(system)
         implicit none
 
-        type(systemparams) system
+        type(system_params_t) system
 ! type(systemparams), intent(inout) :: system
         system%tday= system%tday + system%dt
         system%stepcount= system%stepcount+1
@@ -183,9 +184,9 @@ contains
 
     function steadystate(system)
 
-        type(systemparams) system
+        type(system_params_t) system
         logical(2) steadystate
         steadystate = system%steadystate
     end function
 
-end module class_systemparams
+end module m_system_params

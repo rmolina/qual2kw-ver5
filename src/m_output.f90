@@ -4,7 +4,7 @@ module m_output
     use m_hydraulics, only: riverhydraulics_type
     use class_phsolve, only: ph_solver
     use class_sourcein, only: load, npt, ndiff, sourcescalc
-    use class_systemparams, only: SystemParams
+    use m_system_params, only: system_params_t
     use m_rates, only: rates_t
     use m_rivertopo, only: t_rivertopo
     use m_oxygen, only: oxygen_saturation
@@ -97,7 +97,7 @@ contains
         integer(i32) i,status(0:97) !gp 25-jun-09
 
         !gp 17-nov-04
-        type(systemparams) sys
+        type(system_params_t) sys
         integer(i32) nsteps
         if (sys%imeth == "Adaptive step") then
             nsteps = 2400
@@ -311,7 +311,7 @@ contains
         type(t_rivertopo) topo
         type(riverhydraulics_type), intent(in) :: hydrau
         type(rates_t) rates
-        type(systemparams) system
+        type(system_params_t) system
         integer(i32), intent(in) :: nr
 
         !gp integer(i32) i, j, nrp
@@ -914,7 +914,7 @@ contains
 
         type(outdata_t), intent(in) :: pr
         type(t_rivertopo), intent(in) :: topo
-        type(systemparams), intent(in) :: system
+        type(system_params_t), intent(in) :: system
         type(rates_t), intent(in) :: rates
         integer(i32), intent(in) :: nr
 
