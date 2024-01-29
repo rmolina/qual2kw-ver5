@@ -399,9 +399,9 @@ contains
 
     end subroutine
 
-    function f2(ph, co2, te, alk, cond)
+    function f2_function(ph, co2, te, alk, cond)
 
-        real(r64) f2
+        real(r64) f2_function
         real(r64) ph, co2, te, alk, cond
         real(r64) k1, k2, kw, kh
         real(r64) alp0, alp1, alp2, hh
@@ -411,7 +411,7 @@ contains
         alp0 = hh ** 2 / (hh ** 2 + k1 * hh + k1 * k2)
         alp1 = k1 * hh / (hh ** 2 + k1 * hh + k1 * k2)
         alp2 = k1 * k2 / (hh ** 2 + k1 * hh + k1 * k2)
-        f2 = (alp1 + 2.0_r64 * alp2) * co2 / alp0 + kw / hh - hh - alk
+        f2_function = (alp1 + 2.0_r64 * alp2) * co2 / alp0 + kw / hh - hh - alk
 
     end function
 
