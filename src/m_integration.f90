@@ -2,7 +2,7 @@ module m_integration
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_derivs, only: derivs
     use m_hydraulics, only: riverhydraulics_type
-    use class_integrationdata, only: integral_type, integration_, &
+    use m_integration_data, only: integration_data_t, integration_, &
         saveheatfluxtribs, saveheatfluxadvecdisp, saveheatfluxjsnt, saveheatfluxlongat, saveheatfluxback, &
         saveheatfluxconv, saveheatfluxevap, saveheatfluxjsed, saveheatfluxjhyporheic, &
         os, phitsave, savedofluxtribs, savedofluxadvecdisp, &
@@ -37,7 +37,7 @@ contains
     subroutine integration(sys, rates, meteo, solar, hw, db, hydrau, pr, nr)
 
 
-        type(integral_type) intg !integral data structure
+        type(integration_data_t) intg !integral data structure
         type(system_params_t) sys
         type(rates_t), intent(in) :: rates
         type(meteorology_t) meteo
@@ -449,7 +449,7 @@ contains
         character(len=30), intent(in) :: showdielresults !yes or no (only used in excel vba)
 
         type(rates_t), intent(in) :: rates
-        type(integral_type), intent(in) :: intg
+        type(integration_data_t), intent(in) :: intg
         type(outdata_t), intent(out) :: pr
 
         integer(i32) i, j, k
@@ -670,7 +670,7 @@ contains
         !gp 17-feb-05
         character(len=30), intent(in) :: showdielresults !yes or no (only used in excel vba)
 
-        type(integral_type), intent(in) :: intg
+        type(integration_data_t), intent(in) :: intg
         type(outdata_t), intent(inout) :: pr
         integer(i32) i, j, k
         real(r64) kamm, nh3, ph, totp, totn
@@ -904,7 +904,7 @@ contains
         type(downstream_boundary_t) db !downstream boundary
         type(riverhydraulics_type), intent(in) :: hydrau !channel dimensions, hydraulics, physical characters
         type(system_params_t) sys
-        type(integral_type), intent(inout) :: begin
+        type(integration_data_t), intent(inout) :: begin
         type(rates_t), intent(in) :: rates
         type(outdata_t), intent(out) :: pr !output data
         real(r64), intent(in) :: t1, t2, dt1
@@ -913,7 +913,7 @@ contains
         real(r64) t, dt !initial time
         integer(i32) nstp
         real(r64) dtnext, dtdid
-        type(integral_type) scal, now
+        type(integration_data_t) scal, now
         !gp 28-oct-04 real(r64) dte(nr, nl), dc(nr, nv), dinb(nr), dipb(nr)
         real(r64) dte(nr, nl), dc(nr, nv, nl), dinb(nr), dipb(nr) !gp
 
@@ -989,8 +989,8 @@ contains
         type(downstream_boundary_t), intent(in) :: db !downstream boundary
         type(riverhydraulics_type), intent(in) :: hydrau !channel dimensions, hydraulics, physical characters
         type(system_params_t) sys
-        type(integral_type), intent(inout) :: intg
-        type(integral_type), intent(in) :: scal
+        type(integration_data_t), intent(inout) :: intg
+        type(integration_data_t), intent(in) :: scal
         type(rates_t), intent(in) :: rates
         !gp 28-oct-04 real(r64), intent(in):: dte(nr, nl), dc(nr, nv), dinb(nr), dipb(nr)
         real(r64), intent(in):: dte(nr, nl), dc(nr, nv, nl), dinb(nr), dipb(nr) !gp
@@ -1000,7 +1000,7 @@ contains
         integer(i32) i, j, k
         real(r64) errmax, dt, dttemp, tnew
 
-        type(integral_type) tmp, err !current value and incremented value
+        type(integration_data_t) tmp, err !current value and incremented value
 
         tmp = integration_(nr)
         err = integration_(nr)
@@ -1106,8 +1106,8 @@ contains
         type(downstream_boundary_t), intent(in) :: db !downstream boundary
         type(riverhydraulics_type), intent(in) :: hydrau !channel dimensions, hydraulics, physical characters
         type(system_params_t) sys
-        type(integral_type), intent(in) :: intg
-        type(integral_type), intent(out) :: outintg, err !current value and incremented value
+        type(integration_data_t), intent(in) :: intg
+        type(integration_data_t), intent(out) :: outintg, err !current value and incremented value
         type(rates_t), intent(in) :: rates
 
         !gp 28-oct-04 real(r64), intent(in):: dte(nr, nl), dc(nr, nv), dinb(nr), dipb(nr)
@@ -1122,7 +1122,7 @@ contains
             c3 = 250./621., c4 = 125./594., c6 = 512./1771., dc5 = -277./14336., &
             dc1 =c1 - 2825./ 27648., dc3 = c3 - 18575./48384., dc4 = c4 - 13525./55296., &
             dc6 = c6 - 0.25
-        type(integral_type) temp
+        type(integration_data_t) temp
         !runge-kutta derivatives
         !gp 28-oct-04 real(r64) ak2dc(nr, nv), ak2dte(nr, nl), ak2dinb(nr), ak2dipb(nr)
         !gp real(r64) ak3dc(nr, nv), ak3dte(nr, nl), ak3dinb(nr), ak3dipb(nr)
@@ -1337,7 +1337,7 @@ contains
         type(downstream_boundary_t), intent(in) :: db
         type(riverhydraulics_type), intent(in) :: hydrau
         type(system_params_t) sys
-        type(integral_type), intent(inout) :: intg
+        type(integration_data_t), intent(inout) :: intg
         type(rates_t), intent(in) :: rates
 
         !gp 28-oct-04 real(r64), intent(out):: dte(nr, nl), dc(nr, nv), dinb(nr), dipb(nr)
@@ -1350,7 +1350,7 @@ contains
 
         integer(i32) i,j,k
 
-        type(integral_type) temp
+        type(integration_data_t) temp
         !runge-kutta derivatives
 
         real(r64) ak2dc(nr, nv, nl), ak2dte(nr, nl), ak2dinb(nr), ak2dipb(nr)
