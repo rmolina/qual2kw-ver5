@@ -7,10 +7,10 @@ MODULE Class_Integration
     USE Class_IntegrationData, only: Integral_type, integration_, &
         saveHeatFluxTribs, saveheatfluxadvecdisp, saveheatfluxjsnt, saveheatfluxlongat, saveheatfluxback, &
         saveheatfluxconv, saveheatfluxevap, saveheatfluxjsed, saveheatfluxjhyporheic, &
-        os, phitsave, savedofluxheadwater, saveco2fluxheadwater, savedofluxtribs, savedofluxadvecdisp, &
+        os, phitsave, savedofluxtribs, savedofluxadvecdisp, &
         saveco2fluxtribs, saveco2fluxadvecdisp, phinsave, phipsave, phicsave, philsave, phitotalsave , &
         savebotalgphoto, savebotalgresp, savebotalgdeath, savebotalgnetgrowth, &
-        sodpr, jnh4pr, jno3pr, jch4pr, jsrppr, csodpr, &
+        sodpr, &
         diagfluxdo, diagfluxcbod, diagfluxnh4, diagfluxno3, diagfluxsrp, diagfluxic, savedofluxreaer, &
         savedofluxcbodfast, savedofluxcbodslow, savedofluxnitrif,  savedofluxphytoresp, &
         savedofluxphytophoto, savedofluxbotalgresp, savedofluxbotalgphoto, savedofluxsod, savedofluxcod, &
