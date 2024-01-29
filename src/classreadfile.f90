@@ -5,7 +5,7 @@ contains
         USE nrtype
         USE Class_SystemParams    !, ONLY: SystemParams, SystemParams_
         USE m_rivertopo, only: t_rivertopo
-        USE Class_Hydraulics
+        USE m_hydraulics
         USE m_meteorology, only: meteorology_t
 
         USE Class_LightHeat

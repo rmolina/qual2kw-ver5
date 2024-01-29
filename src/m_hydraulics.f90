@@ -2,7 +2,7 @@
 !
 !hydraulics data structure
 
-module class_hydraulics
+module m_hydraulics
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use nrtype, only: null_val, lgt, grav
     implicit none
@@ -143,104 +143,7 @@ module class_hydraulics
 ! type(hydraulics_type), allocatable :: hydrau(:
 
 contains
-    !/* public functions */
 
-    !gp 07-feb-06
-    !function hydraulics_(nr, xrdn, elev1, elev2, latd, latm, lats, lond, lonm, lons, q, bb, &
-    ! ss1, ss2, s, nm, alp1, bet1, alp2, bet2, ediff, kaaa, &
-    ! frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, hweir, bweir, &
-    ! sedthermcond, sedthermdiff, hsedcm, &
-    ! hypoexchfrac, porosity, rhocpsed, botalg0) result(hydrau) !gp 11-jan-05
-
-    !gp 21-nov-06
-    !function hydraulics_(nr, xrdn, elev1, elev2, latd, latm, lats, lond, lonm, lons, q, bb, &
-    ! ss1, ss2, s, nm, alp1, bet1, alp2, bet2, ediff, &
-    ! frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, hweir, bweir, &
-    ! sedthermcond, sedthermdiff, hsedcm, &
-    ! hypoexchfrac, porosity, rhocpsed, &
-    ! kaaa, vss, khc, &
-    ! kdcs, kdc, khn, &
-    ! von, kn , ki , &
-    ! vdi, khp, vop, &
-    ! vip, kga, krea, &
-    ! kdea, ksn, ksp, &
-    ! isat, khnx, va, &
-    ! botalg0, kgaf, abmax, &
-    ! kreaf, kexaf, kdeaf, &
-    ! ksnf, kspf, isatf, &
-    ! khnxf, ninbmin, nipbmin, &
-    ! ninbupmax, nipbupmax, kqn, &
-    ! kqp, nupwcfrac, pupwcfrac, &
-    ! kdt, vdt, kpath, &
-    ! vpath, apath, kgah, &
-    ! ksch, kinhch, kreah, &
-    ! kdeah, ksnh, ksph, &
-    ! khnxh, ahmax, &
-    ! kgen, vgen) result(hydrau)
-
-    !gp 03-apr-08
-    !function hydraulics_(nr, xrdn, elev1, elev2, latd, latm, lats, lond, lonm, lons, q, bb, &
-    ! ss1, ss2, s, nm, alp1, bet1, alp2, bet2, ediff, &
-    ! frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, hweir, bweir, &
-    ! sedthermcond, sedthermdiff, hsedcm, &
-    ! hypoexchfrac, porosity, rhocpsed, &
-    ! kaaa, vss, khc, &
-    ! kdcs, kdc, khn, &
-    ! von, kn , ki , &
-    ! vdi, khp, vop, &
-    ! vip, kga, krea, &
-    ! kdea, ksn, ksp, &
-    ! isat, khnx, va, &
-    ! kgaf, abmax, &
-    ! kreaf, kexaf, kdeaf, &
-    ! ksnf, kspf, isatf, &
-    ! khnxf, ninbmin, nipbmin, &
-    ! ninbupmax, nipbupmax, kqn, &
-    ! kqp, nupwcfrac, pupwcfrac, &
-    ! kdt, vdt, kpath, &
-    ! vpath, apath, kgah, &
-    ! ksch, kinhch, kreah, &
-    ! kdeah, ksnh, ksph, &
-    ! khnxh, ahmax, &
-    ! kgen, vgen, &
-    ! te_ini, c01_ini, c02_ini, c03_ini, &
-    ! c04_ini, c05_ini, c06_ini, &
-    ! c07_ini, c08_ini, c09_ini, &
-    ! c10_ini, c11_ini, c12_ini, &
-    ! c13_ini, c14_ini, c15_ini, &
-    ! ph_ini, c17_ini, ninb_ini, nipb_ini) result(hydrau)
-
-    !gp 16-jul-08
-    !function hydraulics_(nr, xrdn, elev1, elev2, latd, latm, lats, lond, lonm, lons, q, bb, &
-    ! ss1, ss2, s, nm, alp1, bet1, alp2, bet2, ediff, &
-    ! frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, hweir, bweir, &
-    ! sedthermcond, sedthermdiff, hsedcm, &
-    ! hypoexchfrac, porosity, rhocpsed, &
-    ! kaaa, vss, khc, &
-    ! kdcs, kdc, khn, &
-    ! von, kn , ki , &
-    ! vdi, khp, vop, &
-    ! vip, kga, krea, &
-    ! kdea, ksn, ksp, &
-    ! isat, khnx, va, &
-    ! kgaf, abmax, &
-    ! krea1f, krea2f, kexaf, kdeaf, &
-    ! ksnf, kspf, isatf, &
-    ! khnxf, ninbmin, nipbmin, &
-    ! ninbupmax, nipbupmax, kqn, &
-    ! kqp, nupwcfrac, pupwcfrac, &
-    ! kdt, vdt, kpath, &
-    ! vpath, apath, kgah, &
-    ! ksch, kinhch, kreah, &
-    ! kdeah, ksnh, ksph, &
-    ! khnxh, ahmax, &
-    ! kgen, vgen, &
-    ! te_ini, c01_ini, c02_ini, c03_ini, &
-    ! c04_ini, c05_ini, c06_ini, &
-    ! c07_ini, c08_ini, c09_ini, &
-    ! c10_ini, c11_ini, c12_ini, &
-    ! c13_ini, c14_ini, c15_ini, &
-    ! ph_ini, c17_ini, ninb_ini, nipb_ini) result(hydrau)
     function hydraulics_(nr, xrdn, elev1, elev2, latd, latm, lats, lond, lonm, lons, q, bb, &
         ss1, ss2, s, nm, alp1, bet1, alp2, bet2, ediff, &
         frsed, frsod, sodspec, jch4spec, jnh4spec, jsrpspec, hweir, bweir, &
@@ -276,110 +179,6 @@ contains
         integer(i32), intent(in) :: nr
         real(r64), intent(in) :: xrdn(0:), elev1(0:), elev2(0:), latd(0:), latm(0:)
 
-        !gp 07-feb-06
-        !real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
-        ! ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
-        ! alp2(0:), bet2(0:), ediff(0:), kaaa(0:), frsed(0:), &
-        ! frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
-        ! jsrpspec(0:), hweir(0:), bweir(0:), &
-        ! sedthermcond(0:), sedthermdiff(0:), hsedcm(0:), &
-        ! hypoexchfrac(0:), porosity(0:), rhocpsed(0:), botalg0(0:) !gp 11-jan-05
-
-        !gp 21-nov-06
-        !real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
-        ! ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
-        ! alp2(0:), bet2(0:), ediff(0:), frsed(0:), &
-        ! frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
-        ! jsrpspec(0:), hweir(0:), bweir(0:), &
-        ! sedthermcond(0:), sedthermdiff(0:), hsedcm(0:), &
-        ! hypoexchfrac(0:), porosity(0:), rhocpsed(0:), &
-        ! kaaa(0:), vss(0:), khc(0:), &
-        ! kdcs(0:), kdc(0:), khn(0:), &
-        ! von(0:), kn(0:) , ki(0:) , &
-        ! vdi(0:), khp(0:), vop(0:), &
-        ! vip(0:), kga(0:), krea(0:), &
-        ! kdea(0:), ksn(0:), ksp(0:), &
-        ! isat(0:), khnx(0:), va(0:), &
-        ! botalg0(0:), kgaf(0:), abmax(0:), &
-        ! kreaf(0:), kexaf(0:), kdeaf(0:), &
-        ! ksnf(0:), kspf(0:), isatf(0:), &
-        ! khnxf(0:), ninbmin(0:), nipbmin(0:), &
-        ! ninbupmax(0:), nipbupmax(0:), kqn(0:), &
-        ! kqp(0:), nupwcfrac(0:), pupwcfrac(0:), &
-        ! kdt(0:), vdt(0:), kpath(0:), &
-        ! vpath(0:), apath(0:), kgah(0:), &
-        ! ksch(0:), kinhch(0:), kreah(0:), &
-        ! kdeah(0:), ksnh(0:), ksph(0:), &
-        ! khnxh(0:), ahmax(0:), &
-        ! kgen(0:), vgen(0:)
-
-        !gp 03-apr-08
-        !real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
-        ! ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
-        ! alp2(0:), bet2(0:), ediff(0:), frsed(0:), &
-        ! frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
-        ! jsrpspec(0:), hweir(0:), bweir(0:), &
-        ! sedthermcond(0:), sedthermdiff(0:), hsedcm(0:), &
-        ! hypoexchfrac(0:), porosity(0:), rhocpsed(0:), &
-        ! kaaa(0:), vss(0:), khc(0:), &
-        ! kdcs(0:), kdc(0:), khn(0:), &
-        ! von(0:), kn(0:) , ki(0:) , &
-        ! vdi(0:), khp(0:), vop(0:), &
-        ! vip(0:), kga(0:), krea(0:), &
-        ! kdea(0:), ksn(0:), ksp(0:), &
-        ! isat(0:), khnx(0:), va(0:), &
-        ! kgaf(0:), abmax(0:), &
-        ! kreaf(0:), kexaf(0:), kdeaf(0:), &
-        ! ksnf(0:), kspf(0:), isatf(0:), &
-        ! khnxf(0:), ninbmin(0:), nipbmin(0:), &
-        ! ninbupmax(0:), nipbupmax(0:), kqn(0:), &
-        ! kqp(0:), nupwcfrac(0:), pupwcfrac(0:), &
-        ! kdt(0:), vdt(0:), kpath(0:), &
-        ! vpath(0:), apath(0:), kgah(0:), &
-        ! ksch(0:), kinhch(0:), kreah(0:), &
-        ! kdeah(0:), ksnh(0:), ksph(0:), &
-        ! khnxh(0:), ahmax(0:), &
-        ! kgen(0:), vgen(0:), &
-        ! te_ini(0:), c01_ini(0:), c02_ini(0:), c03_ini(0:), &
-        ! c04_ini(0:), c05_ini(0:), c06_ini(0:), &
-        ! c07_ini(0:), c08_ini(0:), c09_ini(0:), &
-        ! c10_ini(0:), c11_ini(0:), c12_ini(0:), &
-        ! c13_ini(0:), c14_ini(0:), c15_ini(0:), &
-        ! ph_ini(0:), c17_ini(0:), ninb_ini(0:), nipb_ini(0:)
-
-        !gp 16-jul-08
-        !real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
-        ! ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
-        ! alp2(0:), bet2(0:), ediff(0:), frsed(0:), &
-        ! frsod(0:), sodspec(0:), jch4spec(0:), jnh4spec(0:), &
-        ! jsrpspec(0:), hweir(0:), bweir(0:), &
-        ! sedthermcond(0:), sedthermdiff(0:), hsedcm(0:), &
-        ! hypoexchfrac(0:), porosity(0:), rhocpsed(0:), &
-        ! kaaa(0:), vss(0:), khc(0:), &
-        ! kdcs(0:), kdc(0:), khn(0:), &
-        ! von(0:), kn(0:) , ki(0:) , &
-        ! vdi(0:), khp(0:), vop(0:), &
-        ! vip(0:), kga(0:), krea(0:), &
-        ! kdea(0:), ksn(0:), ksp(0:), &
-        ! isat(0:), khnx(0:), va(0:), &
-        ! kgaf(0:), abmax(0:), &
-        ! krea1f(0:), krea2f(0:), kexaf(0:), kdeaf(0:), &
-        ! ksnf(0:), kspf(0:), isatf(0:), &
-        ! khnxf(0:), ninbmin(0:), nipbmin(0:), &
-        ! ninbupmax(0:), nipbupmax(0:), kqn(0:), &
-        ! kqp(0:), nupwcfrac(0:), pupwcfrac(0:), &
-        ! kdt(0:), vdt(0:), kpath(0:), &
-        ! vpath(0:), apath(0:), kgah(0:), &
-        ! ksch(0:), kinhch(0:), kreah(0:), &
-        ! kdeah(0:), ksnh(0:), ksph(0:), &
-        ! khnxh(0:), ahmax(0:), &
-        ! kgen(0:), vgen(0:), &
-        ! te_ini(0:), c01_ini(0:), c02_ini(0:), c03_ini(0:), &
-        ! c04_ini(0:), c05_ini(0:), c06_ini(0:), &
-        ! c07_ini(0:), c08_ini(0:), c09_ini(0:), &
-        ! c10_ini(0:), c11_ini(0:), c12_ini(0:), &
-        ! c13_ini(0:), c14_ini(0:), c15_ini(0:), &
-        ! ph_ini(0:), c17_ini(0:), ninb_ini(0:), nipb_ini(0:)
         real(r64), intent(in) :: lats(0:), lond(0:), lonm(0:), lons(0:), q(0:), bb(0:), &
             ss1(0:), ss2(0:), s(0:), nm(0:) , alp1(0:), bet1(0:), &
             alp2(0:), bet2(0:), ediff(0:), frsed(0:), &
@@ -848,4 +647,4 @@ contains
     end function
 
 
-end module class_hydraulics
+end module m_hydraulics

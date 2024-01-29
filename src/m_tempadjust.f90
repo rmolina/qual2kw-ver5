@@ -2,7 +2,7 @@ module m_tempadjust
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_rates, only: rates_t
     use m_oxygen, only: oxygen_saturation
-    use class_hydraulics, only: RiverHydraulics_type
+    use m_hydraulics, only: RiverHydraulics_type
     use m_meteorology, only: meteorology_t
     implicit none
     private

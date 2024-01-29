@@ -41,7 +41,7 @@ program q2kmain
 
     use nrtype
     use class_systemparams
-    use class_hydraulics
+    use m_hydraulics
     use m_meteorology
     use m_upstream_boundary
     use m_downstream_boundary

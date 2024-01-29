@@ -6,7 +6,7 @@ module class_sourcein
     use m_rivertopo, only: t_rivertopo
     use class_phsolve, only: ct
     use m_water_quality, only: water_quality_t
-    use class_hydraulics, only: riverhydraulics_type
+    use m_hydraulics, only: riverhydraulics_type
     implicit none
     private
     public sourcein_, load, ndiff, npt, sourcescalc

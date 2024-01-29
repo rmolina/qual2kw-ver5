@@ -103,7 +103,7 @@ CONTAINS
 
     SUBROUTINE SunriseSunset(nr, Solar, hydrau, today)
         !gp calculate sunrise, sunset, and photoperid
-        USE Class_Hydraulics, ONLY: RiverHydraulics_type
+        USE m_hydraulics, ONLY: RiverHydraulics_type
         USE m_date
         IMPLICIT NONE
 
@@ -137,7 +137,7 @@ CONTAINS
 
     SUBROUTINE SolarCalc(nr, Solar, siteMeteo, hydrau, system)
         USE Class_SystemParams
-        USE Class_Hydraulics
+        USE m_hydraulics
         USE m_meteorology
 
         INTEGER(I4B), INTENT(IN) :: nr
