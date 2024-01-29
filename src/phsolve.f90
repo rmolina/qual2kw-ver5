@@ -10,16 +10,16 @@ contains
 !!#####################################################################
 !!12/15/07
 !subroutine phsolver(imethph, ph, ct, te, alk, cond)
-!character(*), intent(in) :: imethph       ! ph solve method
+!character(*), intent(in) :: imethph ! ph solve method
 !real(dp), intent(out) :: ph
 !real(dp), intent(in) :: ct, te, alk, cond
 !
 !if (imethph == "newton-raphson") then
-!    call phsolnewton(ph, ct, te, alk, cond)
-!elseif (imethph == "bisection") then     !09/23/07
-!    call phsolbisect(ph, ct, te, alk, cond)
-!else   !brent method
-!    call phsolfzerotx(ph, ct, te, alk, cond)
+! call phsolnewton(ph, ct, te, alk, cond)
+!elseif (imethph == "bisection") then !09/23/07
+! call phsolbisect(ph, ct, te, alk, cond)
+!else !brent method
+! call phsolfzerotx(ph, ct, te, alk, cond)
 !end if
 !
 !end subroutine
@@ -31,10 +31,10 @@ contains
 !subroutine phsolfzerotx(xr, ct, te, alk, cond)
     subroutine phsolbrent(xr, ct, te, alk, cond)
 
-!fzerotx  textbook version of fzero.
-!   x = fzerotx(f,[a,b]) tries to find a zero of f(x) between a and b.
-!   f(a) and f(b) must have opposite signs.  fzerotx returns one
-!   end point of a small subinterval of [a,b] where f changes sign.
+!fzerotx textbook version of fzero.
+! x = fzerotx(f,[a,b]) tries to find a zero of f(x) between a and b.
+! f(a) and f(b) must have opposite signs. fzerotx returns one
+! end point of a small subinterval of [a,b] where f changes sign.
 
 !in&out varaibles
         real(dp), intent(out) :: xr
@@ -46,7 +46,7 @@ contains
         real(dp) p, q, r, s
         real(dp) m, tol
         real(dp) alke
-        real(dp), parameter::  eps2 = 2.22044604925031e-16
+        real(dp), parameter:: eps2 = 2.22044604925031e-16
 
 ! initialize
         a = 0.0
@@ -58,7 +58,7 @@ contains
 
         fa = f(a, ct, te, alke, cond)
         fb = f(b, ct, te, alke, cond)
-        if (fa * fb >=0) then      !if (sgn(fa) == sgn(fb)) then
+        if (fa * fb >=0) then !if (sgn(fa) == sgn(fb)) then
             !msgbox "function must change sign on the interval"
             !end
 
@@ -76,21 +76,21 @@ contains
 ! main loop, exit from middle of the loop
         do while (fb /= 0)
             ! the three current points, a, b, and c, satisfy:
-            !    f(x) changes sign between a and b.
-            !    abs(f(b)) <= abs(f(a)).
-            !    c = previous b, so c might = a.
+            ! f(x) changes sign between a and b.
+            ! abs(f(b)) <= abs(f(a)).
+            ! c = previous b, so c might = a.
             ! the next point is chosen from
-            !    bisection point, (a+b)/2.
-            !    secant point determined by b and c.
-            !    inverse quadratic interpolation point determined
-            !    by a, b, and c if they are distinct.
-            if (fa * fb >=0) then      !if (sgn(fa) == sgn(fb)) then
-                a = c;  fa = fc
-                d = b - c;  e = d
+            ! bisection point, (a+b)/2.
+            ! secant point determined by b and c.
+            ! inverse quadratic interpolation point determined
+            ! by a, b, and c if they are distinct.
+            if (fa * fb >=0) then !if (sgn(fa) == sgn(fb)) then
+                a = c; fa = fc
+                d = b - c; e = d
             end if
             if (abs(fa) < abs(fb)) then
-                c = b;    b = a;    a = c
-                fc = fb;  fb = fa;  fa = fc
+                c = b; b = a; a = c
+                fc = fb; fb = fa; fa = fc
             end if
             ! convergence test and possible exit
             m = 0.5 * (a - b)
@@ -138,7 +138,7 @@ contains
             if (abs(d) > tol) then
                 b = b + d
             else
-                b= b - sign(tol, b-a)  !b = b - sgn(b - a) * tol
+                b= b - sign(tol, b-a) !b = b - sgn(b - a) * tol
             end if
             fb = f(b, ct, te, alke, cond)
         end do
@@ -225,7 +225,7 @@ contains
         real(dp) alke,lam1,lam2
         integer(i4b) iter
         real(dp) k1, k2, kw
-        real(dp) ta																				!absolute temperature
+        real(dp) ta !absolute temperature
         real(dp) hh, mu, xnew, ea
 
         !gp 03-dec-09
@@ -268,23 +268,23 @@ contains
         real(dp) fnh3
         real(dp), intent(in) :: ph, te
 
-        fnh3 = 1.0_dp / (1.0_dp + 10.0_dp ** (-ph) /  &
+        fnh3 = 1.0_dp / (1.0_dp + 10.0_dp ** (-ph) / &
             (10.0_dp ** ( 0.09018_dp + 2729.92_dp / (te + 273.15_dp))))
 
     end function fnh3
 
     ! !oxygen satuation concentration function
     ! !temp- temperature
-    ! !	elev- elevation
+    ! ! elev- elevation
     ! pure function oxsat(temp, elev)
-    !     real(dp) oxsat
-    !     real(dp), intent(in) :: temp, elev
-    !     real(dp) taa, lnosf
+    ! real(dp) oxsat
+    ! real(dp), intent(in) :: temp, elev
+    ! real(dp) taa, lnosf
 
-    !     taa = temp + 273.15_dp
-    !     lnosf = -139.34411_dp + 157570.1_dp / taa - 66423080.0_dp / (taa * taa)
-    !     lnosf= lnosf + 12438.0e6_dp / (taa * taa * taa) - 8621949.0e5_dp / (taa * taa * taa * taa)
-    !     oxsat = exp(lnosf) * (1.0_dp - 0.0001148_dp * elev)
+    ! taa = temp + 273.15_dp
+    ! lnosf = -139.34411_dp + 157570.1_dp / taa - 66423080.0_dp / (taa * taa)
+    ! lnosf= lnosf + 12438.0e6_dp / (taa * taa * taa) - 8621949.0e5_dp / (taa * taa * taa * taa)
+    ! oxsat = exp(lnosf) * (1.0_dp - 0.0001148_dp * elev)
     ! end function
 
     !caculate k for tmeperature te
@@ -365,7 +365,7 @@ contains
 
         do
             if (iter > imax) then
-                !	msgbox "maximum iterations exceeded"
+                ! msgbox "maximum iterations exceeded"
                 stop 'maximum iterations exceeded'
             end if
             if (tola < tol) exit
