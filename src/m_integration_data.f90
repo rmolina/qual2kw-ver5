@@ -6,7 +6,7 @@ module m_integration_data
     implicit none
     private
 
-    public :: integration_data_t, integration_, &
+    public :: integration_data_t, &
         saveheatfluxtribs, saveheatfluxadvecdisp, saveheatfluxjsnt, saveheatfluxlongat, saveheatfluxback, &
         saveheatfluxconv, saveheatfluxevap, saveheatfluxjsed, saveheatfluxjhyporheic, &
         os, phitsave, savedofluxheadwater, saveco2fluxheadwater, savedofluxtribs, savedofluxadvecdisp, &
@@ -28,6 +28,11 @@ module m_integration_data
         real(dp), dimension(:,:), pointer :: te !gp
         real(dp), dimension(:,:,:), pointer :: c !gp add dimension for nl
     end type integration_data_t
+
+    interface integration_data_t
+        procedure :: integration_data_ctor
+    end interface integration_data_t
+
 
     !sediment nutrient flux
     real(dp), dimension(:), pointer :: sodpr, jnh4pr, jno3pr, jch4pr, jsrppr
@@ -65,7 +70,7 @@ module m_integration_data
 contains
 
     !user-defined type 'integral_type' constructor
-    function integration_(nr) result(integral)
+    function integration_data_ctor(nr) result(integral)
 
 ! use class_rivertopo
         type(integration_data_t) integral
@@ -206,6 +211,6 @@ contains
             end if
         end do
 
-    end function integration_
+    end function integration_data_ctor
 
 end module m_integration_data

@@ -2,7 +2,7 @@ module m_integration
     use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
     use m_derivs, only: derivs
     use m_hydraulics, only: riverhydraulics_type
-    use m_integration_data, only: integration_data_t, integration_, &
+    use m_integration_data, only: integration_data_t, &
         saveheatfluxtribs, saveheatfluxadvecdisp, saveheatfluxjsnt, saveheatfluxlongat, saveheatfluxback, &
         saveheatfluxconv, saveheatfluxevap, saveheatfluxjsed, saveheatfluxjhyporheic, &
         os, phitsave, savedofluxtribs, savedofluxadvecdisp, &
@@ -64,7 +64,7 @@ contains
         !gp 24-jun-09
         !character(len=30), intent(in) :: imethph ! ph solve method
 
-        intg=integration_(nr)
+        intg=integration_data_t(nr)
 
         !set initial conditions
         dc=0; dinb=0; dipb=0; dte=0
@@ -921,8 +921,8 @@ contains
         dt=dt1
 
         !constructor
-        now = integration_(nr)
-        scal= integration_(nr)
+        now = integration_data_t(nr)
+        scal= integration_data_t(nr)
         !initialize
         now = begin
 
@@ -1002,8 +1002,8 @@ contains
 
         type(integration_data_t) tmp, err !current value and incremented value
 
-        tmp = integration_(nr)
-        err = integration_(nr)
+        tmp = integration_data_t(nr)
+        err = integration_data_t(nr)
 
         !set the stepsize to the initial trial value
         dt = dttry
@@ -1136,7 +1136,7 @@ contains
         real(r64) ak6dc(nr, nv, nl), ak6dte(nr, nl), ak6dinb(nr), ak6dipb(nr) !gp end new block
 
         !call constructors
-        temp= integration_(nr)
+        temp= integration_data_t(nr)
 
         !gp 28-oct-04 temp%c(1:nr,1:nv) = intg%c(1:nr,1:nv) + b21 * dt * dc(1:nr,1:nv)
         temp%c(1:nr,1:nv,1:nl) = intg%c(1:nr,1:nv,1:nl) + b21 * dt * dc(1:nr,1:nv,1:nl) !gp
@@ -1358,7 +1358,7 @@ contains
         real(r64) ak4dc(nr, nv, nl), ak4dte(nr, nl), ak4dinb(nr), ak4dipb(nr) !gp end new block
 
         !call constructors
-        temp= integration_(nr)
+        temp= integration_data_t(nr)
 
         !first step
         call derivs(nr, meteo, solar, hw, db, hydrau, sys, intg%te, intg%c, intg%inb, intg%ipb, &

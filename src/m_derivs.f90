@@ -1726,36 +1726,32 @@ contains
             END SELECT !'gp end of calculation of hyporheic water quality derivatives
 
 
-            !'
-            !' -------------------------------------------------------------------------
-            !' --- convert water column derivatives from mass to concentration units ---
-            !' -------------------------------------------------------------------------
-            !'
-
-            DO i = 1, nr
-                DO k = 1, nv - 1
-                    !gp dc(i, k) = dc(i, k) / hydrau%reach(i)%vol
-                    dc(i, k, 1) = dc(i, k, 1) / hydrau%reach(i)%vol !gp
-                END DO
-                !gp dc(i, nv) = dc(i, nv) / hydrau%reach(i)%Asb
-                dc(i, nv, 1) = dc(i, nv, 1) / hydrau%reach(i)%Asb !gp
-                dINb(i) = dINb(i) / hydrau%reach(i)%Asb
-                dIPb(i) = dIPb(i) / hydrau%reach(i)%Asb
-            END DO
-
-
+            !convert water column derivatives from mass to concentration units
+            call conv_wat_col_deriv_from_mass_to_conc(nr, nv, hydrau, dc, dinb, dipb)
 
             !gp 03-Feb-05 end of bypass derivs for water quality variables
             !unless 'All' state variables are being simulated
-            !
-            !x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
-            !x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x
 
         End If
 
-        !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
     END SUBROUTINE
+
+    subroutine conv_wat_col_deriv_from_mass_to_conc(nr_, nv_, hydrau_, dc_, dinb_, dipb_)
+        ! convert water column derivatives from mass to concentration units
+        integer(i32), intent(in) :: nr_, nv_
+        real(r64), intent(inout):: dc_(:, :, :), dinb_(:), dipb_(:)
+        type(riverhydraulics_type), intent(in) :: hydrau_
+
+        integer(i32) :: i, k
+
+        do i = 1, nr_
+            do k = 1, nv_ - 1
+                dc_(i, k, 1) = dc_(i, k, 1) / hydrau_%reach(i)%vol
+            end do
+            dc_(i, nv_, 1) = dc_(i, nv_, 1) / hydrau_%reach(i)%asb
+            dinb_(i) = dinb_(i) / hydrau_%reach(i)%asb
+            dipb_(i) = dipb_(i) / hydrau_%reach(i)%asb
+        end do
+    end Subroutine conv_wat_col_deriv_from_mass_to_conc
 
 end module m_derivs
