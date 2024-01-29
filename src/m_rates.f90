@@ -176,7 +176,6 @@ contains
         !this function also assigns global rates to the unspecified reach-specific rates in hydrau
         type(riverhydraulics_type), intent(inout) :: hydrau !assign reach-specific rates
         integer(i32), intent(in) :: nr !number of reach
-        integer(i32) i
 
         type(rates_t) rates
 
