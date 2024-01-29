@@ -17,7 +17,7 @@ module m_integration
         saveco2fluxreaer, saveco2fluxcbodfast, saveco2fluxcbodslow, saveco2fluxphytoresp, saveco2fluxphytophoto, &
         saveco2fluxbotalgresp, saveco2fluxbotalgphoto, saveco2fluxsod, hypofluxdo, hypofluxcbod, hypofluxnh4, &
         hypofluxno3, hypofluxsrp, hypofluxic
-    use class_lightheat, only: lightheat, heatbalance, lightextinction
+    use m_light_heat, only: lightheat, heatbalance, lightextinction
     use class_phsolve, only: chemrates, modfp2, ph_solver, ct
     use class_solarcalc, only: solar_type, solarcalc
     use class_sourcein, only: load, sourcescalc

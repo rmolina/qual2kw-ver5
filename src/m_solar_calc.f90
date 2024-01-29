@@ -8,7 +8,7 @@ module class_solarcalc
     use m_solar_position, only: calcjd, degtorad, radtodeg, solarposition, sunrise, sunset
     use m_rivertopo, only: t_rivertopo
     use m_hydraulics, only: riverhydraulics_type
-    use class_lightheat, only: lightheat
+    use m_light_heat, only: lightheat
     implicit none
     private
     public :: solar_type, sunrisesunset, solarcalc, sitesolar_
