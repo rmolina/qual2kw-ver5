@@ -1,306 +1,307 @@
 ! classlightheat.f90
 ! general variables and functions for calculating light and heat
-MODULE Class_LightHeat
-    USE m_constants
-    IMPLICIT NONE
+module class_lightheat
+    use, intrinsic :: iso_fortran_env, only: i32 => int32, r64 => real64
+    use m_constants, only: acoeff, bowen, eps, rl, sigma
+    implicit none
+    private
+    public :: lightheat, light_, heatbalance, lightextinction
 
-! PRIVATE
-! PUBLIC Aa, Light_
+    type lightheat_type
+        real(r64) :: par = 0.47 !phtosynthetically available radiation, default 0.47
+        real(r64) :: kep = 0.01 !backgroud light extinction
+        real(r64) :: kela=0 !linear chlorophyll light extinction
+        real(r64) :: kenla=0 !nonlinear chlorophyll light extinction
+        real(r64) :: kess=0 !inorganic ss light extinction
+        real(r64) :: kepom=0 !detritus light extinction
 
-    TYPE LightHeat_type
-        REAL(DP) :: PAR = 0.47 !phtosynthetically available radiation, default 0.47
-        REAL(DP) :: kep = 0.01 !backgroud light extinction
-        REAL(DP) :: kela=0 !linear chlorophyll light extinction
-        REAL(DP) :: kenla=0 !nonlinear chlorophyll light extinction
-        REAL(DP) :: kess=0 !inorganic SS light extinction
-        REAL(DP) :: kepom=0 !detritus light extinction
+        !gp 13-feb-06
+        real(r64) :: kemac=0 !macrophyte light extinction
 
-        !gp 13-Feb-06
-        REAL(DP) :: kemac=0 !macrophyte light extinction
-
-        CHARACTER(LEN=30) ::longatMethod = "Brunt"
+        character(len=30) ::longatmethod = "Brunt"
         !atmospheric longwave emissivity model
-        !gp 16-Jul-08
-        REAL(DP) :: kbrut=1.24
+        !gp 16-jul-08
+        real(r64) :: kbrut=1.24
 
-        !gp 24-Jul-09
-        REAL(DP) :: KCL1=0.65
-        REAL(DP) :: KCL2=0.17
+        !gp 24-jul-09
+        real(r64) :: kcl1=0.65
+        real(r64) :: kcl2=0.17
 
-        CHARACTER(LEN=30) ::fUwMethod = "Brady-Graves-Geyer"
+        character(len=30) ::fuwmethod = "Brady-Graves-Geyer"
         !evaporation and air convection/conduction
-    END TYPE
+    end type
 
-    TYPE(LightHeat_type) lightheat
+    type(lightheat_type) lightheat
 
-CONTAINS
+contains
 
-    !gp 13-Feb-06
-    !PURE FUNCTION lightExtinction(lightheat, cPom, ss, cAlgae) RESULT(ke)
+    !gp 13-feb-06
+    !pure function lightextinction(lightheat, cpom, ss, calgae) result(ke)
     !
-    ! TYPE(LightHeat_type), INTENT(IN) :: lightheat
-    ! REAL(DP), INTENT(IN) :: cPom, ss, cAlgae
-    ! REAL(DP) ke
+    ! type(lightheat_type), intent(in) :: lightheat
+    ! real(r64), intent(in) :: cpom, ss, calgae
+    ! real(r64) ke
     !
-    ! ke = lightheat%kep + lightheat%kepom * cPom + lightheat%kess * ss &
-    ! + lightheat%kela * cAlgae + lightheat%kenla * cAlgae ** (2.0 / 3.0)
+    ! ke = lightheat%kep + lightheat%kepom * cpom + lightheat%kess * ss &
+    ! + lightheat%kela * calgae + lightheat%kenla * calgae ** (2.0 / 3.0)
     !
-    !END FUNCTION lightExtinction
-    PURE FUNCTION lightExtinction(lightheat, cPom, ss, cAlgae, cMacrophyte) RESULT(ke)
-        TYPE(LightHeat_type), INTENT(IN) :: lightheat
-        REAL(DP), INTENT(IN) :: cPom, ss, cAlgae, cMacrophyte !note: cMacrophyte is gD/m^3
-        REAL(DP) ke
-        ke = lightheat%kep + lightheat%kepom * cPom + lightheat%kess * ss + lightheat%kemac * cMacrophyte &
-            + lightheat%kela * cAlgae + lightheat%kenla * cAlgae ** (2.0 / 3.0)
-    END FUNCTION lightExtinction
+    !end function lightextinction
+    pure function lightextinction(lightheat, cpom, ss, calgae, cmacrophyte) result(ke)
+        type(lightheat_type), intent(in) :: lightheat
+        real(r64), intent(in) :: cpom, ss, calgae, cmacrophyte !note: cmacrophyte is gd/m^3
+        real(r64) ke
+        ke = lightheat%kep + lightheat%kepom * cpom + lightheat%kess * ss + lightheat%kemac * cmacrophyte &
+            + lightheat%kela * calgae + lightheat%kenla * calgae ** (2.0 / 3.0)
+    end function lightextinction
 
     !/* public functions */
 
-    !gp 13-Feb-06
-    !SUBROUTINE Light_(PAR, kep, kela, kenla, kess, kepom, longatMethod, fUwMethod)
+    !gp 13-feb-06
+    !subroutine light_(par, kep, kela, kenla, kess, kepom, longatmethod, fuwmethod)
 
-    !gp 24-Jun-09
-    !gp 16-Jul-08
-    !SUBROUTINE Light_(PAR, kep, kela, kenla, kess, kepom, kemac, longatMethod, fUwMethod)
-    !SUBROUTINE Light_(PAR, kep, kela, kenla, kess, kepom, kemac, longatMethod, kbrut, fUwMethod)
-    SUBROUTINE Light_(PAR, kep, kela, kenla, kess, kepom, kemac, longatMethod, kbrut, fUwMethod, KCL1, KCL2)
+    !gp 24-jun-09
+    !gp 16-jul-08
+    !subroutine light_(par, kep, kela, kenla, kess, kepom, kemac, longatmethod, fuwmethod)
+    !subroutine light_(par, kep, kela, kenla, kess, kepom, kemac, longatmethod, kbrut, fuwmethod)
+    subroutine light_(par, kep, kela, kenla, kess, kepom, kemac, longatmethod, kbrut, fuwmethod, kcl1, kcl2)
 
-        !gp 13-Feb-06
-        !REAL(DP) PAR, kep, kela, kenla, kess, kepom
+        !gp 13-feb-06
+        !real(r64) par, kep, kela, kenla, kess, kepom
 
-        !gp 24-Jun-09
-        !gp 16-Jul-08
-        !REAL(DP) PAR, kep, kela, kenla, kess, kepom, kemac
-        !REAL(DP) PAR, kep, kela, kenla, kess, kepom, kemac, kbrut
-        REAL(DP) PAR, kep, kela, kenla, kess, kepom, kemac, kbrut, KCL1, KCL2
+        !gp 24-jun-09
+        !gp 16-jul-08
+        !real(r64) par, kep, kela, kenla, kess, kepom, kemac
+        !real(r64) par, kep, kela, kenla, kess, kepom, kemac, kbrut
+        real(r64) par, kep, kela, kenla, kess, kepom, kemac, kbrut, kcl1, kcl2
 
-        CHARACTER(LEN=30) longatMethod, fUwMethod
+        character(len=30) longatmethod, fuwmethod
 
-        lightheat%PAR = PAR
+        lightheat%par = par
         lightheat%kep = kep
         lightheat%kela = kela
         lightheat%kenla=kenla
         lightheat%kess = kess
         lightheat%kepom = kepom
 
-        !gp 13-Feb-06
+        !gp 13-feb-06
         lightheat%kemac = kemac
 
-        lightheat%longatMethod = longatMethod
+        lightheat%longatmethod = longatmethod
 
-        !gp 16-Jul-08
+        !gp 16-jul-08
         lightheat%kbrut = kbrut
 
-        lightheat%fUwMethod= fUwMethod
+        lightheat%fuwmethod= fuwmethod
 
-        !gp 24-Jun-09
-        lightheat%KCL1= KCL1
-        lightheat%KCL2= KCL2
+        !gp 24-jun-09
+        lightheat%kcl1= kcl1
+        lightheat%kcl2= kcl2
 
-    END SUBROUTINE Light_
+    end subroutine light_
 
-    Function fUw(fUwMethod, Uw, Ta, Te, Ast, eair, es)
+    function fuw(fuwmethod, uw, ta, te, ast, eair, es)
 
-        REAL(DP) fUw
-        CHARACTER(LEN=20), INTENT(IN) ::fUwMethod
-        REAL(DP),INTENT(IN) :: Uw, Ta, Te, Ast, eair, es
-        REAL(DP) wmph, areaa
-        REAL(DP) ta2a, tva, tsa, tvs, dtv
+        real(r64) fuw
+        character(len=20), intent(in) ::fuwmethod
+        real(r64),intent(in) :: uw, ta, te, ast, eair, es
+        real(r64) wmph, areaa
+        real(r64) ta2a, tva, tsa, tvs, dtv
 
-        Select Case (fUwMethod)
-          Case ("Brady-Graves-Geyer")
-            !"Brady, Graves, and Geyer"
-            !for this formula the wind speed height is 7 m (see Edinger, et al., 1974)
-            fUw = 19.0_dp + 0.95_dp * Uw * Uw !Chapra eqn 30.22 cal/cm**2/d/mmHg
-          Case ("Adams 1")
-            !write(*,*) "Adams 1, Wrong!"
-            !"East Mesa"
+        select case (fuwmethod)
+          case ("Brady-Graves-Geyer")
+            !"brady, graves, and geyer"
+            !for this formula the wind speed height is 7 m (see edinger, et al., 1974)
+            fuw = 19.0_r64 + 0.95_r64 * uw * uw !chapra eqn 30.22 cal/cm**2/d/mmhg
+          case ("adams 1")
+            !write(*,*) "adams 1, wrong!"
+            !"east mesa"
             !from adams, et al., eq. 4.48, p. 4-26
             !for this formula the wind speed height is 2m
             !first convert windspeed from m s-1 to mph
-            wmph = Uw * 3600.0_dp / (0.3048_dp * 5280.0_dp) !Uw(i) is at 7m
+            wmph = uw * 3600.0_r64 / (0.3048_r64 * 5280.0_r64) !uw(i) is at 7m
             !convert to the formula!s wind speed height using
-            !the exponential wind law, Paily et al., 1974
-            wmph = wmph * (2.0_dp / 7.0_dp) ** 0.15_dp !convert wind speed from 7m to 2m height
+            !the exponential wind law, paily et al., 1974
+            wmph = wmph * (2.0_r64 / 7.0_r64) ** 0.15_r64 !convert wind speed from 7m to 2m height
             !convert surface area in m**2 to area in acres
-            areaa = Ast / (0.3048_dp ** 2.0 * 43560.0_dp)
+            areaa = ast / (0.3048_r64 ** 2.0 * 43560.0_r64)
             !next compute virtual temperature difference
             !eagleson, p. s. 1970. dynamic hydrology. mcgraw-hill, inc.,
             !new york, new york. p. 56
-            ta2a = 9.0_dp / 5.0_dp * Ta + 32.0_dp !deg F air temp at 2m
-            tva = ta2a / (1.0_dp - 0.378_dp * (eair / 760.0_dp))
-            tsa = 9.0_dp / 5.0_dp * Te + 32.0_dp !Te(i, 1)
-            tvs = tsa / (1.0_dp - 0.378_dp * (es / 760.0_dp))
+            ta2a = 9.0_r64 / 5.0_r64 * ta + 32.0_r64 !deg f air temp at 2m
+            tva = ta2a / (1.0_r64 - 0.378_r64 * (eair / 760.0_r64))
+            tsa = 9.0_r64 / 5.0_r64 * te + 32.0_r64 !te(i, 1)
+            tvs = tsa / (1.0_r64 - 0.378_r64 * (es / 760.0_r64))
             dtv = tvs - tva !original formula in shestt
-            If (dtv < 0) dtv = 0
-            !next compute fUw in W/m**2/mmHg
-            fUw = 0.1313_dp * ((22.4_dp * dtv ** (1.0_dp / 3.0_dp)) ** 2 + (24.2_dp * areaa ** (-0.05_dp) * wmph) ** 2) ** 0.5_dp
-            !next convert fUw to cal/cm**2/d/mmHg
-            fUw = fUw / (4.183076_dp * 100.0_dp * 100.0_dp / 86400.0_dp)
-          Case ("Adams 2")
-            !write(*,*) "Adams2, Wrong!"
-            !!"East Mesa modified to include Marciano and Harbeck"
+            if (dtv < 0) dtv = 0
+            !next compute fuw in w/m**2/mmhg
+            fuw = 0.1313_r64 * ((22.4_r64 * dtv ** (1.0_r64 / 3.0_r64)) ** 2 &
+              + (24.2_r64 * areaa ** (-0.05_r64) * wmph) ** 2) ** 0.5_r64
+            !next convert fuw to cal/cm**2/d/mmhg
+            fuw = fuw / (4.183076_r64 * 100.0_r64 * 100.0_r64 / 86400.0_r64)
+          case ("Adams 2")
+            !write(*,*) "adams2, wrong!"
+            !!"east mesa modified to include marciano and harbeck"
             !!from adams, et al., eq. 4.48, p. 4-26
             !for this formula the wind speed height is 2m
             !first convert windspeed from m s-1 to mph
-            wmph = Uw * 3600.0_dp / (0.3048_dp * 5280.0_dp) !Uw(i) is at 7m
+            wmph = uw * 3600.0_r64 / (0.3048_r64 * 5280.0_r64) !uw(i) is at 7m
             !convert to the formula!s wind speed height using
-            !the exponential wind law, Paily et al., 1974
-            wmph = wmph * (2.0_dp / 7.0_dp) ** 0.15_dp !convert wind speed from 7m to 2m height
+            !the exponential wind law, paily et al., 1974
+            wmph = wmph * (2.0_r64 / 7.0_r64) ** 0.15_r64 !convert wind speed from 7m to 2m height
             !next compute virtual temperature difference
             !eagleson, p. s. 1970. dynamic hydrology. mcgraw-hill, inc.,
             !new york, new york. p. 56
-            ta2a = 9.0_dp / 5.0_dp * Ta + 32.0_dp !deg F air temp at 2m
-            tva = ta2a / (1.0_dp - 0.378_dp * (eair / 760.0_dp))
-            tsa = 9.0_dp / 5.0_dp * Te + 32.0_dp !Te(i, 1)
-            tvs = tsa / (1.0_dp - 0.378_dp * (es / 760.0_dp))
+            ta2a = 9.0_r64 / 5.0_r64 * ta + 32.0_r64 !deg f air temp at 2m
+            tva = ta2a / (1.0_r64 - 0.378_r64 * (eair / 760.0_r64))
+            tsa = 9.0_r64 / 5.0_r64 * te + 32.0_r64 !te(i, 1)
+            tvs = tsa / (1.0_r64 - 0.378_r64 * (es / 760.0_r64))
             dtv = tvs - tva !original formula in shestt
-            If (dtv < 0) dtv = 0
-            !next compute fUw in W/m**2/mmHg
-            fUw = 0.1313_dp * ((22.4_dp * dtv ** (1.0_dp / 3.0_dp)) ** 2 + (17.0_dp * wmph) ** 2) ** 0.5_dp
-            !next convert fUw to cal/cm**2/d/mmHg
-            fUw = fUw / (4.183076_dp * 100.0_dp * 100.0_dp / 86400.0_dp)
-          Case Default
-            !write(*,*) "Default, Wrong!"
-        End Select
+            if (dtv < 0) dtv = 0
+            !next compute fuw in w/m**2/mmhg
+            fuw = 0.1313_r64 * ((22.4_r64 * dtv ** (1.0_r64 / 3.0_r64)) ** 2 + (17.0_r64 * wmph) ** 2) ** 0.5_r64
+            !next convert fuw to cal/cm**2/d/mmhg
+            fuw = fuw / (4.183076_r64 * 100.0_r64 * 100.0_r64 / 86400.0_r64)
+          case default
+            !write(*,*) "default, wrong!"
+        end select
 
-    End Function
+    end function
 
 !evaperation, convection, back radiation, air longat
 
-    !gp 16-Jul-08
-    !SUBROUTINE heatBalance(evap, conv, back, longat, lightheat, Te, Ta, Td, cc, Uw, Ast)
-    SUBROUTINE heatBalance(evap, conv, back, longat, lightheat, Te, Ta, Td, cc, Uw, Ast, SKOP)
+    !gp 16-jul-08
+    !subroutine heatbalance(evap, conv, back, longat, lightheat, te, ta, td, cc, uw, ast)
+    subroutine heatbalance(evap, conv, back, longat, lightheat, te, ta, td, cc, uw, ast, skop)
 
-        TYPE(LightHeat_type), INTENT(IN) :: lightheat
+        type(lightheat_type), intent(in) :: lightheat
 
-        !gp 16-Jul-08
-        !REAL(DP), INTENT(IN) :: Te, Ta, Td, cc, Uw, Ast
-        REAL(DP), INTENT(IN) :: Te, Ta, Td, cc, Uw, Ast, SKOP
+        !gp 16-jul-08
+        !real(r64), intent(in) :: te, ta, td, cc, uw, ast
+        real(r64), intent(in) :: te, ta, td, cc, uw, ast, skop
 
-        REAL(DP), INTENT(OUT) :: evap, conv, back, longat
-        REAL(DP) es, eair, emiss, fu
+        real(r64), intent(out) :: evap, conv, back, longat
+        real(r64) es, eair, emiss, fu
 
-        es = 4.596_dp * Exp(17.27_dp * Te / (237.3_dp + Te))
-        eair = 4.596_dp * Exp(17.27_dp * Td / (237.3_dp + Td))
-        !gp comment out next 2 lines and replace with new code to use new wind function in module LightAndHeat
-        !fUw = 19 + 0.95 * Uw(i) ** 2
-        !evap = fUw * (es - eair)
-        fu=fUw(lightheat%fUwMethod, Uw, Ta, Te, Ast, eair, es)
+        es = 4.596_r64 * exp(17.27_r64 * te / (237.3_r64 + te))
+        eair = 4.596_r64 * exp(17.27_r64 * td / (237.3_r64 + td))
+        !gp comment out next 2 lines and replace with new code to use new wind function in module lightandheat
+        !fuw = 19 + 0.95 * uw(i) ** 2
+        !evap = fuw * (es - eair)
+        fu=fuw(lightheat%fuwmethod, uw, ta, te, ast, eair, es)
         evap = fu * (es - eair)
 
-        !gp 24-Jun-09
-        !gp 16-Jul-08
-        !emiss=emissivity(lightheat%longatMethod, eair, Ta, cc)
-        !emiss=emissivity(lightheat%longatMethod, eair, Ta, cc, lightheat%kbrut)
-        emiss=emissivity(lightheat%longatMethod, eair, Ta, cc, lightheat%kbrut, lightheat%KCL1)
+        !gp 24-jun-09
+        !gp 16-jul-08
+        !emiss=emissivity(lightheat%longatmethod, eair, ta, cc)
+        !emiss=emissivity(lightheat%longatmethod, eair, ta, cc, lightheat%kbrut)
+        emiss=emissivity(lightheat%longatmethod, eair, ta, cc, lightheat%kbrut, lightheat%kcl1)
 
-        If (lightheat%longatMethod == 'Koberg') Then
-            longat = sigma * (Ta + 273.15_dp) ** 4 * emiss * (1 - RL)
-        Else
+        if (lightheat%longatmethod == 'Koberg') Then
+            longat = sigma * (ta + 273.15_r64) ** 4 * emiss * (1 - rl)
+        else
 
-            !gp 24-Jun-09
-            !longat = sigma * (Ta + 273.15_dp) ** 4 * emiss * (1 + 0.17_dp * cc ** 2) * (1 - RL)
-            longat = sigma * (Ta + 273.15_dp) ** 4 * emiss * (1 + lightheat%KCL2 * cc ** 2) * (1 - RL)
+            !gp 24-jun-09
+            !longat = sigma * (ta + 273.15_r64) ** 4 * emiss * (1 + 0.17_r64 * cc ** 2) * (1 - rl)
+            longat = sigma * (ta + 273.15_r64) ** 4 * emiss * (1 + lightheat%kcl2 * cc ** 2) * (1 - rl)
 
-        End If
-        !gp comment out next 2 lines and replace with new code to use new wind function in module LightAndHeat
-        !conv = Bowen * fUw * (Te(i, 1) - Ta(i))
-        conv = Bowen * fu * (Te - Ta)
-        back = eps * sigma * (Te + 273.15_dp) ** 4
+        end if
+        !gp comment out next 2 lines and replace with new code to use new wind function in module lightandheat
+        !conv = bowen * fuw * (te(i, 1) - ta(i))
+        conv = bowen * fu * (te - ta)
+        back = eps * sigma * (te + 273.15_r64) ** 4
         !write(*,*) te, es, eair, fu
 
-        !gp 16-Jul=08 adjust longwave for sky opening
-        longat = longat * SKOP
-        back = back * SKOP
+        !gp 16-jul=08 adjust longwave for sky opening
+        longat = longat * skop
+        back = back * skop
 
-    END SUBROUTINE heatBalance
+    end subroutine heatbalance
 
 
-    !gp 24-Jun-09
-    !gp 16-Jul-08
-    !PURE FUNCTION Emissivity(longatMethod, eair, Ta, cc)
-    !PURE FUNCTION Emissivity(longatMethod, eair, Ta, cc, kbrut)
-    PURE FUNCTION Emissivity(longatMethod, eair, Ta, cc, kbrut, KCL1)
+    !gp 24-jun-09
+    !gp 16-jul-08
+    !pure function emissivity(longatmethod, eair, ta, cc)
+    !pure function emissivity(longatmethod, eair, ta, cc, kbrut)
+    pure function emissivity(longatmethod, eair, ta, cc, kbrut, kcl1)
 
-        CHARACTER(LEN=20), INTENT(IN) ::longatMethod
+        character(len=20), intent(in) ::longatmethod
 
-        !gp 24-Jun-09
-        !gp 16-Jul-08
-        !REAL(DP), INTENT(IN) :: eair, Ta, cc
-        !REAL(DP), INTENT(IN) :: eair, Ta, cc, kbrut
-        REAL(DP), INTENT(IN) :: eair, Ta, cc, kbrut, KCL1
+        !gp 24-jun-09
+        !gp 16-jul-08
+        !real(r64), intent(in) :: eair, ta, cc
+        !real(r64), intent(in) :: eair, ta, cc, kbrut
+        real(r64), intent(in) :: eair, ta, cc, kbrut, kcl1
 
-        REAL(DP) Emissivity
+        real(r64) emissivity
 
-        Select Case (longatMethod)
+        select case (longatmethod)
 
-            !gp 16-Jul-08
-            !Case ("Brunt")
-            ! emissivity = (Acoeff + 0.031_dp * SQRT(eair))
-            !Case ("Koberg")
-            ! IF (Aa(Ta, (1 - 0.65_dp * cc ** 2.0)) <= 0.735) THEN
-            ! emissivity = (Aa(Ta, (1 - 0.65_dp * cc ** 2)) + 0.0263_dp * SQRT(1.333224_dp * eair))
-            ! Else
-            ! emissivity = (0.735_dp + 0.0263_dp * SQRT(1.333224_dp * eair))
-            ! End If
-            !Case ("Brutsaert")
-            ! emissivity = 1.24_dp * (1.333224_dp * eair / (Ta + 273.15_dp)) ** (1.0_dp / 7.0_dp) !air vapor pressure is converted to millibars by the factor 1.333224
-            !!gp 08-Nov-04 added new options
-            !Case ("Satterlund") !'Satterlund 1979
-            ! emissivity = 1.08_dp * (1 - Exp(-(1.333224_dp * eair) ** ((Ta + 273.15_dp) / 2016_dp)))
-            !Case ("Idso-Jackson") !'Idso and Jackson 1969
-            ! emissivity = 1_dp - 0.261_dp * Exp(-0.000777_dp * Ta ** 2)
-            !Case ("Swinbank") !'Swinbank 1963
-            ! emissivity = 0.0000092_dp * (Ta + 273.15) ** 2 !gp 08-Nov-04 end new block of options
-          Case ("Brunt")
-            emissivity = (Acoeff + 0.031_dp * SQRT(eair))
-          Case ("Koberg")
+            !gp 16-jul-08
+            !case ("brunt")
+            ! emissivity = (acoeff + 0.031_r64 * sqrt(eair))
+            !case ("koberg")
+            ! if (aa(ta, (1 - 0.65_r64 * cc ** 2.0)) <= 0.735) then
+            ! emissivity = (aa(ta, (1 - 0.65_r64 * cc ** 2)) + 0.0263_r64 * sqrt(1.333224_r64 * eair))
+            ! else
+            ! emissivity = (0.735_r64 + 0.0263_r64 * sqrt(1.333224_r64 * eair))
+            ! end if
+            !case ("brutsaert")
+            ! emissivity = 1.24_r64 * (1.333224_r64 * eair / (ta + 273.15_r64)) ** (1.0_r64 / 7.0_r64) !air vapor pressure is converted to millibars by the factor 1.333224
+            !!gp 08-nov-04 added new options
+            !case ("satterlund") !'satterlund 1979
+            ! emissivity = 1.08_r64 * (1 - exp(-(1.333224_r64 * eair) ** ((ta + 273.15_r64) / 2016_r64)))
+            !case ("idso-jackson") !'idso and jackson 1969
+            ! emissivity = 1_r64 - 0.261_r64 * exp(-0.000777_r64 * ta ** 2)
+            !case ("swinbank") !'swinbank 1963
+            ! emissivity = 0.0000092_r64 * (ta + 273.15) ** 2 !gp 08-nov-04 end new block of options
+          case ("Brunt")
+            emissivity = (acoeff + 0.031_r64 * sqrt(eair))
+          case ("Koberg")
 
-            !gp 24-Jun-09
-            !IF (Aa(Ta, (1_dp - 0.65_dp * cc ** 2.0_dp)) <= 0.735_dp) THEN
-            ! emissivity = (Aa(Ta, (1_dp - 0.65_dp * cc ** 2_dp)) + 0.0263_dp * SQRT(1.333224_dp * eair))
-            IF (Aa(Ta, (1_dp - KCL1 * cc ** 2.0_dp)) <= 0.735_dp) THEN
-                emissivity = (Aa(Ta, (1_dp - KCL1 * cc ** 2_dp)) + 0.0263_dp * SQRT(1.333224_dp * eair))
+            !gp 24-jun-09
+            !if (aa(ta, (1_r64 - 0.65_r64 * cc ** 2.0_r64)) <= 0.735_r64) then
+            ! emissivity = (aa(ta, (1_r64 - 0.65_r64 * cc ** 2_r64)) + 0.0263_r64 * sqrt(1.333224_r64 * eair))
+            if (aa(ta, (1_r64 - kcl1 * cc ** 2.0_r64)) <= 0.735_r64) then
+                emissivity = (aa(ta, (1_r64 - kcl1 * cc ** 2_r64)) + 0.0263_r64 * sqrt(1.333224_r64 * eair))
 
-            Else
-                emissivity = (0.735_dp + 0.0263_dp * SQRT(1.333224_dp * eair))
-            End If
-          Case ("Brutsaert")
-            emissivity = kbrut * (1.333224_dp * eair / (Ta + 273.15_dp)) ** (1.0_dp / 7.0_dp) !air vapor pressure is converted to millibars by the factor 1.333224
-          Case ("Satterlund") !'Satterlund 1979
-            emissivity = 1.08_dp * (1_dp - Exp(-(1.333224_dp * eair) ** ((Ta + 273.15_dp) / 2016_dp)))
-          Case ("Idso-Jackson") !'Idso and Jackson 1969
-            emissivity = 1_dp - 0.261_dp * Exp(-0.000777_dp * Ta ** 2_dp)
-          Case ("Swinbank") !'Swinbank 1963
-            emissivity = 0.0000092_dp * (Ta + 273.15_dp) ** 2_dp
-          Case ("Idso 1")
-            emissivity = 0.179_dp * ((1.333224_dp * eair) ** (1.0_dp / 7.0_dp)) * Exp(350_dp / (Ta + 273.15_dp)) !'air vapor pressure is converted to millibars by the factor 1.333224
-          Case ("Idso 2")
-            emissivity = 0.7_dp + 0.0000595_dp * (1.333224_dp * eair) * Exp(1500_dp / (Ta + 273.15_dp)) !'air vapor pressure is converted to millibars by the factor 1.333224
+            else
+                emissivity = (0.735_r64 + 0.0263_r64 * sqrt(1.333224_r64 * eair))
+            end if
+          case ("Brutsaert")
+            emissivity = kbrut * (1.333224_r64 * eair / (ta + 273.15_r64)) ** (1.0_r64 / 7.0_r64) !air vapor pressure is converted to millibars by the factor 1.333224
+          case ("Satterlund") !'satterlund 1979
+            emissivity = 1.08_r64 * (1_r64 - exp(-(1.333224_r64 * eair) ** ((ta + 273.15_r64) / 2016_r64)))
+          case ("Idso-Jackson") !'idso and jackson 1969
+            emissivity = 1_r64 - 0.261_r64 * exp(-0.000777_r64 * ta ** 2_r64)
+          case ("Swinbank") !'swinbank 1963
+            emissivity = 0.0000092_r64 * (ta + 273.15_r64) ** 2_r64
+          case ("Idso 1")
+            emissivity = 0.179_r64 * ((1.333224_r64 * eair) ** (1.0_r64 / 7.0_r64)) * exp(350_r64 / (ta + 273.15_r64)) !'air vapor pressure is converted to millibars by the factor 1.333224
+          case ("Idso 2")
+            emissivity = 0.7_r64 + 0.0000595_r64 * (1.333224_r64 * eair) * exp(1500_r64 / (ta + 273.15_r64)) !'air vapor pressure is converted to millibars by the factor 1.333224
 
-        End Select
-    END FUNCTION Emissivity
+        end select
+    end function emissivity
 
-    ! Aa empirical coefficient (0.5-0.7)
-    PURE Function Aa(tempC, clearness)
-        !Koberg!s Figure 34 to estimate Brunt!s c coefficient for atmospheric longwave IR
-        !inputs: tempC = air temperature deg C
+    ! aa empirical coefficient (0.5-0.7)
+    pure function aa(tempc, clearness)
+        !koberg!s figure 34 to estimate brunt!s c coefficient for atmospheric longwave ir
+        !inputs: tempc = air temperature deg c
         ! clearness = ratio of estimated measured to clear sky solar radiation
-        !output: Koberg!s Brunt!s c coefficient (Aa in Q2K)
-        REAL(DP) Aa
-        REAL(DP), INTENT(IN) :: tempC, clearness
-        REAL(DP) a, b, c
+        !output: koberg!s brunt!s c coefficient (aa in q2k)
+        real(r64) aa
+        real(r64), intent(in) :: tempc, clearness
+        real(r64) a, b, c
 
-        a = -0.00076437_dp * (clearness ** 3) + 0.00121134_dp * (clearness ** 2) - &
-            0.00073087_dp * clearness + 0.0001106_dp
-        b = 0.12796842_dp * (clearness ** 3) - 0.2204455_dp * (clearness ** 2) + &
-            0.13397992_dp * clearness - 0.02586655_dp
-        c = -3.25272249_dp * (clearness ** 3) + 5.65909609_dp * (clearness ** 2) - &
-            3.43402413_dp * clearness + 1.43052757_dp
-        Aa = a * tempC * tempC + b * tempC + c
+        a = -0.00076437_r64 * (clearness ** 3) + 0.00121134_r64 * (clearness ** 2) - &
+            0.00073087_r64 * clearness + 0.0001106_r64
+        b = 0.12796842_r64 * (clearness ** 3) - 0.2204455_r64 * (clearness ** 2) + &
+            0.13397992_r64 * clearness - 0.02586655_r64
+        c = -3.25272249_r64 * (clearness ** 3) + 5.65909609_r64 * (clearness ** 2) - &
+            3.43402413_r64 * clearness + 1.43052757_r64
+        aa = a * tempc * tempc + b * tempc + c
 
-    End Function
+    end function
 
 
-END MODULE Class_LightHeat
+end module class_lightheat
