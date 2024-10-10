@@ -3,15 +3,15 @@
 
 This is the Fortran source code for version 5 of QUAL2Kw, slightly modified to get it working on Linux.
 
-The original source code is available at https://github.com/gjpelletier/qual2kw-ver5/blob/master/qual2kw51b52_f.zip
+The original sources and the Windows binary are available at https://github.com/gjpelletier/qual2kw-ver5/ under an MIT license.
 
-The Windows executable version is available at
+The Windows executable version is also available at
 https://ecology.wa.gov/Research-Data/Data-resources/Models-spreadsheets/Modeling-the-environment/Models-tools-for-TMDLs
 
 
 ### Building
 
-This uses the Fortran Package Manager (FPM) for building.
+This fork uses the Fortran Package Manager (FPM) for building.
 See: https://fpm.fortran-lang.org/
 
 ```
@@ -44,18 +44,19 @@ q2kmain                                done.
 
 ### Running
 
-Our `message.dat` list the names of the input and output files:
+Our `message.dat` contains the names of the input and output files:
 
 ```
 (fortran) ruben@pop-os:~/github/qual2kw-ver5$ cat message.dat 
 BC_1987-08-21.q2k
 BC_1987-08-21.out
+
 (fortran) ruben@pop-os:~/github/qual2kw-ver5$ ls -lh BC_1987-08-21.*
 -rw-rw-r-- 1 ruben ruben 30K feb 26  2015 BC_1987-08-21.q2k
 ```
 
-Here we use `BC_1987-08-21.q2k` as input file.
-(This file is distributed with the Windows executable, but a copy is available in this repository.)
+Here we use `BC_1987-08-21.q2k` as the input file.
+(This file is distributed with the Windows binary, but a copy is available in this repository.)
 
 Run the model:
 
@@ -85,6 +86,7 @@ Check for an output file:
 (fortran) ruben@pop-os:~/github/qual2kw-ver5$ ls BC_1987-08-21.* -lh
 -rw-rw-r-- 1 ruben ruben 3,3M ene 25 13:35 BC_1987-08-21.out
 -rw-rw-r-- 1 ruben ruben  30K feb 26  2015 BC_1987-08-21.q2k
+
 (fortran) ruben@pop-os:~/github/qual2kw-ver5$ head BC_1987-08-21.out 
  ** Hydraulics Summary **
 Downstrea  Hydraulics          E'           H           B          Ac           U   trav time       slope  Reaeration      Reaeration formulas
